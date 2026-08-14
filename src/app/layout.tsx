@@ -15,6 +15,7 @@ const cormorantGaramond = Cormorant_Garamond({
 });
 
 import { SmoothScroll } from '@/components/providers/smooth-scroll';
+import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
   title: "P1NTO Coffee",
@@ -38,6 +39,7 @@ export default function RootLayout({
         <SmoothScroll>
           {children}
         </SmoothScroll>
+        <Toaster />
       </body>
     </html>
   );

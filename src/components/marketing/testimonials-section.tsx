@@ -39,8 +39,8 @@ export function TestimonialsSection() {
                 <svg className="w-8 h-8 text-ink/20 mb-6" fill="currentColor" viewBox="0 0 32 32">
                   <path d="M10 8c-3.3 0-6 2.7-6 6v10h10V14H8c0-1.1.9-2 2-2h2V8h-2zm14 0c-3.3 0-6 2.7-6 6v10h10V14h-6c0-1.1.9-2 2-2h2V8h-2z" />
                 </svg>
-                <p className="text-ink text-lg leading-relaxed mb-8 italic">
-                  "{item.quote}"
+                <p className="mt-4 text-sm md:text-base italic leading-relaxed text-muted-text">
+                  &quot;{item.quote}&quot;
                 </p>
               </div>
               
