@@ -6,24 +6,24 @@ import { HeroAnimations } from './hero-animations';
 
 const COPY = {
   eyebrow: "P1NTO COFFEE",
-  headlineLine1: "A PERFECT CUP.",
+  headlineLine1: "FROM OUR BAR",
   headlineLine2: {
-    normal: "",
-    highlight: "A BETTER",
-    after: " MOMENT."
+    normal: "TO YOUR ",
+    highlight: "HOME.",
+    after: ""
   },
-  sub: "Coffee crafted with intention, served for the moments worth slowing down.",
+  sub: "Carefully sourced, thoughtfully roasted, and served one cup at a time.",
   ctaPrimary: {
-    label: "Explore Menu",
-    href: "/menu"
+    label: "Shop Coffee",
+    href: "/coffee"
   },
   ctaSecondary: {
-    label: "Our Story",
-    href: "#story"
+    label: "Visit P1NTO",
+    href: "#location"
   },
   tag: {
-    number: "No. 07",
-    label: "House Blend"
+    number: "EST",
+    label: "2024"
   }
 };
 

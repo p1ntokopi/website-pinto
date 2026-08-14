@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Plus } from 'lucide-react';
+import { ScrollReveal } from './scroll-reveal';
 
 const menuItems = [
   { name: "Kopi Susu P1NTO", price: "Rp28.000", desc: "Espresso, fresh milk, and our secret house blend palm sugar.", image: "https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=800&q=80" },
@@ -15,8 +16,12 @@ export function SignatureMenuSection() {
       <div className="container mx-auto px-4 md:px-8">
         <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
           <div>
-            <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground mb-4">Our Popular Picks</p>
-            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-ink mb-2">Customer Favorites</h2>
+            <ScrollReveal>
+              <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground mb-4">Our Popular Picks</p>
+            </ScrollReveal>
+            <ScrollReveal delay={0.1}>
+              <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-ink mb-2">Customer Favorites</h2>
+            </ScrollReveal>
           </div>
           <Link href="/menu" className="group flex items-center text-sm font-semibold tracking-widest uppercase text-ink hover:text-primary transition-colors">
             <span className="border-b border-ink group-hover:border-primary pb-1 mr-2 transition-colors">View Full Menu</span>

@@ -1,4 +1,5 @@
 import { Coffee, Award, Leaf, Heart } from 'lucide-react';
+import { ScrollReveal } from './scroll-reveal';
 
 const values = [
   { icon: Award, title: "Premium Quality", desc: "We use only the finest 100% Arabica beans." },
@@ -15,13 +16,13 @@ export function BrandValuesSection() {
           {values.map((val, idx) => {
             const Icon = val.icon;
             return (
-              <div key={idx} className="flex flex-col items-center text-center px-4">
+              <ScrollReveal key={idx} delay={idx * 0.1} className="flex flex-col items-center text-center px-4">
                 <div className="w-14 h-14 rounded-full bg-warm/10 flex items-center justify-center mb-6 text-coffee">
                   <Icon className="w-6 h-6" strokeWidth={1.5} />
                 </div>
                 <h3 className="font-display text-xl md:text-2xl text-ink mb-3">{val.title}</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed max-w-[200px]">{val.desc}</p>
-              </div>
+              </ScrollReveal>
             );
           })}
         </div>

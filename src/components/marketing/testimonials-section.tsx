@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { ScrollReveal } from './scroll-reveal';
 
 const testimonials = [
   { quote: "The best coffee I've ever had! The quality and taste are simply amazing.", name: "Sophia Williams", rating: 5, avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop" },
@@ -23,8 +24,12 @@ export function TestimonialsSection() {
     <section className="w-full bg-paper py-24 md:py-32 border-t border-ink/5">
       <div className="container mx-auto px-4 md:px-8">
         <div className="mb-16">
-          <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground mb-4">What Our Customers Say</p>
-          <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-ink">Loved by Coffee Lovers</h2>
+          <ScrollReveal>
+            <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground mb-4">What Our Customers Say</p>
+          </ScrollReveal>
+          <ScrollReveal delay={0.1}>
+            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-ink">Loved by Coffee Lovers</h2>
+          </ScrollReveal>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
