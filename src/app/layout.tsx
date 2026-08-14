@@ -1,21 +1,27 @@
 import type { Metadata } from "next";
-import { Inter, DM_Serif_Display } from "next/font/google";
+import { Plus_Jakarta_Sans, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: "--font-plus-jakarta",
   subsets: ["latin"],
 });
 
-const dmSerif = DM_Serif_Display({
-  variable: "--font-dm-serif",
-  weight: "400",
+const cormorantGaramond = Cormorant_Garamond({
+  variable: "--font-cormorant",
+  weight: ["400", "500"],
+  style: ["normal", "italic"],
   subsets: ["latin"],
 });
+
+import { SmoothScroll } from '@/components/providers/smooth-scroll';
 
 export const metadata: Metadata = {
   title: "P1NTO Coffee",
   description: "Digital Coffee Shop Platform",
+  icons: {
+    icon: "/Pintokupi.webp",
+  },
 };
 
 export default function RootLayout({
@@ -26,9 +32,13 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${dmSerif.variable} antialiased`}
+      className={`${plusJakarta.variable} ${cormorantGaramond.variable} antialiased`}
     >
-      <body className="min-h-screen flex flex-col">{children}</body>
+      <body className="min-h-screen flex flex-col">
+        <SmoothScroll>
+          {children}
+        </SmoothScroll>
+      </body>
     </html>
   );
 }

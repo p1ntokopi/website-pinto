@@ -5,8 +5,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: var(--font-inter);
-  --font-display: var(--font-dm-serif);
+  --font-sans: var(--font-plus-jakarta);
+  --font-display: var(--font-cormorant);
 
   --color-ink: var(--ink);
   --color-paper: var(--paper);
