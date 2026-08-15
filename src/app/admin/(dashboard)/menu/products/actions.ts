@@ -8,7 +8,7 @@ const productSchema = z.object({
   category_id: z.string().uuid('Category is required'),
   name: z.string().min(1, 'Name is required'),
   description: z.string().optional(),
-  product_type: z.enum(['CAFE_DRINK', 'FOOD', 'PASTRY', 'COFFEE_BEAN']),
+  product_type: z.enum(['CAFE_DRINK', 'FOOD', 'PASTRY', 'COFFEE_BEAN', 'DESSERT', 'SERVICE']),
   base_price: z.coerce.number().min(0, 'Price must be 0 or greater'),
   is_available: z.boolean().default(true),
   is_featured: z.boolean().default(false),

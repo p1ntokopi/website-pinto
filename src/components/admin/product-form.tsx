@@ -32,7 +32,7 @@ const formSchema = z.object({
   category_id: z.string().min(1, 'Kategori wajib diisi'),
   name: z.string().min(1, 'Nama wajib diisi'),
   description: z.string().optional(),
-  product_type: z.enum(['CAFE_DRINK', 'FOOD', 'PASTRY', 'COFFEE_BEAN']),
+  product_type: z.enum(['CAFE_DRINK', 'FOOD', 'PASTRY', 'COFFEE_BEAN', 'DESSERT', 'SERVICE']),
   base_price: z.coerce.number().min(0, 'Harga tidak valid'),
   is_available: z.boolean().default(true),
   is_featured: z.boolean().default(false),
@@ -221,6 +221,8 @@ toast({
                           <SelectItem value="FOOD">Makanan</SelectItem>
                           <SelectItem value="PASTRY">Pastry</SelectItem>
                           <SelectItem value="COFFEE_BEAN">Biji Kopi</SelectItem>
+                          <SelectItem value="DESSERT">Dessert & Es Krim</SelectItem>
+                          <SelectItem value="SERVICE">Jasa / Layanan</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

@@ -1,10 +1,12 @@
 import { createClient } from "@/lib/supabase/server"
 import { getSessionToken } from "@/lib/ordering/session"
+import { getCoffeeBeans } from "@/lib/shop"
 import { redirect } from "next/navigation"
-import { CategoryNav } from "@/components/ordering/category-nav"
-import { ProductCard } from "@/components/ordering/product-card"
-import { CartBar } from "@/components/ordering/cart-bar"
-import { OrderingHeader } from "@/components/ordering/ordering-header"
+import {
+  MenuPageClient,
+  type MenuCategoryData,
+} from "@/components/ordering/menu-page-client"
+import { type MenuBean } from "@/components/ordering/menu-bean-section"
 
 export default async function MenuPage({ params }: { params: { slug: string } }) {
   const resolvedParams = await params
@@ -22,22 +24,19 @@ export default async function MenuPage({ params }: { params: { slug: string } })
     redirect(`/t/${resolvedParams.slug}`)
   }
 
-  const { data: session } = await supabase
-    .from("dining_sessions")
-    .select("id")
-    .eq("session_token", sessionToken)
-    .eq("table_id", table.id)
-    .eq("status", "open")
-    .single()
+  const { data: session } = await supabase.rpc('validate_dining_session', {
+    p_table_slug: resolvedParams.slug,
+    p_session_token: sessionToken,
+  })
 
-  if (!session) {
+  if (!session || !session.success) {
     redirect(`/t/${resolvedParams.slug}`)
   }
 
   // Fetch Categories
   const { data: categories } = await supabase
     .from("categories")
-    .select("id, name")
+    .select("id, name, description")
     .eq("is_active", true)
     .order("sort_order")
 
@@ -51,65 +50,53 @@ export default async function MenuPage({ params }: { params: { slug: string } })
     .eq("is_available", true)
     .order("sort_order")
 
-  const productsByCategory =
+  const productsByCategory: MenuCategoryData[] =
     categories
       ?.map((cat) => ({
-        ...cat,
-        products: products?.filter((p) => p.category_id === cat.id) || [],
+        id: cat.id,
+        name: cat.name,
+        description: cat.description,
+        products:
+          products
+            ?.filter((p) => p.category_id === cat.id)
+            .map((p) => ({
+              id: p.id,
+              name: p.name,
+              slug: p.slug,
+              description: p.description,
+              base_price: p.base_price,
+              image_url: p.image_url,
+              variants_count: p.variants?.length || 0,
+            })) || [],
       }))
       .filter((cat) => cat.products.length > 0) || []
 
+  const beanCategoryId = categories
+    ?.find((cat) => cat.name.toLowerCase().includes("biji"))
+    ?.id
+
+  // Coffee bean feature — real roastery data
+  const coffeeBeans = await getCoffeeBeans()
+  const beans: MenuBean[] = coffeeBeans.map((b) => ({
+    id: b.id,
+    slug: b.slug,
+    name: b.name,
+    base_price: b.base_price,
+    description: b.description,
+    process: b.process,
+    roast_level: b.roast_level,
+    origin: b.origin ? { country: b.origin.country, region: b.origin.region } : null,
+    flavorNotes: b.flavorNotes,
+    variants: b.variants.map((v) => ({ price: v.price, weight_grams: v.weight_grams })),
+  }))
+
   return (
-    <div className="pb-32">
-      <OrderingHeader tableNumber={table.table_number} />
-
-      <CategoryNav categories={productsByCategory} />
-
-      <main className="mx-auto max-w-2xl px-4 py-6">
-        <section className="mb-8" aria-labelledby="menu-heading">
-          <h1 id="menu-heading" className="font-display text-3xl font-bold tracking-tight text-ink">
-            Menu
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Pesan dari meja Anda — langsung ke dapur.
-          </p>
-        </section>
-
-        {productsByCategory.map((category) => (
-          <section
-            key={category.id}
-            id={`category-${category.id}`}
-            className="mb-10 scroll-mt-32"
-          >
-            <h2 className="mb-4 font-display text-xl font-bold text-ink">
-              {category.name}
-            </h2>
-            <div className="space-y-3">
-              {category.products.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={{
-                    ...product,
-                    variants_count: product.variants?.length || 0,
-                  }}
-                  tableSlug={resolvedParams.slug}
-                />
-              ))}
-            </div>
-          </section>
-        ))}
-
-        {productsByCategory.length === 0 && (
-          <div className="py-16 text-center">
-            <p className="font-medium text-foreground">Menu saat ini kosong</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Nantikan sebentar — kami sedang menyeduh sesuatu yang baru.
-            </p>
-          </div>
-        )}
-      </main>
-
-      <CartBar tableSlug={resolvedParams.slug} />
-    </div>
+    <MenuPageClient
+      tableSlug={resolvedParams.slug}
+      tableNumber={table.table_number}
+      categories={productsByCategory}
+      beans={beans}
+      beanCategoryId={beanCategoryId}
+    />
   )
 }

@@ -32,32 +32,34 @@ export default async function OrderTrackingPage({
     redirect(`/t/${resolvedParams.slug}`)
   }
 
-  const { data: session } = await supabase
-    .from('dining_sessions')
-    .select('id')
-    .eq('session_token', sessionToken)
-    .eq('table_id', table.id)
-    .single()
+  const { data: result } = await supabase.rpc('get_order_tracking', {
+    p_table_slug: resolvedParams.slug,
+    p_session_token: sessionToken,
+    p_order_number: resolvedParams.orderNumber,
+  })
 
-  if (!session) {
-    redirect(`/t/${resolvedParams.slug}`)
+  if (!result || !result.success || !result.order) {
+    notFound()
   }
 
-  const { data: order } = await supabase
-    .from('orders')
-    .select(`
-      id, order_number, status, total,
-      items:order_items(
-        id, quantity, product_name_snapshot, variant_name_snapshot, unit_price, subtotal, notes,
-        options:order_item_options(option_value_snapshot, price_adjustment)
-      )
-    `)
-    .eq('order_number', resolvedParams.orderNumber)
-    .eq('dining_session_id', session.id)
-    .single()
-
-  if (!order) {
-    notFound()
+  const order = result.order as {
+    id: string
+    order_number: string
+    status: 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'READY' | 'COMPLETED' | 'CANCELLED'
+    total: number
+    items: {
+      id: string
+      quantity: number
+      product_name_snapshot: string
+      variant_name_snapshot: string | null
+      unit_price: number
+      subtotal: number
+      notes: string | null
+      options: {
+        option_value_snapshot: string
+        price_adjustment: number
+      }[]
+    }[]
   }
 
   const formatPrice = (price: number) =>

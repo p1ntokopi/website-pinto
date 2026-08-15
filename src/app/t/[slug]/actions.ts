@@ -7,57 +7,23 @@ import { redirect } from 'next/navigation'
 export async function startOrResumeDiningSession(tableSlug: string) {
   const supabase = await createClient()
 
-  // 1. Get Table
-  const { data: table, error: tableError } = await supabase
-    .from('tables')
-    .select('id, is_active')
-    .eq('slug', tableSlug)
-    .single()
+  // RPC validates the table and creates/resumes the dining session
+  // (security definer bypasses RLS for the insert).
+  const { data, error } = await supabase.rpc('start_or_resume_dining_session', {
+    p_table_slug: tableSlug
+  })
 
-  if (tableError || !table) {
-    return { error: 'Meja tidak ditemukan' }
+  if (error) {
+    console.error('Failed to start dining session:', error)
+    return { error: 'Tidak dapat memulai sesi makan. Silakan coba lagi.' }
   }
 
-  if (!table.is_active) {
-    return { error: 'Meja ini sedang tidak menerima pesanan' }
+  if (!data || !data.success) {
+    return { error: data?.error || 'Tidak dapat memulai sesi makan. Silakan coba lagi.' }
   }
 
-  // 2. Check for an existing open session for this table
-  const { data: existingSession } = await supabase
-    .from('dining_sessions')
-    .select('id, session_token')
-    .eq('table_id', table.id)
-    .eq('status', 'open')
-    .single()
+  await setSessionToken(data.session_token)
 
-  let tokenToUse = existingSession?.session_token
-
-  if (!existingSession) {
-    // 3. Create a new session if none exists
-    const newToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
-    
-    const { error: createError } = await supabase
-      .from('dining_sessions')
-      .insert({
-        table_id: table.id,
-        session_token: newToken,
-        status: 'open'
-      })
-
-    if (createError) {
-      console.error('Failed to create session:', createError)
-      return { error: 'Tidak dapat memulai sesi makan. Silakan coba lagi.' }
-    }
-    
-    tokenToUse = newToken
-  }
-
-  // 4. Set cookie with the active token
-  if (tokenToUse) {
-    await setSessionToken(tokenToUse)
-  }
-
-  // Redirect to menu
   redirect(`/t/${tableSlug}/menu`)
 }
 

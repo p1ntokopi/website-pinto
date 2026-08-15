@@ -19,6 +19,27 @@ export interface Database {
         }
         Returns: unknown
       }
+      start_or_resume_dining_session: {
+        Args: {
+          p_table_slug: string
+        }
+        Returns: unknown
+      }
+      validate_dining_session: {
+        Args: {
+          p_table_slug: string
+          p_session_token: string
+        }
+        Returns: unknown
+      }
+      get_order_tracking: {
+        Args: {
+          p_table_slug: string
+          p_session_token: string
+          p_order_number: string
+        }
+        Returns: unknown
+      }
     }
     Views: {
       [_ in never]: never
@@ -60,7 +81,7 @@ export interface Database {
           name: string
           slug: string
           description: string | null
-          product_type: 'CAFE_DRINK' | 'FOOD' | 'PASTRY' | 'COFFEE_BEAN'
+          product_type: 'CAFE_DRINK' | 'FOOD' | 'PASTRY' | 'COFFEE_BEAN' | 'DESSERT' | 'SERVICE'
           base_price: number
           image_url: string | null
           is_available: boolean

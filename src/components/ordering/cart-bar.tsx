@@ -1,7 +1,6 @@
 "use client"
 
 import { useCart } from "@/components/ordering/cart-context"
-import { ShoppingBag } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
@@ -21,27 +20,20 @@ export function CartBar({ tableSlug }: { tableSlug: string }) {
   }).format(cartTotal)
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-background pb-safe">
-      <Link
-        href={`/t/${tableSlug}/cart`}
-        className="mx-auto flex max-w-2xl items-center justify-between gap-3 p-3"
-      >
-        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
-          <span className="relative">
-            <ShoppingBag className="h-5 w-5" aria-hidden="true" />
-            <span className="absolute -top-1.5 -right-2 flex h-4 w-4 items-center justify-center rounded-full bg-ink text-[10px] font-bold text-paper">
-              {cartCount}
-            </span>
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-ink/10 bg-paper pb-safe lg:hidden">
+      <div className="mx-auto max-w-2xl p-3">
+        <Link
+          href={`/t/${tableSlug}/cart`}
+          className="flex items-center justify-between gap-3 bg-ink px-5 py-4 text-paper transition-colors hover:bg-coffee"
+        >
+          <span className="flex items-baseline gap-2 text-sm">
+            <span className="font-semibold">{cartCount} item</span>
+            <span aria-hidden="true" className="h-1 w-1 rounded-full bg-paper/40" />
+            <span>Periksa pesanan</span>
           </span>
-        </span>
-        <span className="flex-1 text-left text-sm font-medium">
-          {cartCount} item
-        </span>
-        <span className="flex items-baseline gap-2">
-          <span className="text-sm text-muted-foreground">Periksa</span>
-          <span className="text-base font-semibold text-ink">{formattedTotal}</span>
-        </span>
-      </Link>
+          <span className="text-base font-semibold">{formattedTotal}</span>
+        </Link>
+      </div>
     </div>
   )
 }

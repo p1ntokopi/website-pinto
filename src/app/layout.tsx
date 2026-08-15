@@ -17,7 +17,7 @@ const cormorantGaramond = Cormorant_Garamond({
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: "P1NTO Coffee",
+  title: "PINTO Kupi",
   description: "Digital Coffee Shop Platform",
   icons: {
     icon: "/Pintokupi.webp",

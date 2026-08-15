@@ -23,26 +23,26 @@ export function OrderingHeader({
   return (
     <header
       className={cn(
-        "sticky top-0 z-40 bg-background/85 backdrop-blur-md border-b border-border/60",
+        "sticky top-0 z-40 border-b border-ink/[0.08] bg-paper/85 backdrop-blur-md",
         className
       )}
     >
-      <div className="mx-auto max-w-2xl px-4 h-14 flex items-center justify-between gap-3">
-        <div className="flex items-center min-w-0">
+      <div className="mx-auto flex h-14 max-w-3xl items-center justify-between gap-3 px-4 md:px-6">
+        <div className="flex min-w-0 items-center">
           {backHref && (
             <Link
               href={backHref}
               aria-label="Kembali"
-              className="-ml-2 mr-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-ink transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 outline-none"
+              className="-ml-2 mr-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-sm text-ink transition-colors hover:bg-ink/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-coffee/40"
             >
               <ChevronLeft className="h-5 w-5" />
             </Link>
           )}
           {title ? (
-            <h1 className="truncate font-semibold">{title}</h1>
+            <h1 className="truncate font-display text-xl font-semibold text-ink">{title}</h1>
           ) : (
             <div className="flex flex-col leading-none">
-              <span className="font-display text-lg font-bold tracking-[0.2em] uppercase text-primary">
+              <span className="font-display text-lg font-bold uppercase tracking-[0.22em] text-ink">
                 P1NTO
               </span>
               <span className="mt-1 text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
@@ -52,9 +52,10 @@ export function OrderingHeader({
           )}
         </div>
 
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center gap-3">
           {tableNumber && (
-            <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold">
+            <span className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="h-1 w-1 rounded-full bg-coffee" aria-hidden="true" />
               Meja {tableNumber}
             </span>
           )}

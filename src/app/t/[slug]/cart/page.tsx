@@ -25,15 +25,12 @@ export default async function CartPage({ params }: { params: { slug: string } })
   }
 
   // Check if session is valid
-  const { data: session } = await supabase
-    .from('dining_sessions')
-    .select('id')
-    .eq('session_token', sessionToken)
-    .eq('table_id', table.id)
-    .eq('status', 'open')
-    .single()
+  const { data: session } = await supabase.rpc('validate_dining_session', {
+    p_table_slug: resolvedParams.slug,
+    p_session_token: sessionToken,
+  })
 
-  if (!session) {
+  if (!session || !session.success) {
     redirect(`/t/${resolvedParams.slug}`)
   }
 
