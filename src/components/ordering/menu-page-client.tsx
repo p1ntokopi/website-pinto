@@ -109,6 +109,7 @@ export function MenuPageClient({
         categories={categories}
         activeCategory={activeCategory}
         onSelect={setActiveCategory}
+        variant="top"
       />
 
       <div className="mx-auto max-w-6xl px-4 pt-10 md:px-8 lg:grid lg:grid-cols-[180px_1fr] lg:gap-16 lg:pt-14">
@@ -116,6 +117,7 @@ export function MenuPageClient({
           categories={categories}
           activeCategory={activeCategory}
           onSelect={setActiveCategory}
+          variant="sidebar"
         />
 
         <main className="min-w-0">
