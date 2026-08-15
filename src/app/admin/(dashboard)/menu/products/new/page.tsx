@@ -5,7 +5,7 @@ import { ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Add Product - P1NTO Admin',
+  title: 'Tambah Produk - P1NTO Admin',
 }
 
 export default async function NewProductPage() {
@@ -18,7 +18,7 @@ export default async function NewProductPage() {
     .order('sort_order', { ascending: true })
 
   if (error || !categories) {
-    return <div className="text-destructive p-8">Failed to load categories. Please create a category first.</div>
+    return <div className="text-destructive p-8">Gagal memuat kategori. Silakan buat kategori terlebih dahulu.</div>
   }
 
   return (
@@ -28,8 +28,8 @@ export default async function NewProductPage() {
           <ChevronLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="text-3xl font-display font-bold text-primary">Add New Product</h1>
-          <p className="text-muted-foreground mt-1">Create a new item for your digital menu.</p>
+          <h1 className="text-3xl font-display font-bold text-primary">Tambah Produk Baru</h1>
+          <p className="text-muted-foreground mt-1">Buat item baru untuk menu digital Anda.</p>
         </div>
       </div>
 

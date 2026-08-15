@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { Database } from '@/types/database.types'
 import { OrderStatus } from '@/lib/orders/status-machine'
+import { KitchenOrder } from '@/lib/orders/kitchen-types'
 import { KitchenCard } from './kitchen-card'
 import { Maximize, Minimize, Wifi, WifiOff } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
-export function KitchenClient({ initialOrders }: { initialOrders: Record<string, unknown>[] }) {
-  const [orders, setOrders] = useState<Record<string, unknown>[]>(initialOrders)
+export function KitchenClient({ initialOrders }: { initialOrders: KitchenOrder[] }) {
+  const [orders, setOrders] = useState<KitchenOrder[]>(initialOrders)
   const [isConnected, setIsConnected] = useState(true)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [currentTime, setCurrentTime] = useState('')
@@ -61,9 +63,10 @@ export function KitchenClient({ initialOrders }: { initialOrders: Record<string,
               `)
               .eq('id', payload.new.id)
               .single()
-            
-            if (data && ['PENDING', 'CONFIRMED', 'PREPARING', 'READY'].includes(data.status)) {
-              setOrders(prev => [...prev, data])
+
+            const order = data as unknown as KitchenOrder | null
+            if (order && ['PENDING', 'CONFIRMED', 'PREPARING', 'READY'].includes(order.status)) {
+              setOrders(prev => [...prev, order])
               // Play notification sound if browser allows
               try {
                 const audio = new Audio('/notification.mp3') // Placeholder path, can be ignored if file doesn't exist
@@ -109,31 +112,44 @@ export function KitchenClient({ initialOrders }: { initialOrders: Record<string,
   return (
     <>
       {/* Header */}
-      <header className="h-16 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between px-6 shrink-0">
-        <div className="flex items-center gap-6">
-          <h1 className="font-display text-2xl font-black tracking-tight text-white">
+      <header className="h-16 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between px-4 sm:px-6 shrink-0 gap-4">
+        <div className="flex items-center gap-3 sm:gap-6 min-w-0">
+          <h1 className="font-display text-xl sm:text-2xl font-black tracking-tight text-white truncate">
             P1NTO<span className="text-amber-500">KITCHEN</span>
           </h1>
-          <div className="bg-zinc-950 px-4 py-1.5 rounded-lg border border-zinc-800 font-mono text-xl font-bold text-zinc-300">
+          <div className="hidden md:block bg-zinc-950 px-4 py-1.5 rounded-lg border border-zinc-800 font-mono text-xl font-bold text-zinc-300">
             {currentTime}
           </div>
         </div>
 
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3 sm:gap-6 shrink-0">
+          <div className="hidden sm:flex items-center gap-2">
             {isConnected ? (
               <span className="flex items-center gap-2 text-emerald-500 font-medium text-sm bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20">
-                <Wifi className="w-4 h-4" /> LIVE
+                <Wifi className="w-4 h-4" /> LANGSUNG
               </span>
             ) : (
               <span className="flex items-center gap-2 text-red-500 font-medium text-sm bg-red-500/10 px-3 py-1.5 rounded-full border border-red-500/20 animate-pulse">
-                <WifiOff className="w-4 h-4" /> RECONNECTING...
+                <WifiOff className="w-4 h-4" /> MENGHUBUNGKAN ULANG...
               </span>
             )}
           </div>
-          <button 
+          <span
+            className={cn(
+              'sm:hidden flex items-center gap-1.5 text-xs font-bold rounded-full px-2.5 py-1',
+              isConnected
+                ? 'text-emerald-500 bg-emerald-500/10 border border-emerald-500/20'
+                : 'text-red-500 bg-red-500/10 border border-red-500/20 animate-pulse'
+            )}
+            aria-label={isConnected ? 'Langsung' : 'Menghubungkan ulang'}
+          >
+            {isConnected ? <Wifi className="w-3.5 h-3.5" /> : <WifiOff className="w-3.5 h-3.5" />}
+          </span>
+          <button
+            type="button"
             onClick={toggleFullscreen}
-            className="p-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors"
+            aria-label={isFullscreen ? 'Keluar layar penuh' : 'Layar penuh'}
+            className="p-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors focus-visible:ring-3 focus-visible:ring-amber-400/50 outline-none"
           >
             {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
           </button>
@@ -145,7 +161,7 @@ export function KitchenClient({ initialOrders }: { initialOrders: Record<string,
         {/* NEW Column */}
         <div className="flex flex-col bg-zinc-900/50 rounded-3xl border border-zinc-800/50 overflow-hidden">
           <div className="p-4 border-b border-zinc-800/50 flex justify-between items-center bg-zinc-900">
-            <h2 className="font-bold text-xl text-zinc-300 tracking-wide">NEW / CONFIRMED</h2>
+            <h2 className="font-bold text-xl text-zinc-300 tracking-wide">BARU / TERKONFIRMASI</h2>
             <div className="bg-zinc-800 px-3 py-1 rounded-full text-sm font-bold text-white">
               {newOrders.length}
             </div>
@@ -156,7 +172,7 @@ export function KitchenClient({ initialOrders }: { initialOrders: Record<string,
             ))}
             {newOrders.length === 0 && (
               <div className="h-full flex items-center justify-center text-zinc-600 font-medium text-lg">
-                No new orders
+                Tidak ada pesanan baru
               </div>
             )}
           </div>
@@ -165,7 +181,7 @@ export function KitchenClient({ initialOrders }: { initialOrders: Record<string,
         {/* PREPARING Column */}
         <div className="flex flex-col bg-zinc-900/50 rounded-3xl border border-zinc-800/50 overflow-hidden">
           <div className="p-4 border-b border-zinc-800/50 flex justify-between items-center bg-amber-500/10">
-            <h2 className="font-bold text-xl text-amber-500 tracking-wide">PREPARING</h2>
+            <h2 className="font-bold text-xl text-amber-500 tracking-wide">DIPROSES</h2>
             <div className="bg-amber-500 text-amber-950 px-3 py-1 rounded-full text-sm font-bold">
               {preparingOrders.length}
             </div>
@@ -176,7 +192,7 @@ export function KitchenClient({ initialOrders }: { initialOrders: Record<string,
             ))}
             {preparingOrders.length === 0 && (
               <div className="h-full flex items-center justify-center text-zinc-600 font-medium text-lg">
-                Kitchen is clear
+                Dapur kosong
               </div>
             )}
           </div>
@@ -185,7 +201,7 @@ export function KitchenClient({ initialOrders }: { initialOrders: Record<string,
         {/* READY Column */}
         <div className="flex flex-col bg-zinc-900/50 rounded-3xl border border-zinc-800/50 overflow-hidden">
           <div className="p-4 border-b border-zinc-800/50 flex justify-between items-center bg-emerald-500/10">
-            <h2 className="font-bold text-xl text-emerald-500 tracking-wide">READY</h2>
+            <h2 className="font-bold text-xl text-emerald-500 tracking-wide">SIAP</h2>
             <div className="bg-emerald-500 text-emerald-950 px-3 py-1 rounded-full text-sm font-bold">
               {readyOrders.length}
             </div>
@@ -196,7 +212,7 @@ export function KitchenClient({ initialOrders }: { initialOrders: Record<string,
             ))}
             {readyOrders.length === 0 && (
               <div className="h-full flex items-center justify-center text-zinc-600 font-medium text-lg">
-                No orders waiting
+                Tidak ada pesanan menunggu
               </div>
             )}
           </div>

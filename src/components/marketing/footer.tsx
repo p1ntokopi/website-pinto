@@ -11,32 +11,32 @@ export function Footer() {
               <Image src="/Pintokupi.webp" alt="P1NTO Coffee Logo" width={40} height={40} className="rounded-md object-cover grayscale brightness-200 contrast-125" />
               <span className="font-display text-3xl font-bold text-cream mt-1">P1NTO</span>
             </Link>
-            <p className="text-muted-foreground text-xs md:text-sm tracking-widest uppercase font-semibold">
-              Coffee • Food • Good Moments
+            <p className="text-paper/60 text-xs md:text-sm tracking-widest uppercase font-semibold">
+              Kopi • Makanan • Momen Indah
             </p>
           </div>
           
           <div className="col-span-1 md:col-span-3">
-            <h3 className="font-semibold text-xs tracking-widest uppercase mb-6 text-cream">Navigation</h3>
+            <h3 className="font-semibold text-xs tracking-widest uppercase mb-6 text-cream">Navigasi</h3>
             <ul className="space-y-4">
-              <li><Link href="/" className="text-muted-foreground hover:text-white transition-colors text-sm">Home</Link></li>
-              <li><Link href="/menu" className="text-muted-foreground hover:text-white transition-colors text-sm">Menu</Link></li>
-              <li><Link href="#location" className="text-muted-foreground hover:text-white transition-colors text-sm">Location</Link></li>
-              <li><Link href="#" className="text-muted-foreground hover:text-white transition-colors text-sm">Instagram</Link></li>
+              <li><Link href="/" className="text-paper/60 hover:text-white transition-colors text-sm">Beranda</Link></li>
+              <li><Link href="/menu" className="text-paper/60 hover:text-white transition-colors text-sm">Menu</Link></li>
+              <li><Link href="/coffee" className="text-paper/60 hover:text-white transition-colors text-sm">Kopi</Link></li>
+              <li><Link href="/locations" className="text-paper/60 hover:text-white transition-colors text-sm">Lokasi</Link></li>
             </ul>
           </div>
 
           <div className="col-span-1 md:col-span-3">
-            <h3 className="font-semibold text-xs tracking-widest uppercase mb-6 text-cream">Visit Us</h3>
+            <h3 className="font-semibold text-xs tracking-widest uppercase mb-6 text-cream">Kunjungi Kami</h3>
             <ul className="space-y-4">
-              <li className="text-muted-foreground text-sm">Jl. Pajajaran No. 12<br/>Bogor, Jawa Barat</li>
-              <li className="text-muted-foreground text-sm">Open Everyday<br/>08:00 — 22:00</li>
+              <li className="text-paper/60 text-sm">Perumahan Bumi Insani, Jl. Flamboyan No. 8<br/>Tajur Halang, Kabupaten Bogor</li>
+              <li className="text-paper/60 text-sm">Buka Setiap Hari<br/>08.00 — 22.00</li>
             </ul>
           </div>
         </div>
         
-        <div className="mt-20 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center text-[10px] md:text-xs text-muted-foreground uppercase tracking-widest">
-          <p>© {new Date().getFullYear()} P1NTO Coffee. All rights reserved.</p>
+        <div className="mt-20 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center text-[10px] md:text-xs text-paper/60 uppercase tracking-widest">
+          <p>© {new Date().getFullYear()} P1NTO Coffee. Hak cipta dilindungi.</p>
         </div>
       </div>
     </footer>

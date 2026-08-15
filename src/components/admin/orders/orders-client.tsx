@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { Database } from '@/types/database.types'
 import { OrderStatus } from '@/lib/orders/status-machine'
+import { STATUS_CONFIG } from '@/lib/orders/status-config'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { Search, Clock, CheckCircle2, Coffee, Package, Check, XCircle } from 'lucide-react'
+import { Search } from 'lucide-react'
 import Link from 'next/link'
+import { cn } from '@/lib/utils'
 
 type OrderRow = {
   id: string
@@ -23,15 +25,6 @@ type OrderRow = {
   table: { id: string, table_number: string } | null
 }
 
-const STATUS_CONFIG: Record<OrderStatus, { label: string, color: string, icon: any }> = {
-  PENDING: { label: 'Pending', color: 'bg-amber-100 text-amber-800 border-amber-200', icon: Clock },
-  CONFIRMED: { label: 'Confirmed', color: 'bg-blue-100 text-blue-800 border-blue-200', icon: CheckCircle2 },
-  PREPARING: { label: 'Preparing', color: 'bg-purple-100 text-purple-800 border-purple-200', icon: Coffee },
-  READY: { label: 'Ready', color: 'bg-indigo-100 text-indigo-800 border-indigo-200', icon: Package },
-  COMPLETED: { label: 'Completed', color: 'bg-emerald-100 text-emerald-800 border-emerald-200', icon: Check },
-  CANCELLED: { label: 'Cancelled', color: 'bg-red-100 text-red-800 border-red-200', icon: XCircle },
-}
-
 export function OrdersClient({ initialOrders }: { initialOrders: OrderRow[] }) {
   const [orders, setOrders] = useState<OrderRow[]>(initialOrders)
   const [searchQuery, setSearchQuery] = useState('')
@@ -43,25 +36,23 @@ export function OrdersClient({ initialOrders }: { initialOrders: OrderRow[] }) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
 
-    // Setup Realtime subscription
     const channel = supabase.channel('admin_orders')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'orders' },
         async (payload) => {
           if (payload.eventType === 'INSERT') {
-            // Need to fetch relation data (table) for the new order
             const { data } = await supabase
               .from('orders')
               .select('id, order_number, order_type, fulfillment_type, subtotal, total, status, customer_name, created_at, table:tables(id, table_number)')
               .eq('id', payload.new.id)
               .single()
-            
+
             if (data) {
               setOrders(prev => [data as unknown as OrderRow, ...prev])
             }
           } else if (payload.eventType === 'UPDATE') {
-            setOrders(prev => prev.map(o => 
+            setOrders(prev => prev.map(o =>
               o.id === payload.new.id ? { ...o, ...payload.new } : o
             ))
           } else if (payload.eventType === 'DELETE') {
@@ -76,10 +67,9 @@ export function OrdersClient({ initialOrders }: { initialOrders: OrderRow[] }) {
     }
   }, [])
 
-  // Derived state
   const filteredOrders = orders.filter(o => {
     if (statusFilter !== 'ALL' && o.status !== statusFilter) return false
-    
+
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
       const matchesNumber = o.order_number.toLowerCase().includes(query)
@@ -87,19 +77,16 @@ export function OrdersClient({ initialOrders }: { initialOrders: OrderRow[] }) {
       const matchesTable = o.table?.table_number.toLowerCase().includes(query)
       if (!matchesNumber && !matchesCustomer && !matchesTable) return false
     }
-    
+
     return true
   })
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(price)
-  }
-  
-  const formatTime = (isoString: string) => {
-    return new Date(isoString).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
-  }
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(price)
 
-  // Counts
+  const formatTime = (isoString: string) =>
+    new Date(isoString).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+
   const counts = {
     PENDING: orders.filter(o => o.status === 'PENDING').length,
     CONFIRMED: orders.filter(o => o.status === 'CONFIRMED').length,
@@ -111,104 +98,112 @@ export function OrdersClient({ initialOrders }: { initialOrders: OrderRow[] }) {
   return (
     <div className="space-y-6">
       {/* Top Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        {(Object.entries(counts) as [OrderStatus, number][]).map(([status, count]) => (
-          <button
-            key={status}
-            onClick={() => setStatusFilter(statusFilter === status ? 'ALL' : status)}
-            className={`p-4 rounded-2xl border flex flex-col items-center justify-center transition-colors ${
-              statusFilter === status 
-                ? 'bg-primary/5 border-primary shadow-sm' 
-                : 'bg-white border-border/50 hover:bg-muted/30'
-            }`}
-          >
-            <span className="text-2xl font-bold">{count}</span>
-            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mt-1">
-              {STATUS_CONFIG[status].label}
-            </span>
-          </button>
-        ))}
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
+        {(Object.entries(counts) as [OrderStatus, number][]).map(([status, count]) => {
+          const isActive = statusFilter === status
+          const config = STATUS_CONFIG[status]
+          return (
+            <button
+              key={status}
+              type="button"
+              onClick={() => setStatusFilter(isActive ? 'ALL' : status)}
+              aria-pressed={isActive}
+              className={cn(
+                'flex flex-col items-center justify-center rounded-lg border p-4 transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 outline-none',
+                isActive
+                  ? 'border-primary bg-primary/5 shadow-card'
+                  : 'border-border/50 bg-white hover:bg-muted/40'
+              )}
+            >
+              <span className="text-2xl font-bold">{count}</span>
+              <span className={cn('mt-1 text-xs font-semibold uppercase tracking-wider', isActive ? 'text-primary' : 'text-muted-foreground')}>
+                {config.label}
+              </span>
+            </button>
+          )
+        })}
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-border/50">
+      <div className="flex flex-col gap-4 items-center justify-between rounded-lg border border-border/50 bg-white p-4 sm:flex-row">
         <div className="relative w-full max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input 
-            placeholder="Search order, customer, table..." 
+          <Search className="absolute left-3 top-1/2 w-4 h-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Cari pesanan, pelanggan, meja..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 h-10 rounded-xl bg-muted/50 border-transparent focus:bg-white"
+            className="h-10 pl-9"
           />
         </div>
-        
+
         {statusFilter !== 'ALL' && (
-          <button 
+          <button
+            type="button"
             onClick={() => setStatusFilter('ALL')}
-            className="text-sm text-primary hover:underline font-medium"
+            className="text-sm font-medium text-primary hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 outline-none rounded"
           >
-            Clear Filter
+            Hapus Filter
           </button>
         )}
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-border/50 overflow-hidden">
+      <div className="overflow-hidden rounded-lg border border-border/50 bg-white">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead>Order #</TableHead>
-              <TableHead>Time</TableHead>
-              <TableHead>Table</TableHead>
-              <TableHead>Customer</TableHead>
+              <TableHead>Pesanan #</TableHead>
+              <TableHead>Waktu</TableHead>
+              <TableHead>Meja</TableHead>
+              <TableHead>Pelanggan</TableHead>
               <TableHead>Total</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-right">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredOrders.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
-                  No orders found for the current filter.
+                <TableCell colSpan={7} className="py-12 text-center text-muted-foreground">
+                  Tidak ada pesanan yang cocok dengan filter saat ini.
                 </TableCell>
               </TableRow>
             ) : (
               filteredOrders.map(order => {
                 const config = STATUS_CONFIG[order.status]
                 const Icon = config.icon
-                
+
                 return (
-                  <TableRow key={order.id} className="group">
+                  <TableRow key={order.id}>
                     <TableCell className="font-medium text-ink">
-                      <Link href={`/admin/orders/${order.id}`} className="hover:underline">
+                      <Link href={`/admin/orders/${order.id}`} className="hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 outline-none rounded">
                         {order.order_number}
                       </Link>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{formatTime(order.created_at)}</TableCell>
                     <TableCell>
                       {order.table ? (
-                        <Badge variant="outline" className="font-semibold text-xs">
+                        <Badge variant="outline" className="text-xs font-semibold">
                           T{order.table.table_number}
                         </Badge>
                       ) : (
-                        <span className="text-muted-foreground text-xs">-</span>
+                        <span className="text-xs text-muted-foreground">-</span>
                       )}
                     </TableCell>
-                    <TableCell>{order.customer_name || 'Guest'}</TableCell>
+                    <TableCell>{order.customer_name || 'Tamu'}</TableCell>
                     <TableCell className="font-medium">{formatPrice(order.total)}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={`${config.color} border gap-1 font-semibold`}>
-                        <Icon className="w-3 h-3" />
+                      <Badge variant="outline" className={cn('gap-1 border font-semibold', config.color)}>
+                        <Icon className="h-3 w-3" />
                         {config.label}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Link 
+                      <Link
                         href={`/admin/orders/${order.id}`}
-                        className="text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="text-sm font-medium text-primary hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 outline-none rounded"
                       >
-                        Manage →
+                        Kelola →
                       </Link>
                     </TableCell>
                   </TableRow>

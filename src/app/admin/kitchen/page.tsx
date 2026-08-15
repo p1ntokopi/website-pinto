@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { KitchenClient } from '@/components/admin/kitchen/kitchen-client'
+import { KitchenOrder } from '@/lib/orders/kitchen-types'
 
 export default async function KitchenPage() {
   const supabase = await createClient()
@@ -18,9 +19,19 @@ export default async function KitchenPage() {
     .in('status', ['PENDING', 'CONFIRMED', 'PREPARING', 'READY'])
     .order('created_at', { ascending: true })
 
+  const orders: KitchenOrder[] = (initialOrders || []).map((order) => ({
+    id: order.id,
+    order_number: order.order_number,
+    status: order.status,
+    created_at: order.created_at,
+    notes: order.notes,
+    table: Array.isArray(order.table) ? order.table[0] ?? null : order.table,
+    items: order.items ?? [],
+  }))
+
   return (
     <main className="h-screen flex flex-col overflow-hidden">
-      <KitchenClient initialOrders={initialOrders || []} />
+      <KitchenClient initialOrders={orders} />
     </main>
   )
 }

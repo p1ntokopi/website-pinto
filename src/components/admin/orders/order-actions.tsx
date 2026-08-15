@@ -33,9 +33,9 @@ export function OrderActions({ orderId, currentStatus, userRole }: { orderId: st
     setIsUpdating(false)
 
     if (result.error) {
-      toast({ variant: 'destructive', title: 'Update Failed', description: result.error })
+      toast({ variant: 'destructive', title: 'Pembaruan Gagal', description: result.error })
     } else {
-      toast({ title: 'Order Updated', description: `Status changed to ${targetStatus}` })
+      toast({ title: 'Pesanan Diperbarui', description: `Status diubah menjadi ${targetStatus}` })
       setCancelDialogOpen(false)
       // We don't necessarily need to router.refresh() if Realtime handles it, 
       // but to ensure the detail page is fresh, we do a refresh.
@@ -50,60 +50,61 @@ export function OrderActions({ orderId, currentStatus, userRole }: { orderId: st
   return (
     <div className="flex flex-wrap gap-2">
       {availableTransitions.includes('CONFIRMED') && (
-        <Button onClick={() => handleStatusChange('CONFIRMED')} disabled={isUpdating} className="rounded-xl bg-blue-600 hover:bg-blue-700">
-          {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm Order'}
+        <Button onClick={() => handleStatusChange('CONFIRMED')} disabled={isUpdating}>
+          {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Konfirmasi Pesanan'}
         </Button>
       )}
-      
+
       {availableTransitions.includes('PREPARING') && (
-        <Button onClick={() => handleStatusChange('PREPARING')} disabled={isUpdating} className="rounded-xl bg-purple-600 hover:bg-purple-700">
-          {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Start Preparing'}
+        <Button onClick={() => handleStatusChange('PREPARING')} disabled={isUpdating} className="bg-warning text-white hover:bg-warning/90">
+          {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Mulai Siapkan'}
         </Button>
       )}
-      
+
       {availableTransitions.includes('READY') && (
-        <Button onClick={() => handleStatusChange('READY')} disabled={isUpdating} className="rounded-xl bg-indigo-600 hover:bg-indigo-700">
-          {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Mark as Ready'}
+        <Button onClick={() => handleStatusChange('READY')} disabled={isUpdating} className="bg-success text-white hover:bg-success/90">
+          {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Tandai Siap'}
         </Button>
       )}
-      
+
       {availableTransitions.includes('COMPLETED') && (
-        <Button onClick={() => handleStatusChange('COMPLETED')} disabled={isUpdating} className="rounded-xl bg-emerald-600 hover:bg-emerald-700">
-          {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Complete Order'}
+        <Button onClick={() => handleStatusChange('COMPLETED')} disabled={isUpdating} variant="outline">
+          {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Selesaikan Pesanan'}
         </Button>
       )}
 
       {availableTransitions.includes('CANCELLED') && (
         <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
           <DialogTrigger render={
-            <Button variant="destructive" size="sm" className="w-full">
-              Cancel Order
+            <Button variant="destructive">
+              Batalkan Pesanan
             </Button>
           } />
           <DialogContent>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <AlertCircle className="w-5 h-5 text-destructive" />
-                Cancel Order
+                Batalkan Pesanan
               </DialogTitle>
               <DialogDescription>
-                Are you sure you want to cancel this order? This action cannot be undone.
+                Yakin ingin membatalkan pesanan ini? Tindakan ini tidak dapat dibatalkan.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-2 py-4">
-              <label className="text-sm font-medium">Reason (Optional)</label>
-              <Textarea 
-                placeholder="Why is this order being cancelled?"
+              <label htmlFor="cancel-reason" className="text-sm font-medium">Alasan (Opsional)</label>
+              <Textarea
+                id="cancel-reason"
+                placeholder="Mengapa pesanan ini dibatalkan?"
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
-                className="resize-none rounded-xl"
+                className="resize-none"
               />
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setCancelDialogOpen(false)} className="rounded-xl">Keep Order</Button>
+              <Button variant="outline" onClick={() => setCancelDialogOpen(false)}>Pertahankan Pesanan</Button>
               <Button variant="destructive" onClick={() => handleStatusChange('CANCELLED', cancelReason)} disabled={isUpdating} className="rounded-xl">
                 {isUpdating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                Confirm Cancellation
+                Konfirmasi Pembatalan
               </Button>
             </DialogFooter>
           </DialogContent>

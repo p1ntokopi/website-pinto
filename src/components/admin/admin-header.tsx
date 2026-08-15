@@ -8,15 +8,22 @@ interface HeaderProps {
     full_name: string
     role: string
   }
+  onMenuOpen?: () => void
 }
 
-export function AdminHeader({ user }: HeaderProps) {
+export function AdminHeader({ user, onMenuOpen }: HeaderProps) {
   return (
     <header className="h-16 border-b border-border/40 bg-card flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" className="lg:hidden">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="lg:hidden"
+          onClick={onMenuOpen}
+          aria-label="Buka menu"
+        >
           <Menu className="w-5 h-5" />
-          <span className="sr-only">Toggle menu</span>
+          <span className="sr-only">Buka menu</span>
         </Button>
         <div className="lg:hidden font-display text-xl font-bold text-primary">P1NTO</div>
       </div>

@@ -15,11 +15,11 @@ export async function startOrResumeDiningSession(tableSlug: string) {
     .single()
 
   if (tableError || !table) {
-    return { error: 'Table not found' }
+    return { error: 'Meja tidak ditemukan' }
   }
 
   if (!table.is_active) {
-    return { error: 'Table is not currently accepting orders' }
+    return { error: 'Meja ini sedang tidak menerima pesanan' }
   }
 
   // 2. Check for an existing open session for this table
@@ -46,7 +46,7 @@ export async function startOrResumeDiningSession(tableSlug: string) {
 
     if (createError) {
       console.error('Failed to create session:', createError)
-      return { error: 'Could not start dining session. Please try again.' }
+      return { error: 'Tidak dapat memulai sesi makan. Silakan coba lagi.' }
     }
     
     tokenToUse = newToken
@@ -66,12 +66,12 @@ export async function submitOrder(tableSlug: string, customerName: string, notes
   const sessionToken = await getSessionToken()
 
   if (!sessionToken) {
-    return { error: 'Your session has expired. Please rescan the table QR code.' }
+    return { error: 'Sesi Anda telah berakhir. Silakan pindai ulang kode QR meja.' }
   }
 
   // Basic validation on the server before hitting RPC
   if (!cartItems || cartItems.length === 0) {
-    return { error: 'Your cart is empty.' }
+    return { error: 'Keranjang Anda kosong.' }
   }
 
   // Format cart items for the RPC
@@ -97,14 +97,14 @@ export async function submitOrder(tableSlug: string, customerName: string, notes
 
   if (error) {
     console.error('Order creation RPC error:', error)
-    return { error: 'Failed to create order. Please try again or ask staff for assistance.' }
+    return { error: 'Gagal membuat pesanan. Silakan coba lagi atau minta bantuan staf.' }
   }
 
   if (data && data.success) {
     return { success: true, orderNumber: data.order_number }
   } else {
     console.error('Order creation RPC failed internally:', data)
-    return { error: data?.error || 'Failed to create order due to an invalid item or price.' }
+    return { error: data?.error || 'Gagal membuat pesanan karena item atau harga tidak valid.' }
   }
 }
 

@@ -29,11 +29,11 @@ type ProductRow = Database['public']['Tables']['products']['Row']
 type CategoryRow = Database['public']['Tables']['categories']['Row']
 
 const formSchema = z.object({
-  category_id: z.string().min(1, 'Category is required'),
-  name: z.string().min(1, 'Name is required'),
+  category_id: z.string().min(1, 'Kategori wajib diisi'),
+  name: z.string().min(1, 'Nama wajib diisi'),
   description: z.string().optional(),
   product_type: z.enum(['CAFE_DRINK', 'FOOD', 'PASTRY', 'COFFEE_BEAN']),
-  base_price: z.coerce.number().min(0, 'Price must be valid'),
+  base_price: z.coerce.number().min(0, 'Harga tidak valid'),
   is_available: z.boolean().default(true),
   is_featured: z.boolean().default(false),
   sort_order: z.coerce.number().default(0),
@@ -53,7 +53,7 @@ export function ProductForm({ product, categories }: ProductFormProps) {
   const router = useRouter()
   const isEditing = !!product
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<z.input<typeof formSchema>, any, z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       category_id: product?.category_id || '',
@@ -71,8 +71,8 @@ export function ProductForm({ product, categories }: ProductFormProps) {
     const file = e.target.files?.[0]
     if (!file) return
 
-    if (!file.type.startsWith('image/')) {
-      toast({ variant: 'destructive', title: 'Error', description: 'File must be an image.' })
+if (!file.type.startsWith('image/')) {
+      toast({ variant: 'destructive', title: 'Kesalahan', description: 'File harus berupa gambar.' })
       return
     }
 
@@ -98,9 +98,9 @@ export function ProductForm({ product, categories }: ProductFormProps) {
         .getPublicUrl(filePath)
 
       setImageUrl(publicUrl)
-      toast({ title: 'Success', description: 'Image uploaded successfully.' })
+toast({ title: 'Berhasil', description: 'Gambar berhasil diunggah.' })
     } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Upload failed', description: err.message })
+      toast({ variant: 'destructive', title: 'Pengunggahan Gagal', description: err.message })
     } finally {
       setUploadingImage(false)
     }
@@ -130,18 +130,18 @@ export function ProductForm({ product, categories }: ProductFormProps) {
     setIsSubmitting(false)
 
     if (result.error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: result.error,
-      })
-      return
-    }
-
-    toast({
-      title: 'Success',
-      description: isEditing ? 'Product updated successfully.' : 'Product created successfully.',
+toast({
+      variant: 'destructive',
+      title: 'Kesalahan',
+      description: result.error,
     })
+    return
+  }
+
+  toast({
+    title: 'Berhasil',
+    description: isEditing ? 'Produk berhasil diperbarui.' : 'Produk berhasil dibuat.',
+  })
     
     router.push('/admin/menu/products')
   }
@@ -157,9 +157,9 @@ export function ProductForm({ product, categories }: ProductFormProps) {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Product Name *</FormLabel>
+<FormLabel>Nama Produk *</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Iced Cafe Latte" {...field} />
+                      <Input placeholder="mis., Iced Cafe Latte" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -171,9 +171,9 @@ export function ProductForm({ product, categories }: ProductFormProps) {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+<FormLabel>Deskripsi</FormLabel>
                     <FormControl>
-                      <Input placeholder="A brief description of the product..." {...field} />
+                      <Input placeholder="Deskripsi singkat produk..." {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -186,11 +186,11 @@ export function ProductForm({ product, categories }: ProductFormProps) {
                   name="category_id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Category *</FormLabel>
+<FormLabel>Kategori *</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a category" />
+                            <SelectValue placeholder="Pilih kategori" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -209,18 +209,18 @@ export function ProductForm({ product, categories }: ProductFormProps) {
                   name="product_type"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Product Type *</FormLabel>
+<FormLabel>Tipe Produk *</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a type" />
+                            <SelectValue placeholder="Pilih tipe" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="CAFE_DRINK">Cafe Drink</SelectItem>
-                          <SelectItem value="FOOD">Food</SelectItem>
+                          <SelectItem value="CAFE_DRINK">Minuman Kafe</SelectItem>
+                          <SelectItem value="FOOD">Makanan</SelectItem>
                           <SelectItem value="PASTRY">Pastry</SelectItem>
-                          <SelectItem value="COFFEE_BEAN">Coffee Bean</SelectItem>
+                          <SelectItem value="COFFEE_BEAN">Biji Kopi</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -235,9 +235,17 @@ export function ProductForm({ product, categories }: ProductFormProps) {
                   name="base_price"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Base Price (IDR) *</FormLabel>
+                      <FormLabel>Harga Dasar (IDR) *</FormLabel>
                       <FormControl>
-                        <Input type="number" min={0} {...field} />
+                        <Input
+                          type="number"
+                          min={0}
+                          value={String(field.value ?? '')}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                          ref={field.ref}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -249,9 +257,16 @@ export function ProductForm({ product, categories }: ProductFormProps) {
                   name="sort_order"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Sort Order</FormLabel>
+                      <FormLabel>Urutan</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} />
+                        <Input
+                          type="number"
+                          value={String(field.value ?? '')}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                          ref={field.ref}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -263,15 +278,15 @@ export function ProductForm({ product, categories }: ProductFormProps) {
 
           <Card className="border-border/60 shadow-sm">
             <CardContent className="p-6 space-y-4">
-              <h3 className="font-semibold text-lg">Visibility</h3>
+<h3 className="font-semibold text-lg">Visibilitas</h3>
               <FormField
                 control={form.control}
                 name="is_available"
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
-                      <FormLabel className="text-base">Available for Order</FormLabel>
-                      <FormDescription>If turned off, product will show as Sold Out.</FormDescription>
+                      <FormLabel className="text-base">Tersedia untuk Dipesan</FormLabel>
+                      <FormDescription>Jika dimatikan, produk akan tampil sebagai Habis.</FormDescription>
                     </div>
                     <FormControl>
                       <Switch checked={field.value} onCheckedChange={field.onChange} />
@@ -285,8 +300,8 @@ export function ProductForm({ product, categories }: ProductFormProps) {
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
-                      <FormLabel className="text-base">Featured Product</FormLabel>
-                      <FormDescription>Show this prominently on the digital menu.</FormDescription>
+                      <FormLabel className="text-base">Produk Unggulan</FormLabel>
+                      <FormDescription>Tampilkan ini secara menonjol di menu digital.</FormDescription>
                     </div>
                     <FormControl>
                       <Switch checked={field.value} onCheckedChange={field.onChange} />
@@ -298,12 +313,12 @@ export function ProductForm({ product, categories }: ProductFormProps) {
           </Card>
 
           <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={() => router.push('/admin/menu/products')}>
-              Cancel
+<Button type="button" variant="outline" onClick={() => router.push('/admin/menu/products')}>
+              Batal
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isEditing ? 'Save Changes' : 'Create Product'}
+              {isEditing ? 'Simpan Perubahan' : 'Buat Produk'}
             </Button>
           </div>
         </form>
@@ -312,32 +327,32 @@ export function ProductForm({ product, categories }: ProductFormProps) {
       <div className="space-y-6">
         <Card className="border-border/60 shadow-sm">
           <CardContent className="p-6 space-y-4">
-            <h3 className="font-semibold text-lg">Product Image</h3>
+<h3 className="font-semibold text-lg">Gambar Produk</h3>
             
             <div className="flex flex-col gap-4">
               {imageUrl ? (
                 <div className="relative group rounded-md overflow-hidden border">
-                  <img src={imageUrl} alt="Preview" className="w-full aspect-square object-cover" />
+                  <img src={imageUrl} alt="Pratinjau" className="w-full aspect-square object-cover" />
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <Button variant="destructive" size="sm" onClick={() => setImageUrl(null)}>
-                      <X className="w-4 h-4 mr-2" /> Remove
+                      <X className="w-4 h-4 mr-2" /> Hapus
                     </Button>
                   </div>
                 </div>
               ) : (
                 <div className="w-full aspect-square bg-muted rounded-md border-2 border-dashed flex flex-col items-center justify-center p-6 text-center text-muted-foreground">
                   <Upload className="w-8 h-8 mb-2 opacity-50" />
-                  <p className="text-sm">Upload a product image</p>
-                  <p className="text-xs opacity-70 mt-1">PNG, JPG up to 2MB</p>
+                  <p className="text-sm">Unggah gambar produk</p>
+                  <p className="text-xs opacity-70 mt-1">PNG, JPG maksimal 2MB</p>
                 </div>
               )}
 
               <div className="flex items-center gap-2">
                 <Button variant="outline" className="w-full relative" disabled={uploadingImage}>
                   {uploadingImage ? (
-                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading...</>
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Mengunggah...</>
                   ) : (
-                    <>Select Image</>
+                    <>Pilih Gambar</>
                   )}
                   <input
                     type="file"
@@ -355,3 +370,4 @@ export function ProductForm({ product, categories }: ProductFormProps) {
     </div>
   )
 }
+

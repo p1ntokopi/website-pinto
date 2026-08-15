@@ -1,10 +1,10 @@
-import { createClient } from '@/lib/supabase/server'
-import { getSessionToken } from '@/lib/ordering/session'
-import { redirect } from 'next/navigation'
-import { CategoryNav } from '@/components/ordering/category-nav'
-import { ProductCard } from '@/components/ordering/product-card'
-import { CartBar } from '@/components/ordering/cart-bar'
-import { Coffee } from 'lucide-react'
+import { createClient } from "@/lib/supabase/server"
+import { getSessionToken } from "@/lib/ordering/session"
+import { redirect } from "next/navigation"
+import { CategoryNav } from "@/components/ordering/category-nav"
+import { ProductCard } from "@/components/ordering/product-card"
+import { CartBar } from "@/components/ordering/cart-bar"
+import { OrderingHeader } from "@/components/ordering/ordering-header"
 
 export default async function MenuPage({ params }: { params: { slug: string } }) {
   const resolvedParams = await params
@@ -13,22 +13,21 @@ export default async function MenuPage({ params }: { params: { slug: string } })
 
   // Verify Table & Session
   const { data: table } = await supabase
-    .from('tables')
-    .select('id, table_number, is_active')
-    .eq('slug', resolvedParams.slug)
+    .from("tables")
+    .select("id, table_number, is_active")
+    .eq("slug", resolvedParams.slug)
     .single()
 
   if (!table || !table.is_active || !sessionToken) {
     redirect(`/t/${resolvedParams.slug}`)
   }
 
-  // Check if session is valid
   const { data: session } = await supabase
-    .from('dining_sessions')
-    .select('id')
-    .eq('session_token', sessionToken)
-    .eq('table_id', table.id)
-    .eq('status', 'open')
+    .from("dining_sessions")
+    .select("id")
+    .eq("session_token", sessionToken)
+    .eq("table_id", table.id)
+    .eq("status", "open")
     .single()
 
   if (!session) {
@@ -37,58 +36,61 @@ export default async function MenuPage({ params }: { params: { slug: string } })
 
   // Fetch Categories
   const { data: categories } = await supabase
-    .from('categories')
-    .select('id, name')
-    .eq('is_active', true)
-    .order('sort_order')
+    .from("categories")
+    .select("id, name")
+    .eq("is_active", true)
+    .order("sort_order")
 
   // Fetch Products with variants count
   const { data: products } = await supabase
-    .from('products')
+    .from("products")
     .select(`
       id, name, slug, description, base_price, image_url, category_id,
       variants:product_variants(id)
     `)
-    .eq('is_available', true)
-    .order('sort_order')
+    .eq("is_available", true)
+    .order("sort_order")
 
-  // Group products by category
-  const productsByCategory = categories?.map(cat => ({
-    ...cat,
-    products: products?.filter(p => p.category_id === cat.id) || []
-  })).filter(cat => cat.products.length > 0) || []
+  const productsByCategory =
+    categories
+      ?.map((cat) => ({
+        ...cat,
+        products: products?.filter((p) => p.category_id === cat.id) || [],
+      }))
+      .filter((cat) => cat.products.length > 0) || []
 
   return (
-    <div className="pb-32 relative">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-background border-b border-border/50">
-        <div className="max-w-md mx-auto px-4 h-[60px] flex items-center justify-between">
-          <div className="flex flex-col">
-            <span className="font-display font-bold text-lg tracking-widest uppercase text-primary leading-none">P1NTO</span>
-            <span className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">Coffee</span>
-          </div>
-          <div className="flex items-center gap-2 bg-muted px-3 py-1.5 rounded-full">
-            <Coffee className="w-3.5 h-3.5 text-muted-foreground" />
-            <span className="text-xs font-semibold tracking-wide">TABLE {table.table_number}</span>
-          </div>
-        </div>
-      </header>
+    <div className="pb-32">
+      <OrderingHeader tableNumber={table.table_number} />
 
       <CategoryNav categories={productsByCategory} />
 
-      <main className="max-w-md mx-auto p-4 space-y-12 mt-4">
-        {productsByCategory.map(category => (
-          <section key={category.id} id={`category-${category.id}`} className="scroll-mt-32">
-            <h2 className="text-xl font-display font-bold mb-4 flex items-center gap-2">
+      <main className="mx-auto max-w-2xl px-4 py-6">
+        <section className="mb-8" aria-labelledby="menu-heading">
+          <h1 id="menu-heading" className="font-display text-3xl font-bold tracking-tight text-ink">
+            Menu
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Pesan dari meja Anda — langsung ke dapur.
+          </p>
+        </section>
+
+        {productsByCategory.map((category) => (
+          <section
+            key={category.id}
+            id={`category-${category.id}`}
+            className="mb-10 scroll-mt-32"
+          >
+            <h2 className="mb-4 font-display text-xl font-bold text-ink">
               {category.name}
             </h2>
-            <div className="grid grid-cols-1 gap-4">
-              {category.products.map(product => (
-                <ProductCard 
-                  key={product.id} 
+            <div className="space-y-3">
+              {category.products.map((product) => (
+                <ProductCard
+                  key={product.id}
                   product={{
                     ...product,
-                    variants_count: product.variants?.length || 0
+                    variants_count: product.variants?.length || 0,
                   }}
                   tableSlug={resolvedParams.slug}
                 />
@@ -96,10 +98,13 @@ export default async function MenuPage({ params }: { params: { slug: string } })
             </div>
           </section>
         ))}
-        
+
         {productsByCategory.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground">
-            <p>Menu is currently empty.</p>
+          <div className="py-16 text-center">
+            <p className="font-medium text-foreground">Menu saat ini kosong</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Nantikan sebentar — kami sedang menyeduh sesuatu yang baru.
+            </p>
           </div>
         )}
       </main>

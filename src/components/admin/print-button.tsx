@@ -7,7 +7,7 @@ export function PrintButton() {
   return (
     <Button onClick={() => window.print()} className="font-medium">
       <Printer className="w-4 h-4 mr-2" />
-      Print Now
+      Cetak Sekarang
     </Button>
   )
 }

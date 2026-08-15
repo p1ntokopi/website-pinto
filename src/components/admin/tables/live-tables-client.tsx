@@ -1,93 +1,139 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Users, Receipt, Clock, Ban } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
+type TableOrder = {
+  id: string
+  order_number: string
+  dining_session_id: string | null
+  total: number
+  status: string
+}
+
+type LiveTableData = {
+  id: string
+  table_number: number
+  capacity: number
+  is_active: boolean
+  session: {
+    id: string
+    created_at: string
+    orders: TableOrder[]
+  } | null
+}
+
 interface LiveTablesClientProps {
-  initialTables: Record<string, unknown>[]
+  initialTables: LiveTableData[]
 }
 
 export function LiveTablesClient({ initialTables }: LiveTablesClientProps) {
-  const [tables] = useState<Record<string, unknown>[]>(initialTables)
+  const [tables] = useState<LiveTableData[]>(initialTables)
+  const router = useRouter()
 
-  // In a full production environment, we'd subscribe to `dining_sessions` and `orders` changes.
-  // For now, we will simply poll every 30 seconds since we don't want to overcomplicate 
-  // the client with complex relational subscriptions for tables in M4.
-  // We can easily use supabase.channel('tables_live') if needed later.
+  // Poll the server for fresh data every 30 seconds so occupancy
+  // stays reasonably current without complex client subscriptions.
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!document.hidden) router.refresh()
+    }, 30000)
+    return () => clearInterval(interval)
+  }, [router])
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(price)
-  }
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      maximumFractionDigits: 0,
+    }).format(price)
 
-  const formatTime = (isoString: string) => {
-    return new Date(isoString).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
-  }
+  const formatTime = (isoString: string) =>
+    new Date(isoString).toLocaleTimeString('id-ID', {
+      hour: '2-digit',
+      minute: '2-digit',
+    })
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-      {tables.map(tableData => {
-        const table = tableData as any
+    <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-5">
+      {tables.map((table) => {
         const isOccupied = !!table.session
         const orderCount = table.session?.orders.length || 0
-        const totalAmount = table.session?.orders.reduce((sum: number, o: any) => sum + o.total, 0) || 0
+        const totalAmount =
+          table.session?.orders.reduce((sum, o) => sum + o.total, 0) || 0
 
         if (!table.is_active) {
           return (
-            <div key={table.id} className="bg-muted/30 border border-border/30 rounded-2xl p-4 flex flex-col items-center justify-center opacity-50 h-40">
-              <Ban className="w-8 h-8 text-muted-foreground/50 mb-2" />
-              <div className="font-bold text-muted-foreground text-xl">T{table.table_number}</div>
-              <div className="text-xs font-semibold text-muted-foreground uppercase">Inactive</div>
+            <div
+              key={table.id}
+              className="flex h-40 flex-col items-center justify-center rounded-lg border border-border/30 bg-muted/30 p-4 opacity-50"
+            >
+              <Ban className="mb-2 h-8 w-8 text-muted-foreground/50" />
+              <div className="text-xl font-bold text-muted-foreground">
+                T{table.table_number}
+              </div>
+              <div className="text-xs font-semibold uppercase text-muted-foreground">
+                Nonaktif
+              </div>
             </div>
           )
         }
 
         return (
-          <div 
-            key={table.id} 
+          <div
+            key={table.id}
             className={cn(
-              "rounded-2xl p-4 flex flex-col h-48 border shadow-sm transition-all hover:shadow-md",
-              isOccupied 
-                ? "bg-amber-500/10 border-amber-500/30" 
-                : "bg-white border-border/50 hover:border-primary/50"
+              'flex h-48 flex-col rounded-lg border p-4 shadow-card transition-all hover:shadow-raised',
+              isOccupied
+                ? 'border-warning/30 bg-warning/5'
+                : 'border-border/50 bg-white hover:border-primary/50'
             )}
           >
-            <div className="flex justify-between items-start mb-auto">
-              <div className={cn("text-2xl font-black", isOccupied ? "text-amber-700" : "text-ink")}>
+            <div className="mb-auto flex items-start justify-between">
+              <div
+                className={cn(
+                  'text-2xl font-black',
+                  isOccupied ? 'text-warning' : 'text-ink'
+                )}
+              >
                 T{table.table_number}
               </div>
-              <div className="flex items-center gap-1 text-muted-foreground text-xs font-semibold bg-muted/50 px-2 py-1 rounded-md">
-                <Users className="w-3 h-3" /> {table.capacity}
+              <div className="flex items-center gap-1 rounded-md bg-muted/50 px-2 py-1 text-xs font-semibold text-muted-foreground">
+                <Users className="h-3 w-3" /> {table.capacity}
               </div>
             </div>
 
             {isOccupied ? (
-              <div className="space-y-3 mt-4">
-                <div className="flex items-center gap-2 text-xs font-semibold text-amber-700/80">
-                  <Clock className="w-3.5 h-3.5" /> 
-                  Since {formatTime(table.session.created_at)}
+              <div className="mt-4 space-y-3">
+                <div className="flex items-center gap-2 text-xs font-semibold text-warning/80">
+                  <Clock className="h-3.5 w-3.5" />
+                  Sejak {formatTime(table.session!.created_at)}
                 </div>
-                
-                <div className="bg-amber-500/10 rounded-xl p-3 border border-amber-500/20">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-xs font-semibold text-amber-800 flex items-center gap-1">
-                      <Receipt className="w-3 h-3" /> {orderCount} Orders
+
+                <div className="rounded-lg border border-warning/20 bg-warning/10 p-3">
+                  <div className="mb-1 flex items-center justify-between">
+                    <span className="flex items-center gap-1 text-xs font-semibold text-warning">
+                      <Receipt className="h-3 w-3" /> {orderCount} Pesanan
                     </span>
                     {orderCount > 0 && (
-                      <span className="text-xs font-bold text-amber-900">{formatPrice(totalAmount)}</span>
+                      <span className="text-xs font-bold text-warning">
+                        {formatPrice(totalAmount)}
+                      </span>
                     )}
                   </div>
                   {orderCount > 0 ? (
-                    <div className="mt-2 text-xs text-amber-800/80 line-clamp-1">
-                      {table.session.orders.map((o: any) => o.order_number).join(', ')}
+                    <div className="mt-2 line-clamp-1 text-xs text-warning/80">
+                      {table.session!.orders.map((o) => o.order_number).join(', ')}
                     </div>
                   ) : (
-                    <div className="mt-2 text-xs text-amber-800/60 italic">No orders yet</div>
+                    <div className="mt-2 text-xs italic text-warning/60">Belum ada pesanan</div>
                   )}
                 </div>
               </div>
             ) : (
-              <div className="mt-auto pt-4 flex flex-col items-center justify-center text-muted-foreground">
-                <div className="text-sm font-semibold uppercase tracking-wider">Available</div>
+              <div className="mt-auto flex flex-col items-center justify-center pt-4 text-muted-foreground">
+                <div className="text-sm font-semibold uppercase tracking-wider">Tersedia</div>
               </div>
             )}
           </div>

@@ -31,9 +31,9 @@ import { Database } from '@/types/database.types'
 type TableRow = Database['public']['Tables']['tables']['Row']
 
 const formSchema = z.object({
-  table_number: z.string().min(1, 'Table number is required'),
+  table_number: z.string().min(1, 'Nomor meja wajib diisi'),
   name: z.string().optional(),
-  capacity: z.coerce.number().min(1, 'Capacity must be at least 1'),
+  capacity: z.coerce.number().min(1, 'Kapasitas minimal 1'),
   is_active: z.boolean().default(true),
 })
 
@@ -49,7 +49,7 @@ export function TableFormDialog({ open, onOpenChange, table }: TableFormDialogPr
 
   const isEditing = !!table
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<z.input<typeof formSchema>, any, z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       table_number: table?.table_number || '',
@@ -90,17 +90,17 @@ export function TableFormDialog({ open, onOpenChange, table }: TableFormDialogPr
     setIsSubmitting(false)
 
     if (result.error) {
-      toast({
+toast({
         variant: 'destructive',
-        title: 'Error',
+        title: 'Kesalahan',
         description: result.error,
       })
       return
     }
 
     toast({
-      title: 'Success',
-      description: isEditing ? 'Table updated successfully.' : 'Table created successfully.',
+      title: 'Berhasil',
+      description: isEditing ? 'Meja berhasil diperbarui.' : 'Meja berhasil dibuat.',
     })
     
     onOpenChange(false)
@@ -110,11 +110,11 @@ export function TableFormDialog({ open, onOpenChange, table }: TableFormDialogPr
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{isEditing ? 'Edit Table' : 'Add New Table'}</DialogTitle>
+<DialogTitle>{isEditing ? 'Edit Meja' : 'Tambah Meja Baru'}</DialogTitle>
           <DialogDescription>
             {isEditing 
-              ? 'Update the details for this table.' 
-              : 'Create a new table for the cafe. A unique QR code will be generated automatically.'}
+              ? 'Perbarui detail meja ini.' 
+              : 'Buat meja baru untuk kafe. Kode QR unik akan dibuat secara otomatis.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -125,12 +125,12 @@ export function TableFormDialog({ open, onOpenChange, table }: TableFormDialogPr
               name="table_number"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Table Number *</FormLabel>
+<FormLabel>Nomor Meja *</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., 01, 02, VIP-1" {...field} />
+                    <Input placeholder="mis., 01, 02, VIP-1" {...field} />
                   </FormControl>
                   <FormDescription>
-                    Will be used to generate the QR URL slug (e.g., table-01).
+                    Akan digunakan untuk membuat slug URL QR (mis., table-01).
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -142,9 +142,9 @@ export function TableFormDialog({ open, onOpenChange, table }: TableFormDialogPr
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Custom Name (Optional)</FormLabel>
+<FormLabel>Nama Kustom (Opsional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Window Seat" {...field} />
+                    <Input placeholder="mis., Window Seat" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -156,9 +156,16 @@ export function TableFormDialog({ open, onOpenChange, table }: TableFormDialogPr
               name="capacity"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Capacity *</FormLabel>
+                  <FormLabel>Kapasitas *</FormLabel>
                   <FormControl>
-                    <Input type="number" min={1} {...field} />
+                    <Input
+                      type="number"
+                      value={String(field.value ?? '')}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      ref={field.ref}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -171,11 +178,11 @@ export function TableFormDialog({ open, onOpenChange, table }: TableFormDialogPr
               render={({ field }) => (
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
-                    <FormLabel className="text-base">
-                      Active Status
+<FormLabel className="text-base">
+                      Status Aktif
                     </FormLabel>
                     <FormDescription>
-                      Inactive tables cannot be ordered from and show as archived.
+                      Meja nonaktif tidak dapat dipesan dan tampil sebagai arsip.
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -189,12 +196,12 @@ export function TableFormDialog({ open, onOpenChange, table }: TableFormDialogPr
             />
 
             <div className="flex justify-end pt-4">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="mr-2">
-                Cancel
+<Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="mr-2">
+                Batal
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isEditing ? 'Save Changes' : 'Create Table'}
+                {isEditing ? 'Simpan Perubahan' : 'Buat Meja'}
               </Button>
             </div>
           </form>
@@ -203,3 +210,4 @@ export function TableFormDialog({ open, onOpenChange, table }: TableFormDialogPr
     </Dialog>
   )
 }
+

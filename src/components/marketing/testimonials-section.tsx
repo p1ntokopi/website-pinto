@@ -2,9 +2,9 @@ import Image from 'next/image';
 import { ScrollReveal } from './scroll-reveal';
 
 const testimonials = [
-  { quote: "The best coffee I've ever had! The quality and taste are simply amazing.", name: "Sophia Williams", rating: 5, avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop" },
-  { quote: "Cozy place, friendly staff, and the coffee is just perfect!", name: "James Anderson", rating: 5, avatar: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=150&auto=format&fit=crop" },
-  { quote: "I come here every weekend. P1NTO is my happy place!", name: "Olivia Brown", rating: 5, avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=150&auto=format&fit=crop" }
+  { quote: "Kopi terbaik yang pernah saya coba! Kualitas dan rasanya sungguh luar biasa.", name: "Sinta Prameswari", rating: 5, avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop" },
+  { quote: "Tempatnya nyaman, stafnya ramah, dan kopinya sempurna!", name: "Bima Aditya", rating: 5, avatar: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=150&auto=format&fit=crop" },
+  { quote: "Saya ke sini setiap akhir pekan. P1NTO adalah tempat bahagia saya!", name: "Dinda Ayu", rating: 5, avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=150&auto=format&fit=crop" }
 ];
 
 function StarRating() {
@@ -25,10 +25,10 @@ export function TestimonialsSection() {
       <div className="container mx-auto px-4 md:px-8">
         <div className="mb-16">
           <ScrollReveal>
-            <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground mb-4">What Our Customers Say</p>
+            <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground mb-4">Kata Pelanggan Kami</p>
           </ScrollReveal>
           <ScrollReveal delay={0.1}>
-            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-ink">Loved by Coffee Lovers</h2>
+            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-ink">Disukai Para Pecinta Kopi</h2>
           </ScrollReveal>
         </div>
 

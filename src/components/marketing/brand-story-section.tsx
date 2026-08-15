@@ -11,24 +11,24 @@ export function BrandStorySection() {
           <div className="w-full lg:w-[45%] flex flex-col justify-center order-2 lg:order-1 z-10">
             <ScrollReveal>
               <p className="text-xs font-semibold tracking-[0.2em] uppercase text-muted-foreground mb-6">
-                Our Story
+                Kisah Kami
               </p>
             </ScrollReveal>
             <ScrollReveal delay={0.1}>
               <h2 className="font-display text-5xl md:text-6xl lg:text-[4.5rem] text-ink leading-[1.05] mb-8">
-                More Than<br />
-                <i className="text-primary font-medium">Just Coffee</i>
+                Lebih dari<br />
+                <i className="text-primary font-medium">Sekadar Kopi</i>
               </h2>
             </ScrollReveal>
             <ScrollReveal delay={0.2}>
               <p className="text-muted-foreground text-lg md:text-xl leading-relaxed mb-10 max-w-md">
-                P1NTO was born out of a simple passion for great coffee and meaningful connections. From carefully selected beans to your favorite cup, we are here to make every moment special.
+                P1NTO lahir dari hasrat sederhana akan kopi yang hebat dan koneksi yang bermakna. Dari biji yang dipilih dengan cermat hingga cangkir favorit Anda, kami hadir untuk membuat setiap momen menjadi istimewa.
               </p>
             </ScrollReveal>
             <ScrollReveal delay={0.3}>
               <div>
-                <Link href="#story" className={buttonVariants({ variant: "outline", className: "rounded-full h-14 px-8 text-lg border-ink text-ink hover:bg-ink hover:text-paper transition-colors duration-300" })}>
-                  Discover Our Story
+                <Link href="/story" className={buttonVariants({ variant: "outline", className: "rounded-full h-14 px-8 text-lg border-ink text-ink hover:bg-ink hover:text-paper transition-colors duration-300" })}>
+                  Baca Kisah Kami
                 </Link>
               </div>
             </ScrollReveal>
@@ -38,7 +38,7 @@ export function BrandStorySection() {
             <div className="absolute inset-0 bg-gradient-to-br from-warm/40 to-ink/20 z-0" />
             <Image 
               src="https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=1600&auto=format&fit=crop"
-              alt="Barista pouring coffee"
+              alt="Barista menuang kopi"
               fill
               className="object-cover z-10"
             />

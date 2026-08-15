@@ -2,100 +2,100 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { 
-  LayoutDashboard, 
-  Coffee, 
-  UtensilsCrossed, 
-  Tags, 
-  Bean, 
-  Armchair, 
-  Settings,
+import {
+  LayoutDashboard,
+  Coffee,
+  Tags,
+  Armchair,
   LogOut,
   ChevronRight,
   ShoppingBag,
-  QrCode
+  QrCode,
+  CookingPot,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { signOutAction } from '@/app/auth/signout/actions'
 
 interface SidebarProps {
   role: 'admin' | 'staff'
+  mobile?: boolean
 }
 
-export function AdminSidebar({ role }: SidebarProps) {
+export function AdminSidebar({ role, mobile = false }: SidebarProps) {
   const pathname = usePathname()
 
   const navGroups = [
     {
-      title: 'Dashboard',
-      items: [
-        { title: 'Overview', href: '/admin', icon: LayoutDashboard, roles: ['admin', 'staff'] }
-      ]
+      title: 'Dasbor',
+      items: [{ title: 'Ringkasan', href: '/admin', icon: LayoutDashboard, roles: ['admin', 'staff'] }],
     },
     {
       title: 'Menu',
       items: [
-        { title: 'Products', href: '/admin/menu/products', icon: Coffee, roles: ['admin', 'staff'] },
-        { title: 'Categories', href: '/admin/menu/categories', icon: Tags, roles: ['admin'] }
-      ]
+        { title: 'Produk', href: '/admin/menu/products', icon: Coffee, roles: ['admin', 'staff'] },
+        { title: 'Kategori', href: '/admin/menu/categories', icon: Tags, roles: ['admin'] },
+      ],
     },
     {
-      title: 'Coffee Roastery',
+      title: 'Operasional',
       items: [
-        { title: 'Coffee Beans', href: '/admin/coffee/products', icon: Bean, roles: ['admin'] }
-      ]
+        { title: 'Pesanan', href: '/admin/orders', icon: ShoppingBag, roles: ['admin', 'staff'] },
+        { title: 'Meja Langsung', href: '/admin/tables/live', icon: Armchair, roles: ['admin', 'staff'] },
+        { title: 'Meja & QR', href: '/admin/tables', icon: QrCode, roles: ['admin'] },
+        { title: 'Display Dapur', href: '/admin/kitchen', icon: CookingPot, roles: ['admin', 'staff'] },
+      ],
     },
-    {
-      title: 'Operations',
-      items: [
-        { title: 'Orders', href: '/admin/orders', icon: ShoppingBag, roles: ['admin', 'staff'] },
-        { title: 'Live Tables', href: '/admin/tables/live', icon: Armchair, roles: ['admin', 'staff'] },
-        { title: 'Manage Tables & QR', href: '/admin/tables', icon: QrCode, roles: ['admin'] }
-      ]
-    },
-    {
-      title: 'System',
-      items: [
-        { title: 'Settings', href: '/admin/settings', icon: Settings, roles: ['admin'] }
-      ]
-    }
   ]
 
   return (
-    <aside className="w-64 border-r border-border/40 bg-card h-[calc(100vh-4rem)] lg:h-screen flex flex-col hidden lg:flex">
-      <div className="h-16 flex items-center px-6 border-b border-border/40 shrink-0">
+    <aside
+      className={cn(
+        'flex w-64 flex-col border-r border-border/40 bg-card',
+        mobile
+          ? 'h-full'
+          : 'hidden lg:flex lg:h-screen'
+      )}
+    >
+      <div className="flex h-16 shrink-0 items-center border-b border-border/40 px-6">
         <Link href="/admin" className="font-display text-2xl font-bold tracking-tight text-primary">
-          P1NTO<span className="text-muted-foreground font-sans text-sm ml-2 font-normal tracking-normal">Admin</span>
+          P1NTO
+          <span className="ml-2 font-sans text-sm font-normal tracking-normal text-muted-foreground">
+            Admin
+          </span>
         </Link>
       </div>
 
-      <div className="flex-1 overflow-y-auto py-6 px-4 space-y-8">
+      <div className="flex-1 space-y-8 overflow-y-auto px-4 py-6">
         {navGroups.map((group) => {
-          const visibleItems = group.items.filter(item => item.roles.includes(role))
+          const visibleItems = group.items.filter((item) => item.roles.includes(role))
           if (visibleItems.length === 0) return null
 
           return (
             <div key={group.title}>
-              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-2">
+              <h4 className="mb-3 px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {group.title}
               </h4>
               <nav className="space-y-1">
                 {visibleItems.map((item) => {
-                  const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href))
+                  const isActive =
+                    pathname === item.href ||
+                    (item.href !== '/admin' && pathname.startsWith(item.href))
                   const Icon = item.icon
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
+                      aria-current={isActive ? 'page' : undefined}
                       className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
-                        isActive 
-                          ? "bg-primary/10 text-primary font-medium" 
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                        'flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 outline-none',
+                        isActive
+                          ? 'bg-primary/10 font-medium text-primary'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                       )}
                     >
-                      <Icon className="w-4 h-4" />
+                      <Icon className="h-4 w-4" />
                       {item.title}
-                      {isActive && <ChevronRight className="w-4 h-4 ml-auto opacity-50" />}
+                      {isActive && <ChevronRight className="ml-auto h-4 w-4 opacity-50" />}
                     </Link>
                   )
                 })}
@@ -105,11 +105,14 @@ export function AdminSidebar({ role }: SidebarProps) {
         })}
       </div>
 
-      <div className="p-4 border-t border-border/40 mt-auto">
-        <form action="/auth/signout" method="post">
-          <button type="submit" className="flex items-center gap-3 px-3 py-2 w-full rounded-md text-sm text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
-            <LogOut className="w-4 h-4" />
-            Sign Out
+      <div className="mt-auto border-t border-border/40 p-4">
+        <form action={signOutAction}>
+          <button
+            type="submit"
+            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:ring-3 focus-visible:ring-ring/50 outline-none"
+          >
+            <LogOut className="h-4 w-4" />
+            Keluar
           </button>
         </form>
       </div>

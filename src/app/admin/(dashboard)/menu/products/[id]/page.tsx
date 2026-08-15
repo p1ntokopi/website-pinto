@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 export const metadata: Metadata = {
-  title: 'Edit Product - P1NTO Admin',
+  title: 'Edit Produk - P1NTO Admin',
 }
 
 export default async function EditProductPage({ params }: { params: { id: string } }) {
@@ -37,8 +37,8 @@ export default async function EditProductPage({ params }: { params: { id: string
           <ChevronLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="text-3xl font-display font-bold text-primary">Edit Product</h1>
-          <p className="text-muted-foreground mt-1">Update details for {product.name}.</p>
+          <h1 className="text-3xl font-display font-bold text-primary">Edit Produk</h1>
+          <p className="text-muted-foreground mt-1">Perbarui detail untuk {product.name}.</p>
         </div>
       </div>
 

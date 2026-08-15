@@ -1,6 +1,6 @@
-import Link from 'next/link'
-import Image from 'next/image'
-import { Plus } from 'lucide-react'
+import Link from "next/link"
+import Image from "next/image"
+import { Plus } from "lucide-react"
 
 interface ProductCardProps {
   product: {
@@ -16,57 +16,51 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, tableSlug }: ProductCardProps) {
-  const formattedPrice = new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0
+  const formattedPrice = new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
   }).format(product.base_price)
 
   return (
-    <Link 
+    <Link
       href={`/t/${tableSlug}/product/${product.slug}`}
-      className="group flex flex-col sm:flex-row bg-white rounded-xl shadow-sm border border-border/50 overflow-hidden active:scale-[0.98] transition-transform"
+      className="group flex items-stretch gap-4 border border-border/60 bg-white p-3 transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 outline-none hover:border-coffee/40"
     >
-      {/* Mobile: Top image. Desktop/Tablet: Left image */}
-      <div className="relative w-full sm:w-32 aspect-[4/3] sm:aspect-square bg-muted shrink-0">
+      <div className="relative h-24 w-24 shrink-0 overflow-hidden bg-muted">
         {product.image_url ? (
-          <Image 
-            src={product.image_url} 
+          <Image
+            src={product.image_url}
             alt={product.name}
             fill
-            className="object-cover"
-            sizes="(max-width: 640px) 100vw, 128px"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            sizes="96px"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-muted-foreground/30">
-            <span className="text-xs font-medium uppercase tracking-widest">P1NTO</span>
+          <div className="flex h-full w-full items-center justify-center text-[10px] font-medium uppercase tracking-widest text-muted-foreground/40">
+            P1NTO
           </div>
         )}
       </div>
 
-      <div className="p-4 flex flex-col flex-grow justify-between">
-        <div>
-          <h3 className="font-semibold text-base leading-tight mb-1 group-hover:text-primary transition-colors">
-            {product.name}
-          </h3>
-          {product.description && (
-            <p className="text-xs text-muted-foreground line-clamp-2 mb-3 leading-relaxed">
-              {product.description}
-            </p>
-          )}
-        </div>
-        
-        <div className="flex items-center justify-between mt-auto pt-2">
-          <div className="flex flex-col">
-            {product.variants_count && product.variants_count > 0 ? (
-              <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mb-0.5">Mulai dari</span>
-            ) : null}
-            <span className="font-medium text-sm text-ink">{formattedPrice}</span>
-          </div>
-          
-          <div className="bg-primary/5 text-primary rounded-full p-2 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-            <Plus className="w-4 h-4" />
-          </div>
+      <div className="flex min-w-0 flex-grow flex-col py-0.5">
+        <h3 className="truncate font-semibold leading-snug text-ink transition-colors group-hover:text-primary">
+          {product.name}
+        </h3>
+        {product.description && (
+          <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+            {product.description}
+          </p>
+        )}
+
+        <div className="mt-auto flex items-center justify-between pt-2">
+          <span className="text-sm font-semibold text-ink">{formattedPrice}</span>
+          <span
+            aria-hidden="true"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors group-hover:bg-ink"
+          >
+            <Plus className="h-4 w-4" />
+          </span>
         </div>
       </div>
     </Link>

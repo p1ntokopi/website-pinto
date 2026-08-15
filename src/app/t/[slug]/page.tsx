@@ -1,29 +1,34 @@
-import { createClient } from '@/lib/supabase/server'
-import { startOrResumeDiningSession } from '@/app/t/[slug]/actions'
-import { Button } from '@/components/ui/button'
-import { Coffee, AlertCircle } from 'lucide-react'
-import Link from 'next/link'
+import Link from "next/link"
+import { AlertCircle } from "lucide-react"
 
-export default async function TableLandingPage({ params }: { params: { slug: string } }) {
+import { createClient } from "@/lib/supabase/server"
+import { Button } from "@/components/ui/button"
+import { TableLandingForm } from "@/components/ordering/table-landing-form"
+
+export default async function TableLandingPage({
+  params,
+}: {
+  params: { slug: string }
+}) {
   const resolvedParams = await params
   const supabase = await createClient()
 
   const { data: table, error } = await supabase
-    .from('tables')
-    .select('*')
-    .eq('slug', resolvedParams.slug)
+    .from("tables")
+    .select("*")
+    .eq("slug", resolvedParams.slug)
     .single()
 
   if (error || !table) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-6 text-center">
-        <AlertCircle className="w-12 h-12 text-destructive mb-4" />
-        <h1 className="text-2xl font-display font-bold mb-2">Table Not Found</h1>
-        <p className="text-muted-foreground mb-8">
-          This QR code may be invalid or the table does not exist.
+      <div className="flex min-h-screen flex-col items-center justify-center p-6 text-center">
+        <AlertCircle className="mb-4 h-10 w-10 text-destructive" />
+        <h1 className="mb-2 text-2xl font-display font-bold">Meja Tidak Ditemukan</h1>
+        <p className="mb-8 text-muted-foreground">
+          Kode QR ini mungkin tidak valid atau meja tidak tersedia.
         </p>
         <Button render={<Link href="/" />} variant="outline">
-          Back to P1NTO
+          Kembali ke P1NTO
         </Button>
       </div>
     )
@@ -31,39 +36,38 @@ export default async function TableLandingPage({ params }: { params: { slug: str
 
   if (!table.is_active) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-6 text-center">
-        <AlertCircle className="w-12 h-12 text-muted-foreground mb-4" />
-        <h1 className="text-2xl font-display font-bold mb-2">Table Unavailable</h1>
-        <p className="text-muted-foreground mb-8">
-          This table is not currently accepting orders.
+      <div className="flex min-h-screen flex-col items-center justify-center p-6 text-center">
+        <AlertCircle className="mb-4 h-10 w-10 text-muted-foreground" />
+        <h1 className="mb-2 text-2xl font-display font-bold">Meja Tidak Tersedia</h1>
+        <p className="mb-8 text-muted-foreground">
+          Meja ini saat ini tidak menerima pesanan.
         </p>
         <Button render={<Link href="/" />} variant="outline">
-          Back to P1NTO
+          Kembali ke P1NTO
         </Button>
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[90vh] p-6 text-center max-w-md mx-auto">
-      <div className="mb-12">
-        <h1 className="text-4xl font-display font-bold tracking-tight text-primary uppercase tracking-widest mb-2">P1NTO</h1>
-        <p className="text-sm font-medium tracking-widest text-muted-foreground uppercase">Coffee</p>
+    <div className="flex min-h-[90vh] flex-col items-center justify-center p-6 text-center max-w-md mx-auto">
+      <div className="mb-10">
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground mb-3">
+          P1NTO Coffee
+        </p>
+        <h1 className="font-display text-5xl font-bold tracking-tight text-ink leading-none">
+          P1NTO
+        </h1>
       </div>
 
-      <div className="w-full bg-white p-8 rounded-2xl shadow-sm border border-border/50 mb-8">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary mb-4">
-          <Coffee className="w-6 h-6" />
-        </div>
-        <h2 className="text-2xl font-bold mb-2">Table {table.table_number}</h2>
-        <p className="text-muted-foreground text-sm">Welcome. You can order directly from this device.</p>
+      <div className="w-full border border-border/60 bg-white p-8 mb-6">
+        <h2 className="text-2xl font-bold mb-1">Meja {table.table_number}</h2>
+        <p className="text-sm text-muted-foreground">
+          Selamat datang. Anda dapat memesan langsung dari perangkat ini.
+        </p>
       </div>
 
-      <form action={startOrResumeDiningSession.bind(null, table.slug)} className="w-full">
-        <Button type="submit" className="w-full h-14 text-lg font-medium shadow-md transition-transform active:scale-95 rounded-xl">
-          View Menu & Order
-        </Button>
-      </form>
+      <TableLandingForm tableSlug={table.slug} />
     </div>
   )
 }

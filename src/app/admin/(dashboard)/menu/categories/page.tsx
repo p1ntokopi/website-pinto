@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { CategoryList } from '@/components/admin/category-list'
 
 export const metadata: Metadata = {
-  title: 'Categories - P1NTO Admin',
+  title: 'Kategori - P1NTO Admin',
 }
 
 export default async function AdminCategoriesPage() {
@@ -18,7 +18,7 @@ export default async function AdminCategoriesPage() {
   if (error) {
     return (
       <div className="p-8 text-center text-destructive">
-        Failed to load categories: {error.message}
+        Gagal memuat kategori: {error.message}
       </div>
     )
   }
@@ -42,8 +42,8 @@ export default async function AdminCategoriesPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-display font-bold text-primary">Menu Categories</h1>
-        <p className="text-muted-foreground mt-1">Organize your menu items into distinct categories.</p>
+        <h1 className="text-3xl font-display font-bold text-primary">Kategori Menu</h1>
+        <p className="text-muted-foreground mt-1">Atur item menu Anda ke dalam kategori yang jelas.</p>
       </div>
 
       <CategoryList categories={categoriesWithCounts} />

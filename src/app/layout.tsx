@@ -9,12 +9,11 @@ const plusJakarta = Plus_Jakarta_Sans({
 
 const cormorantGaramond = Cormorant_Garamond({
   variable: "--font-cormorant",
-  weight: ["400", "500"],
+  weight: ["400", "500", "600", "700"],
   style: ["normal", "italic"],
   subsets: ["latin"],
 });
 
-import { SmoothScroll } from '@/components/providers/smooth-scroll';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
@@ -32,13 +31,11 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="id"
       className={`${plusJakarta.variable} ${cormorantGaramond.variable} antialiased`}
     >
       <body className="min-h-screen flex flex-col">
-        <SmoothScroll>
-          {children}
-        </SmoothScroll>
+        {children}
         <Toaster />
       </body>
     </html>

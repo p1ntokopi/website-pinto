@@ -13,8 +13,8 @@ import { Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
 const formSchema = z.object({
-  email: z.string().email({ message: 'Invalid email address' }),
-  password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
+  email: z.string().email({ message: 'Alamat email tidak valid' }),
+  password: z.string().min(6, { message: 'Kata sandi minimal 6 karakter' }),
 })
 
 export function LoginForm() {
@@ -49,7 +49,7 @@ export function LoginForm() {
     if (error) {
       toast({
         variant: 'destructive',
-        title: 'Login failed',
+        title: 'Gagal masuk',
         description: error.message,
       })
       return
@@ -79,7 +79,7 @@ export function LoginForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password">Kata Sandi</Label>
         <Input 
           id="password" 
           type="password" 
@@ -97,10 +97,10 @@ export function LoginForm() {
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Signing in...
+            Masuk...
           </>
         ) : (
-          'Sign In'
+          'Masuk'
         )}
       </Button>
     </form>

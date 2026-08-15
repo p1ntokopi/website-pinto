@@ -46,13 +46,21 @@
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
+
+  /* Shadows — restrained, warm-tinted */
+  --shadow-card: 0 1px 2px rgb(23 21 19 / 0.04);
+  --shadow-raised: 0 4px 16px -4px rgb(23 21 19 / 0.1);
+  --shadow-popover: 0 12px 32px -8px rgb(23 21 19 / 0.16);
+
+  /* Motion */
+  --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 :root {
   --ink: #171513;
   --paper: #F7F5F0;
   --white: #FFFFFF;
-  --muted-text: #77736D;
+  --muted-text: #6E6A63;
   --border-custom: #E5E1DA;
   --coffee: #8B5E3C;
   --cream: #EAD9C5;
@@ -81,5 +89,37 @@
   }
   html {
     @apply font-sans;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+}
+
+/* Intentional utilities ---------------------------------------------------- */
+
+/* Safe-area padding for floating bars on mobile */
+@utility pb-safe {
+  padding-bottom: calc(env(safe-area-inset-bottom));
+}
+
+/* Hide scrollbars while keeping scrollability */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

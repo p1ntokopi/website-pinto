@@ -6,19 +6,19 @@ import { HeroAnimations } from './hero-animations';
 
 const COPY = {
   eyebrow: "P1NTO COFFEE",
-  headlineLine1: "FROM OUR BAR",
+  headlineLine1: "DARI BAR KAMI",
   headlineLine2: {
-    normal: "TO YOUR ",
-    highlight: "HOME.",
+    normal: "KE ",
+    highlight: "RUMAH.",
     after: ""
   },
-  sub: "Carefully sourced, thoughtfully roasted, and served one cup at a time.",
+  sub: "Biji pilihan, disangrai dengan penuh perhatian, dan disajikan satu cangkir demi satu cangkir.",
   ctaPrimary: {
-    label: "Shop Coffee",
+    label: "Beli Kopi",
     href: "/coffee"
   },
   ctaSecondary: {
-    label: "Visit P1NTO",
+    label: "Kunjungi P1NTO",
     href: "#location"
   },
   tag: {

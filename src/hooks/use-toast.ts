@@ -1,20 +1,26 @@
 "use client"
 
-// Inspired by react-hot-toast library
+// Lightweight, self-contained toast state manager.
+// (The Base-UI toast manager in ui/toast.tsx is not wired to this store.)
 import * as React from "react"
 
-import type {
-  ToastActionElement,
-  ToastProps,
-} from "@/components/ui/toast"
+export type ToastVariant = "default" | "destructive" | "success" | "info"
+
+export type ToastProps = {
+  variant?: ToastVariant
+  title?: React.ReactNode
+  description?: React.ReactNode
+}
+
+export type ToastActionElement = React.ReactElement
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
 
 type ToasterToast = ToastProps & {
   id: string
-  title?: React.ReactNode
-  description?: React.ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
   action?: ToastActionElement
 }
 
@@ -93,8 +99,6 @@ export const reducer = (state: State, action: Action): State => {
     case "DISMISS_TOAST": {
       const { toastId } = action
 
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
       if (toastId) {
         addToRemoveQueue(toastId)
       } else {
@@ -158,7 +162,7 @@ export function toast({ ...props }: Toast) {
       ...props,
       id,
       open: true,
-      onOpenChange: (open) => {
+      onOpenChange: (open: boolean) => {
         if (!open) dismiss()
       },
     },

@@ -31,7 +31,7 @@ import { Database } from '@/types/database.types'
 type CategoryRow = Database['public']['Tables']['categories']['Row']
 
 const formSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
+  name: z.string().min(1, 'Nama wajib diisi'),
   description: z.string().optional(),
   sort_order: z.coerce.number().default(0),
   is_active: z.boolean().default(true),
@@ -49,7 +49,7 @@ export function CategoryFormDialog({ open, onOpenChange, category }: CategoryFor
 
   const isEditing = !!category
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<z.input<typeof formSchema>, any, z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: category?.name || '',
@@ -89,17 +89,17 @@ export function CategoryFormDialog({ open, onOpenChange, category }: CategoryFor
     setIsSubmitting(false)
 
     if (result.error) {
-      toast({
+toast({
         variant: 'destructive',
-        title: 'Error',
+        title: 'Kesalahan',
         description: result.error,
       })
       return
     }
 
     toast({
-      title: 'Success',
-      description: isEditing ? 'Category updated successfully.' : 'Category created successfully.',
+      title: 'Berhasil',
+      description: isEditing ? 'Kategori berhasil diperbarui.' : 'Kategori berhasil dibuat.',
     })
     
     onOpenChange(false)
@@ -109,9 +109,9 @@ export function CategoryFormDialog({ open, onOpenChange, category }: CategoryFor
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{isEditing ? 'Edit Category' : 'Add New Category'}</DialogTitle>
+<DialogTitle>{isEditing ? 'Edit Kategori' : 'Tambah Kategori Baru'}</DialogTitle>
           <DialogDescription>
-            {isEditing ? 'Update category details.' : 'Create a new menu category.'}
+            {isEditing ? 'Perbarui detail kategori.' : 'Buat kategori menu baru.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -122,9 +122,9 @@ export function CategoryFormDialog({ open, onOpenChange, category }: CategoryFor
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Category Name *</FormLabel>
+<FormLabel>Nama Kategori *</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Signature Coffee" {...field} />
+                    <Input placeholder="mis., Signature Coffee" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -136,9 +136,9 @@ export function CategoryFormDialog({ open, onOpenChange, category }: CategoryFor
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>Deskripsi</FormLabel>
                   <FormControl>
-                    <Input placeholder="Optional description..." {...field} />
+                    <Input placeholder="Deskripsi opsional..." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -150,11 +150,18 @@ export function CategoryFormDialog({ open, onOpenChange, category }: CategoryFor
               name="sort_order"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Sort Order</FormLabel>
+<FormLabel>Urutan</FormLabel>
                   <FormControl>
-                    <Input type="number" {...field} />
+                    <Input
+                      type="number"
+                      value={String(field.value ?? '')}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      ref={field.ref}
+                    />
                   </FormControl>
-                  <FormDescription>Lower numbers appear first.</FormDescription>
+                  <FormDescription>Angka lebih kecil tampil lebih dulu.</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -166,7 +173,7 @@ export function CategoryFormDialog({ open, onOpenChange, category }: CategoryFor
               render={({ field }) => (
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
-                    <FormLabel className="text-base">Active Status</FormLabel>
+                    <FormLabel className="text-base">Status Aktif</FormLabel>
                   </div>
                   <FormControl>
                     <Switch
@@ -179,12 +186,12 @@ export function CategoryFormDialog({ open, onOpenChange, category }: CategoryFor
             />
 
             <div className="flex justify-end pt-4">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="mr-2">
-                Cancel
+<Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="mr-2">
+                Batal
               </Button>
               <Button type="submit" disabled={isSubmitting}>
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isEditing ? 'Save Changes' : 'Create Category'}
+                {isEditing ? 'Simpan Perubahan' : 'Buat Kategori'}
               </Button>
             </div>
           </form>
@@ -193,3 +200,4 @@ export function CategoryFormDialog({ open, onOpenChange, category }: CategoryFor
     </Dialog>
   )
 }
+

@@ -4,7 +4,7 @@ import { LiveTablesClient } from '@/components/admin/tables/live-tables-client'
 import { Users, Receipt } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Live Tables - P1NTO Admin',
+  title: 'Meja Langsung - P1NTO Admin',
 }
 
 export default async function LiveTablesPage() {
@@ -24,7 +24,7 @@ export default async function LiveTablesPage() {
 
   // Fetch open orders for those sessions
   const sessionIds = sessions?.map(s => s.id) || []
-  let orders: unknown[] = []
+  let orders: { id: string; order_number: string; dining_session_id: string | null; total: number; status: string }[] = []
   if (sessionIds.length > 0) {
     const { data: activeOrders } = await supabase
       .from('orders')
@@ -32,7 +32,7 @@ export default async function LiveTablesPage() {
       .in('dining_session_id', sessionIds)
       .in('status', ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'COMPLETED']) // Even completed orders stay on table until session closes
 
-    if (activeOrders) orders = activeOrders
+    if (activeOrders) orders = activeOrders as typeof orders
   }
 
   // Combine data
@@ -54,17 +54,17 @@ export default async function LiveTablesPage() {
     <div className="max-w-7xl mx-auto space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-display font-bold text-primary">Live Tables</h1>
-          <p className="text-muted-foreground mt-1">Real-time cafe occupancy and table orders.</p>
+          <h1 className="text-3xl font-display font-bold text-primary">Meja Langsung</h1>
+          <p className="text-muted-foreground mt-1">Okupansi kafe dan pesanan meja secara real-time.</p>
         </div>
         <div className="flex gap-4">
           <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-border/50 shadow-sm">
             <Users className="w-4 h-4 text-emerald-600" />
-            <span className="text-sm font-semibold">{sessions?.length || 0} Active Tables</span>
+            <span className="text-sm font-semibold">{sessions?.length || 0} Meja Aktif</span>
           </div>
           <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-border/50 shadow-sm">
             <Receipt className="w-4 h-4 text-amber-600" />
-            <span className="text-sm font-semibold">{orders.length || 0} Open Orders</span>
+            <span className="text-sm font-semibold">{orders.length || 0} Pesanan Terbuka</span>
           </div>
         </div>
       </div>

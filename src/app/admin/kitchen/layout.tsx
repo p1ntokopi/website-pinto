@@ -1,10 +1,12 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Metadata } from 'next'
+import { Button } from '@/components/ui/button'
+import { signOutAction } from '@/app/auth/signout/actions'
 
 export const metadata: Metadata = {
   title: 'P1NTO KDS',
-  description: 'Kitchen Display System',
+  description: 'Sistem Display Dapur',
 }
 
 export default async function KitchenLayout({
@@ -27,12 +29,10 @@ export default async function KitchenLayout({
     return (
       <div className="min-h-screen flex items-center justify-center bg-zinc-950 p-4 text-zinc-50">
         <div className="max-w-md text-center space-y-4">
-          <h1 className="font-display text-2xl font-bold">Access Denied</h1>
-          <p className="text-zinc-400">You do not have kitchen access permissions.</p>
-          <form action="/auth/signout" method="post">
-            <button type="submit" className="text-amber-500 hover:underline">
-              Sign Out
-            </button>
+          <h1 className="font-display text-2xl font-bold">Akses Ditolak</h1>
+          <p className="text-zinc-400">Anda tidak memiliki izin akses dapur.</p>
+          <form action={signOutAction}>
+            <Button type="submit" variant="outline" size="sm">Keluar</Button>
           </form>
         </div>
       </div>

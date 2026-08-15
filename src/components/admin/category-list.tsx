@@ -40,16 +40,16 @@ export function CategoryList({ categories }: { categories: CategoryWithCount[] }
   }
 
   const handleDelete = async (category: CategoryRow) => {
-    if (!confirm(`Are you sure you want to delete ${category.name}?`)) return
+    if (!confirm(`Yakin ingin menghapus ${category.name}?`)) return
     
     setIsProcessing(true)
     const result = await deleteCategory(category.id)
     setIsProcessing(false)
     
     if (result.error) {
-      toast({ variant: 'destructive', title: 'Error', description: result.error })
+      toast({ variant: 'destructive', title: 'Kesalahan', description: result.error })
     } else {
-      toast({ title: 'Success', description: 'Category deleted.' })
+      toast({ title: 'Berhasil', description: 'Kategori dihapus.' })
       router.refresh()
     }
   }
@@ -57,26 +57,26 @@ export function CategoryList({ categories }: { categories: CategoryWithCount[] }
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold font-display">Manage Categories</h2>
-        <Button onClick={handleAddNew}>Add Category</Button>
+        <h2 className="text-xl font-bold font-display">Kelola Kategori</h2>
+        <Button onClick={handleAddNew}>Tambah Kategori</Button>
       </div>
 
       <div className="border rounded-md bg-card">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Order</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Products</TableHead>
+              <TableHead>Urutan</TableHead>
+              <TableHead>Kategori</TableHead>
+              <TableHead>Produk</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-right">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {categories.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                  No categories found. Create one to get started.
+                  Belum ada kategori. Buat satu untuk memulai.
                 </TableCell>
               </TableRow>
             ) : (
@@ -89,7 +89,7 @@ export function CategoryList({ categories }: { categories: CategoryWithCount[] }
                   </TableCell>
                   <TableCell>{cat.product_count || 0}</TableCell>
                   <TableCell>
-                    {cat.is_active ? <Badge>Active</Badge> : <Badge variant="secondary">Inactive</Badge>}
+                    {cat.is_active ? <Badge>Aktif</Badge> : <Badge variant="secondary">Nonaktif</Badge>}
                   </TableCell>
                   <TableCell className="text-right space-x-2">
                     <Button variant="outline" size="icon" onClick={() => handleEdit(cat)}>

@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import { Menu } from 'lucide-react';
 import Image from 'next/image';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
+import { MobileNav } from './mobile-nav';
 
 export function Navbar() {
   return (
@@ -13,25 +13,22 @@ export function Navbar() {
         </Link>
         
         <nav className="hidden md:flex items-center gap-8 absolute left-1/2 -translate-x-1/2">
-          <Link href="/cafe" className="text-sm font-medium text-muted-foreground hover:text-ink transition-colors">Cafe</Link>
-          <Link href="/coffee" className="text-sm font-medium text-muted-foreground hover:text-ink transition-colors">Coffee</Link>
-          <Link href="/story" className="text-sm font-medium text-muted-foreground hover:text-ink transition-colors">Story</Link>
-          <Link href="/journal" className="text-sm font-medium text-muted-foreground hover:text-ink transition-colors">Journal</Link>
+          <Link href="/cafe" className="text-sm font-medium text-muted-foreground hover:text-ink transition-colors">Kafe</Link>
+          <Link href="/coffee" className="text-sm font-medium text-muted-foreground hover:text-ink transition-colors">Kopi</Link>
+          <Link href="/story" className="text-sm font-medium text-muted-foreground hover:text-ink transition-colors">Kisah</Link>
+          <Link href="/journal" className="text-sm font-medium text-muted-foreground hover:text-ink transition-colors">Jurnal</Link>
         </nav>
 
         <div className="flex items-center gap-3">
           <div className="hidden md:flex items-center gap-2">
             <Link href="/coffee" className={buttonVariants({ variant: "ghost", className: "rounded-full px-5 text-ink hover:bg-ink/5" })}>
-              Shop Coffee
+              Beli Kopi
             </Link>
-            <Link href="#location" className={buttonVariants({ variant: "default", className: "rounded-full px-6 bg-ink text-paper hover:bg-ink/90 shadow-none" })}>
-              Order at Cafe
+            <Link href="/locations" className={buttonVariants({ variant: "default", className: "rounded-full px-6 bg-ink text-paper hover:bg-ink/90 shadow-none" })}>
+              Pesan di Kafe
             </Link>
           </div>
-          <Button variant="ghost" size="icon" className="md:hidden text-ink hover:bg-ink/5">
-            <Menu className="h-5 w-5" />
-            <span className="sr-only">Toggle menu</span>
-          </Button>
+          <MobileNav />
         </div>
       </div>
     </header>

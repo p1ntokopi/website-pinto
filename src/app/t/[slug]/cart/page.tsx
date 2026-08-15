@@ -5,7 +5,7 @@ import { CartClient } from '@/components/ordering/cart-client'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Review Order - P1NTO',
+  title: 'Review Pesanan - P1NTO',
 }
 
 export default async function CartPage({ params }: { params: { slug: string } }) {

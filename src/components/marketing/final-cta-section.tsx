@@ -9,22 +9,22 @@ export function FinalCtaSection() {
       <div className="max-w-4xl mx-auto flex flex-col items-center z-10">
         <ScrollReveal>
           <h2 className="font-display text-5xl md:text-7xl lg:text-[6rem] text-cream leading-[0.9] mb-8">
-            YOUR NEXT CUP<br />
-            STARTS HERE.
+            CANGKIR ANDA BERIKUTNYA<br />
+            DIMULAI DI SINI.
           </h2>
         </ScrollReveal>
         <ScrollReveal delay={0.1}>
           <p className="text-paper/70 text-xl md:text-2xl mb-12">
-            Come for the coffee.<br />
-            Stay for the moment.
+            Datang untuk kopi.<br />
+            Bertahan untuk momen.
           </p>
         </ScrollReveal>
         <ScrollReveal delay={0.2} className="flex flex-col sm:flex-row gap-6">
           <Link href="#location" className={buttonVariants({ size: "lg", className: "rounded-full h-16 px-12 text-lg bg-warm text-ink hover:bg-cream border-none transition-colors" })}>
-            Order at Cafe
+            Pesan di Kafe
           </Link>
           <Link href="/coffee" className={buttonVariants({ size: "lg", variant: "outline", className: "rounded-full h-16 px-12 text-lg border-cream text-cream hover:bg-cream/10 bg-transparent transition-colors" })}>
-            Shop Coffee
+            Beli Kopi
           </Link>
         </ScrollReveal>
       </div>

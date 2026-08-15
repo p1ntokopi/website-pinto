@@ -4,7 +4,7 @@ import { QRPreview } from '@/components/admin/qr-preview'
 import { PrintButton } from '@/components/admin/print-button'
 
 export const metadata: Metadata = {
-  title: 'Print QR Codes - P1NTO',
+  title: 'Cetak Kode QR - P1NTO',
 }
 
 export default async function PrintQRsPage() {
@@ -19,8 +19,8 @@ export default async function PrintQRsPage() {
   return (
     <div className="min-h-screen bg-white p-8 print:p-0">
       <div className="mb-8 print:hidden">
-        <h1 className="text-2xl font-bold mb-4">Print QR Codes</h1>
-        <p className="mb-4 text-muted-foreground">Press Ctrl+P (or Cmd+P) to print this page. Ensure background graphics are enabled.</p>
+        <h1 className="text-2xl font-bold mb-4">Cetak Kode QR</h1>
+        <p className="mb-4 text-muted-foreground">Tekan Ctrl+P (atau Cmd+P) untuk mencetak halaman ini. Pastikan grafis latar belakang diaktifkan.</p>
         <PrintButton />
       </div>
 

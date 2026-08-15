@@ -3,18 +3,18 @@ import { QrCode, Coffee, CreditCard } from 'lucide-react';
 const features = [
   {
     icon: <QrCode className="h-8 w-8 text-primary" />,
-    title: 'Scan QR',
-    description: 'Find the QR code on your table and scan it using your smartphone to view our digital menu instantly.',
+    title: 'Pindai QR',
+    description: 'Temukan kode QR di meja Anda dan pindai dengan ponsel untuk melihat menu digital kami secara instan.',
   },
   {
     icon: <Coffee className="h-8 w-8 text-primary" />,
-    title: 'Order & Customize',
-    description: 'Select your favorite coffee and customize it exactly how you like it. No waiting in line.',
+    title: 'Pesan & Sesuaikan',
+    description: 'Pilih kopi favorit Anda dan sesuaikan persis seperti yang Anda suka. Tanpa antre.',
   },
   {
     icon: <CreditCard className="h-8 w-8 text-primary" />,
-    title: 'Pay Seamlessly',
-    description: 'Complete your payment digitally using various e-wallet or bank transfer options securely.',
+    title: 'Bayar Tanpa Ribet',
+    description: 'Selesaikan pembayaran secara digital menggunakan berbagai e-wallet atau transfer bank dengan aman.',
   },
 ];
 
@@ -23,8 +23,8 @@ export function FeaturesSection() {
     <section className="py-24 bg-white relative">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="font-display text-4xl md:text-5xl text-ink mb-4">How It Works</h2>
-          <p className="text-muted-text max-w-2xl mx-auto text-lg">Seamless ordering experience right from your seat.</p>
+          <h2 className="font-display text-4xl md:text-5xl text-ink mb-4">Cara Kerjanya</h2>
+          <p className="text-muted-text max-w-2xl mx-auto text-lg">Pengalaman memesan tanpa hambatan, langsung dari tempat duduk Anda.</p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">

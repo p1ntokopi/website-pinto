@@ -53,11 +53,11 @@ export function TableList({ tables }: { tables: TableWithSession[] }) {
     setIsProcessing(false)
     
     if (result.error) {
-      toast({ variant: 'destructive', title: 'Error', description: result.error })
+      toast({ variant: 'destructive', title: 'Kesalahan', description: result.error })
     } else {
       toast({ 
-        title: 'Status Updated', 
-        description: `Table ${table.table_number} is now ${!table.is_active ? 'active' : 'archived'}.`
+        title: 'Status Diperbarui', 
+        description: `Meja ${table.table_number} sekarang ${!table.is_active ? 'aktif' : 'diarsipkan'}.`
       })
       router.refresh()
     }
@@ -66,50 +66,50 @@ export function TableList({ tables }: { tables: TableWithSession[] }) {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold font-display">Manage Tables</h2>
-        <Button onClick={handleAddNew}>Add New Table</Button>
+        <h2 className="text-xl font-bold font-display">Kelola Meja</h2>
+        <Button onClick={handleAddNew}>Tambah Meja Baru</Button>
       </div>
 
       <div className="border rounded-md bg-card">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Table</TableHead>
-              <TableHead>Capacity</TableHead>
+              <TableHead>Meja</TableHead>
+              <TableHead>Kapasitas</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-right">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {tables.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                  No tables found. Add your first table to generate QR codes.
+                  Belum ada meja. Tambahkan meja pertama Anda untuk membuat kode QR.
                 </TableCell>
               </TableRow>
             ) : (
               tables.map((table) => {
                 let statusVariant: 'default' | 'secondary' | 'destructive' | 'outline' = 'outline'
-                let statusText = 'Unknown'
+                let statusText = 'Tidak Diketahui'
 
                 if (!table.is_active) {
                   statusVariant = 'secondary'
-                  statusText = 'Archived'
+                  statusText = 'Diarsipkan'
                 } else if (table.has_active_session) {
                   statusVariant = 'destructive'
-                  statusText = 'Occupied'
+                  statusText = 'Terisi'
                 } else {
                   statusVariant = 'default'
-                  statusText = 'Available'
+                  statusText = 'Tersedia'
                 }
 
                 return (
                   <TableRow key={table.id}>
                     <TableCell className="font-medium">
-                      Table {table.table_number}
+                      Meja {table.table_number}
                       {table.name && <span className="block text-xs text-muted-foreground font-normal">{table.name}</span>}
                     </TableCell>
-                    <TableCell>{table.capacity} seats</TableCell>
+                    <TableCell>{table.capacity} kursi</TableCell>
                     <TableCell>
                       <Badge variant={statusVariant}>{statusText}</Badge>
                     </TableCell>
@@ -146,9 +146,9 @@ export function TableList({ tables }: { tables: TableWithSession[] }) {
       <Dialog open={qrOpen} onOpenChange={setQrOpen}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle>Table {selectedTable?.table_number} QR Code</DialogTitle>
+            <DialogTitle>Kode QR Meja {selectedTable?.table_number}</DialogTitle>
             <DialogDescription>
-              Scan this code to access the digital menu and order.
+              Pindai kode ini untuk mengakses menu digital dan memesan.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 flex justify-center">

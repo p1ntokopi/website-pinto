@@ -7,11 +7,11 @@ import { CheckCircle2, Clock, Coffee, Package, Check } from 'lucide-react'
 type OrderStatus = 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'READY' | 'COMPLETED' | 'CANCELLED'
 
 const STATUS_STEPS: { id: OrderStatus, label: string, icon: React.ElementType }[] = [
-  { id: 'PENDING', label: 'Order received', icon: Clock },
-  { id: 'CONFIRMED', label: 'Confirmed', icon: CheckCircle2 },
-  { id: 'PREPARING', label: 'Preparing', icon: Coffee },
-  { id: 'READY', label: 'Ready', icon: Package },
-  { id: 'COMPLETED', label: 'Completed', icon: Check },
+  { id: 'PENDING', label: 'Pesanan Diterima', icon: Clock },
+  { id: 'CONFIRMED', label: 'Terkonfirmasi', icon: CheckCircle2 },
+  { id: 'PREPARING', label: 'Disiapkan', icon: Coffee },
+  { id: 'READY', label: 'Siap', icon: Package },
+  { id: 'COMPLETED', label: 'Selesai', icon: Check },
 ]
 
 export function OrderStatusTimeline({ initialStatus, orderId }: { initialStatus: OrderStatus, orderId: string }) {
@@ -50,8 +50,8 @@ export function OrderStatusTimeline({ initialStatus, orderId }: { initialStatus:
   if (status === 'CANCELLED') {
     return (
       <div className="bg-destructive/10 text-destructive p-4 rounded-xl text-center">
-        <p className="font-semibold">Order Cancelled</p>
-        <p className="text-sm opacity-80 mt-1">Please contact staff for details.</p>
+        <p className="font-semibold">Pesanan Dibatalkan</p>
+        <p className="text-sm opacity-80 mt-1">Silakan hubungi staf untuk detail.</p>
       </div>
     )
   }

@@ -47,7 +47,7 @@ export function QRPreview({ slug, tableNumber }: QRPreviewProps) {
     printWindow.document.write(`
       <html>
         <head>
-          <title>Print QR - Table ${tableNumber}</title>
+          <title>Cetak QR - Meja ${tableNumber}</title>
           <style>
             body { 
               font-family: sans-serif; 
@@ -93,8 +93,8 @@ export function QRPreview({ slug, tableNumber }: QRPreviewProps) {
             <div class="brand">P1NTO</div>
             <div>COFFEE</div>
             <img src="${pngUrl}" alt="QR Code" />
-            <div class="title">TABLE ${tableNumber}</div>
-            <div class="subtitle">Scan to view our menu<br/>Order directly from your table</div>
+            <div class="title">MEJA ${tableNumber}</div>
+            <div class="subtitle">Pindai untuk melihat menu kami<br/>Pesan langsung dari meja Anda</div>
           </div>
           <script>
             setTimeout(() => {
@@ -126,9 +126,9 @@ export function QRPreview({ slug, tableNumber }: QRPreviewProps) {
           marginSize={0}
         />
         
-        <div className="mt-4 font-bold text-lg">TABLE {tableNumber}</div>
+        <div className="mt-4 font-bold text-lg">MEJA {tableNumber}</div>
         <div className="text-xs text-center text-muted-foreground mt-1 max-w-[180px]">
-          Scan to order directly from your table
+          Pindai untuk memesan langsung dari meja Anda
         </div>
       </div>
 
@@ -137,7 +137,7 @@ export function QRPreview({ slug, tableNumber }: QRPreviewProps) {
           <Download className="w-4 h-4 mr-2" /> PNG
         </Button>
         <Button size="sm" onClick={printQR}>
-          <Printer className="w-4 h-4 mr-2" /> Print
+          <Printer className="w-4 h-4 mr-2" /> Cetak
         </Button>
       </div>
     </div>

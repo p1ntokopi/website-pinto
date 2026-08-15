@@ -2,10 +2,10 @@ import { Coffee, Award, Leaf, Heart } from 'lucide-react';
 import { ScrollReveal } from './scroll-reveal';
 
 const values = [
-  { icon: Award, title: "Premium Quality", desc: "We use only the finest 100% Arabica beans." },
-  { icon: Coffee, title: "Expertly Crafted", desc: "Our baristas craft every cup with precision and care." },
-  { icon: Leaf, title: "Thoughtful Sourcing", desc: "Ethically sourced beans that support communities." },
-  { icon: Heart, title: "Made With Care", desc: "Every cup is brewed with passion and intention." }
+  { icon: Award, title: "Kualitas Premium", desc: "Kami hanya memakai biji Arabika 100% pilihan." },
+  { icon: Coffee, title: "Dirangkai Ahli", desc: "Barista kami meracik setiap cangkir dengan presisi dan penuh perhatian." },
+  { icon: Leaf, title: "Sumber yang Bertanggung Jawab", desc: "Biji yang bersumber secara etis untuk mendukung komunitas." },
+  { icon: Heart, title: "Dibuat dengan Hati", desc: "Setiap cangkir diseduh dengan semangat dan niat baik." }
 ];
 
 export function BrandValuesSection() {
