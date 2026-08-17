@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { createBrowserClient } from '@supabase/ssr'
 import { Button } from '@/components/ui/button'
 import {
   Form,
@@ -20,6 +19,7 @@ import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { createProduct, updateProduct } from '@/app/admin/(dashboard)/menu/products/actions'
+import { getImageUploadUrl } from '@/lib/storage/actions'
 import { useToast } from '@/hooks/use-toast'
 import { Loader2, Upload, X } from 'lucide-react'
 import { Database } from '@/types/database.types'
@@ -45,9 +45,11 @@ interface ProductFormProps {
 }
 
 export function ProductForm({ product, categories }: ProductFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false)
+const [isSubmitting, setIsSubmitting] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
   const [imageUrl, setImageUrl] = useState<string | null>(product?.image_url || null)
+
+  const originalImageUrl = product?.image_url || null
   
   const { toast } = useToast()
   const router = useRouter()
@@ -76,29 +78,26 @@ if (!file.type.startsWith('image/')) {
       return
     }
 
-    setUploadingImage(true)
+setUploadingImage(true)
     try {
-      const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      const { uploadUrl, publicUrl } = await getImageUploadUrl(
+        'products',
+        file.type,
+        file.size
       )
 
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`
-      const filePath = `${fileName}`
+      const response = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type },
+      })
 
-      const { error: uploadError, data } = await supabase.storage
-        .from('product-images')
-        .upload(filePath, file)
-
-      if (uploadError) throw uploadError
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('product-images')
-        .getPublicUrl(filePath)
+      if (!response.ok) {
+        throw new Error('Gagal mengunggah ke penyimpanan.')
+      }
 
       setImageUrl(publicUrl)
-toast({ title: 'Berhasil', description: 'Gambar berhasil diunggah.' })
+      toast({ title: 'Berhasil', description: 'Gambar berhasil diunggah.' })
     } catch (err: any) {
       toast({ variant: 'destructive', title: 'Pengunggahan Gagal', description: err.message })
     } finally {
@@ -117,8 +116,9 @@ toast({ title: 'Berhasil', description: 'Gambar berhasil diunggah.' })
     formData.append('base_price', values.base_price.toString())
     formData.append('is_available', values.is_available.toString())
     formData.append('is_featured', values.is_featured.toString())
-    formData.append('sort_order', values.sort_order.toString())
+formData.append('sort_order', values.sort_order.toString())
     if (imageUrl) formData.append('image_url', imageUrl)
+    if (isEditing && originalImageUrl) formData.append('old_image_url', originalImageUrl)
 
     let result
     if (isEditing && product) {

@@ -9,19 +9,23 @@ const plusJakarta = Plus_Jakarta_Sans({
 
 const cormorantGaramond = Cormorant_Garamond({
   variable: "--font-cormorant",
-  weight: ["400", "500", "600", "700"],
-  style: ["normal", "italic"],
   subsets: ["latin"],
+  display: "swap",
 });
 
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: "PINTO Kupi",
-  description: "Digital Coffee Shop Platform",
+  title: {
+    default: "P1NTO Coffee — Roastery & Kafe di Bogor",
+    template: "%s | P1NTO Coffee",
+  },
+  description:
+    "P1NTO Coffee — roastery dan kafe di Bogor. Biji kopi Nusantara pilihan, disangrai in-house dalam batch kecil, dan disajikan segar untuk setiap momen.",
   icons: {
     icon: "/Pintokupi.webp",
   },
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
 };
 
 export default function RootLayout({

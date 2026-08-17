@@ -1,91 +1,100 @@
-import Image from 'next/image';
 import Link from 'next/link';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { ArrowRight } from 'lucide-react';
+import { buttonVariants } from '@/components/ui/button';
 import { HeroPhotoTag } from './hero-photo-tag';
 import { HeroAnimations } from './hero-animations';
-
-const COPY = {
-  eyebrow: "P1NTO COFFEE",
-  headlineLine1: "DARI BAR KAMI",
-  headlineLine2: {
-    normal: "KE ",
-    highlight: "RUMAH.",
-    after: ""
-  },
-  sub: "Biji pilihan, disangrai dengan penuh perhatian, dan disajikan satu cangkir demi satu cangkir.",
-  ctaPrimary: {
-    label: "Beli Kopi",
-    href: "/coffee"
-  },
-  ctaSecondary: {
-    label: "Kunjungi P1NTO",
-    href: "#location"
-  },
-  tag: {
-    number: "EST",
-    label: "2024"
-  }
-};
+import { AmbientVideo } from './ambient-video';
+import { media } from '@/config/media';
+import { cn } from '@/lib/utils';
 
 export function HeroSection() {
   return (
-    <section className="relative w-full min-h-[100vh] bg-paper overflow-hidden flex flex-col xl:flex-row">
+    <section className="relative flex min-h-[92svh] w-full items-center justify-center overflow-hidden bg-ink md:min-h-screen">
+      <noscript>
+        <style>{'.gsap-reveal,.gsap-photo-inner{opacity:1!important}'}</style>
+      </noscript>
       <HeroAnimations />
-      
-      {/* LEFT: Text Content */}
-      <div className="w-full xl:w-[45%] flex flex-col justify-center px-6 md:px-12 lg:px-20 py-16 xl:py-0 order-2 xl:order-1 z-10 mt-auto xl:mt-0 pb-24 xl:pb-0">
-        <div className="max-w-2xl">
-          <p className="gsap-reveal text-sm font-semibold tracking-[0.15em] uppercase text-muted-foreground mb-6 opacity-0">
-            {COPY.eyebrow}
+
+      {/* Media — video ambient + overlay sinematik */}
+      <div className="gsap-photo-inner absolute inset-0 h-full w-full origin-center opacity-0">
+        <div className="hero-zoom absolute inset-0 h-full w-full">
+          <AmbientVideo
+            src={media.hero.video}
+            poster={media.hero.poster}
+            className="absolute inset-0 h-full w-full object-cover object-center"
+          />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/55 to-ink/70" />
+        <div className="absolute inset-0 bg-radial-vignette opacity-70" />
+      </div>
+
+      {/* Konten */}
+      <div className="relative z-10 container mx-auto flex flex-col items-center px-6 py-24 text-center md:px-12 md:py-32 lg:px-20">
+        <div className="flex max-w-4xl flex-col items-center">
+          <p className="gsap-reveal mb-8 flex items-center gap-4 text-[10px] font-semibold uppercase tracking-[0.3em] text-cream/80 opacity-0 md:text-xs">
+            <span className="h-px w-10 bg-cream/40" />
+            Roastery &amp; Kafe — Bogor
+            <span className="h-px w-10 bg-cream/40" />
           </p>
-          
-          <h1 className="font-display text-5xl md:text-6xl lg:text-7xl xl:text-[5.5rem] tracking-tight text-ink leading-[1.1] mb-8">
-            <span className="gsap-reveal block opacity-0">
-              {COPY.headlineLine1}
-            </span>
-            <span className="gsap-reveal block opacity-0 mt-1 md:mt-2">
-              {COPY.headlineLine2.normal}
-              <i className="text-primary italic font-medium">{COPY.headlineLine2.highlight}</i>
-              {COPY.headlineLine2.after}
+
+          <h1 className="font-display text-[clamp(2.75rem,10.5vw,4.75rem)] leading-[1.05] tracking-tight text-white sm:text-6xl md:text-7xl lg:text-[6.5rem]">
+            <span className="gsap-reveal block opacity-0">KOPI BAGUS.</span>
+            <span className="gsap-reveal mt-2 block opacity-0">
+              MOMEN <i className="font-normal italic text-cream">TENANG.</i>
             </span>
           </h1>
-          
-          <p className="gsap-reveal text-lg md:text-xl text-muted-foreground leading-relaxed mb-10 opacity-0 max-w-xl">
-            {COPY.sub}
+
+          <p className="gsap-reveal mb-10 max-w-2xl text-base font-light leading-relaxed text-white/85 opacity-0 md:text-lg lg:text-xl">
+            Biji kopi Nusantara pilihan, disangrai in-house dalam batch kecil,
+            dan disajikan segar — di bar kami, atau di rumah Anda.
           </p>
-          
-          <div className="gsap-reveal flex flex-col sm:flex-row gap-4 opacity-0">
-            <Link href={COPY.ctaPrimary.href} className={buttonVariants({ size: "lg", className: "rounded-full h-14 px-8 text-lg w-full sm:w-auto hover:scale-105 transition-transform duration-300" })}>
-              {COPY.ctaPrimary.label}
+
+          <div className="gsap-reveal flex w-full flex-col items-center justify-center gap-4 opacity-0 sm:w-auto sm:flex-row">
+            <Link
+              href="/coffee"
+              className={buttonVariants({
+                size: 'lg',
+                className:
+                  'h-14 w-full rounded-full bg-warm px-8 text-base text-ink hover:bg-cream sm:w-auto',
+              })}
+            >
+              Beli Kopi
             </Link>
-            <Link href={COPY.ctaSecondary.href} className={buttonVariants({ size: "lg", variant: "outline", className: "rounded-full h-14 px-8 text-lg w-full sm:w-auto border-border bg-transparent hover:bg-ink/5 text-ink hover:scale-105 transition-transform duration-300" })}>
-              {COPY.ctaSecondary.label}
+            <Link
+              href="/locations"
+              className="inline-flex h-11 items-center gap-2 text-sm font-semibold uppercase tracking-widest text-white/80 transition-colors hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:hidden"
+            >
+              Kunjungi Kafe
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link
+              href="/locations"
+              className={cn(
+                buttonVariants({
+                  size: 'lg',
+                  variant: 'outline',
+                  className:
+                    'hidden h-14 w-full rounded-full border-white/25 bg-transparent px-8 text-base text-white hover:bg-white/10 sm:inline-flex sm:w-auto',
+                }),
+              )}
+            >
+              Kunjungi Kafe
             </Link>
           </div>
         </div>
       </div>
-      
-      {/* RIGHT: Photo */}
-      <div className="w-full xl:w-[55%] h-[45vh] md:h-[50vh] xl:h-[100vh] relative order-1 xl:order-2 overflow-visible bg-warm/20">
-        <div className="gsap-photo-inner absolute inset-0 w-full h-full opacity-0 origin-center">
-          {/* PLACEHOLDER GRADIENT */}
-          <div className="absolute inset-0 bg-gradient-to-br from-warm/40 to-ink/20" />
-          
-          {/* 
-            TODO: Ganti atribut hidden di className ketika gambar asli sudah ada.
-            Jangan lupa sesuaikan src gambar.
-          */}
-          <Image 
-            src="/hero-placeholder.jpg" 
-            alt="Suasana hangat P1NTO Coffee di sore hari" 
-            fill
-            className="object-cover object-center hidden" 
-            priority
-          />
-        </div>
-        
-        {/* Kraft Tag Signature Element */}
-        <HeroPhotoTag number={COPY.tag.number} label={COPY.tag.label} />
+
+      {/* Signature tag */}
+      <div className="absolute bottom-12 right-12 z-10 hidden lg:block">
+        <HeroPhotoTag number="EST" label="2024" />
+      </div>
+
+      {/* Scroll indicator */}
+      <div className="pointer-events-none absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-2 text-[10px] uppercase tracking-widest text-white/50">
+        <span className="hidden sm:inline">Scroll untuk menjelajah</span>
+        <span className="flex h-9 w-5 items-start justify-center rounded-full border border-white/30 p-1">
+          <span className="hero-scroll-dot h-1.5 w-1 rounded-full bg-cream" />
+        </span>
       </div>
     </section>
   );

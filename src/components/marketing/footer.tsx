@@ -1,42 +1,93 @@
 import Link from 'next/link';
 import Image from 'next/image';
 
+const NAV = [
+  { href: '/', label: 'Beranda' },
+  { href: '/cafe', label: 'Kafe' },
+  { href: '/coffee', label: 'Kopi' },
+  { href: '/menu', label: 'Menu' },
+  { href: '/story', label: 'Kisah' },
+  { href: '/locations', label: 'Lokasi' },
+];
+
 export function Footer() {
   return (
-    <footer className="bg-ink text-paper py-16 md:py-24 border-t border-white/10">
+    <footer className="border-t border-white/10 bg-ink py-16 text-paper md:py-20">
       <div className="container mx-auto px-4 md:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-8">
-          <div className="col-span-1 md:col-span-6">
-            <Link href="/" className="flex items-center gap-3 mb-6">
-              <Image src="/Pintokupi.webp" alt="P1NTO Coffee Logo" width={40} height={40} className="rounded-md object-cover grayscale brightness-200 contrast-125" />
-              <span className="font-display text-3xl font-bold text-cream mt-1">P1NTO</span>
+        <div className="grid grid-cols-1 gap-12 md:grid-cols-12 md:gap-8">
+          <div className="md:col-span-5">
+            <Link href="/" className="mb-6 flex items-center gap-3">
+              <Image
+                src="/Pintokupi.webp"
+                alt="Logo P1NTO Coffee"
+                width={40}
+                height={40}
+                className="rounded-md object-cover grayscale brightness-200 contrast-125"
+              />
+              <span className="font-display mt-1 text-3xl font-bold text-cream">P1NTO</span>
             </Link>
-            <p className="text-paper/60 text-xs md:text-sm tracking-widest uppercase font-semibold">
-              Kopi • Makanan • Momen Indah
+            <p className="mb-6 max-w-xs leading-relaxed text-paper/60">
+              Kafe dan roastery di Bogor. Kopi Nusantara, disangrai in-house
+              dalam batch kecil, disajikan untuk setiap momen.
+            </p>
+            <p className="text-xs uppercase tracking-[0.25em] text-paper/50">
+              Kopi · Makanan · Momen Indah
             </p>
           </div>
-          
-          <div className="col-span-1 md:col-span-3">
-            <h3 className="font-semibold text-xs tracking-widest uppercase mb-6 text-cream">Navigasi</h3>
-            <ul className="space-y-4">
-              <li><Link href="/" className="text-paper/60 hover:text-white transition-colors text-sm">Beranda</Link></li>
-              <li><Link href="/menu" className="text-paper/60 hover:text-white transition-colors text-sm">Menu</Link></li>
-              <li><Link href="/coffee" className="text-paper/60 hover:text-white transition-colors text-sm">Kopi</Link></li>
-              <li><Link href="/locations" className="text-paper/60 hover:text-white transition-colors text-sm">Lokasi</Link></li>
+
+          <div className="md:col-span-3">
+            <h3 className="mb-6 text-xs font-semibold uppercase tracking-widest text-cream">
+              Jelajahi
+            </h3>
+            <ul className="space-y-1">
+              {NAV.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="block py-1.5 text-sm text-paper/60 transition-colors hover:text-white"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          <div className="col-span-1 md:col-span-3">
-            <h3 className="font-semibold text-xs tracking-widest uppercase mb-6 text-cream">Kunjungi Kami</h3>
-            <ul className="space-y-4">
-              <li className="text-paper/60 text-sm">Perumahan Bumi Insani, Jl. Flamboyan No. 8<br/>Tajur Halang, Kabupaten Bogor</li>
-              <li className="text-paper/60 text-sm">Buka Setiap Hari<br/>08.00 — 22.00</li>
+          <div className="md:col-span-4">
+            <h3 className="mb-6 text-xs font-semibold uppercase tracking-widest text-cream">
+              Kunjungi Kami
+            </h3>
+            <ul className="space-y-4 text-sm text-paper/60">
+              <li>
+                Perumahan Bumi Insani, Jl. Flamboyan No. 8
+                <br />
+                Tajur Halang, Kabupaten Bogor
+              </li>
+              <li>
+                Buka Setiap Hari
+                <br />
+                08.00 — 22.00
+              </li>
+              <li>
+                <a
+                  href="https://maps.app.goo.gl/p7UhDrsRF1SbVEVh9"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-paper/60 underline-offset-4 transition-colors hover:text-white hover:underline"
+                >
+                  Petunjuk Arah
+                </a>
+              </li>
             </ul>
           </div>
         </div>
-        
-        <div className="mt-20 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center text-[10px] md:text-xs text-paper/60 uppercase tracking-widest">
+
+        <div
+          className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 text-[10px] uppercase tracking-widest text-paper/50 md:flex-row"
+          style={{ paddingBottom: 'calc(env(safe-area-inset-bottom))' }}
+        >
           <p>© {new Date().getFullYear()} P1NTO Coffee. Hak cipta dilindungi.</p>
+          <p>Roastery &amp; Kafe — Bogor</p>
         </div>
       </div>
     </footer>

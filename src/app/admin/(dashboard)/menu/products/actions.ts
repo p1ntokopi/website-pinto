@@ -3,6 +3,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { deleteObject } from '@/lib/storage/r2'
+import { objectKeyFromUrl } from '@/lib/storage/r2'
 
 const productSchema = z.object({
   category_id: z.string().uuid('Category is required'),
@@ -80,6 +82,7 @@ export async function updateProduct(id: string, prevState: unknown, formData: Fo
       sort_order: formData.get('sort_order'),
       image_url: formData.get('image_url') || null,
     }
+    const oldImageUrl = (formData.get('old_image_url') as string | null) || null
 
     const validatedData = productSchema.safeParse(rawData)
 
@@ -106,6 +109,10 @@ export async function updateProduct(id: string, prevState: unknown, formData: Fo
     if (error) {
       if (error.code === '23505') return { error: 'Product with this name already exists' }
       throw error
+    }
+
+    if (oldImageUrl && oldImageUrl !== validatedData.data.image_url) {
+      await deleteObject(objectKeyFromUrl(oldImageUrl))
     }
 
     revalidatePath('/admin/menu/products')
@@ -135,12 +142,23 @@ export async function toggleProductAvailability(id: string, is_available: boolea
 export async function deleteProduct(id: string) {
   const supabase = await createClient()
   try {
+    const { data: product } = await supabase
+      .from('products')
+      .select('image_url')
+      .eq('id', id)
+      .single()
+
     const { error } = await supabase
       .from('products')
       .delete()
       .eq('id', id)
 
     if (error) throw error
+
+    if (product?.image_url) {
+      await deleteObject(objectKeyFromUrl(product.image_url))
+    }
+
     revalidatePath('/admin/menu/products')
     return { success: true }
   } catch (err: unknown) {

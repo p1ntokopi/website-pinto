@@ -1,17 +1,56 @@
-import Image from 'next/image';
-import { ScrollReveal } from './scroll-reveal';
+'use client';
 
-const testimonials = [
-  { quote: "Kopi terbaik yang pernah saya coba! Kualitas dan rasanya sungguh luar biasa.", name: "Sinta Prameswari", rating: 5, avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop" },
-  { quote: "Tempatnya nyaman, stafnya ramah, dan kopinya sempurna!", name: "Bima Aditya", rating: 5, avatar: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=150&auto=format&fit=crop" },
-  { quote: "Saya ke sini setiap akhir pekan. P1NTO adalah tempat bahagia saya!", name: "Dinda Ayu", rating: 5, avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?q=80&w=150&auto=format&fit=crop" }
+import { useEffect, useState } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { SectionHeader } from './section-header';
+import { cn } from '@/lib/utils';
+
+/**
+ * PLACEHOLDER — ganti dengan testimoni asli pelanggan P1NTO.
+ * Jangan gunakan nama atau cerita fiktif untuk produksi.
+ * Struktur carousel sudah final; cukup ganti isi array ini.
+ */
+const QUOTES = [
+  {
+    quote:
+      'Tempatnya terasa seperti rumah sendiri. Kopinya konsisten, dan selalu ada ruang untuk duduk lebih lama dari yang direncanakan.',
+    name: 'Nama Pelanggan',
+    role: 'Pelanggan tetap P1NTO',
+  },
+  {
+    quote:
+      'Saya mulai dari satu cangkir, lalu membawa pulang bijinya. Sekarang menyeduh kopi P1NTO di rumah setiap pagi.',
+    name: 'Nama Pelanggan',
+    role: 'Pembeli biji kopi',
+  },
+  {
+    quote:
+      'Kafe yang tenang, kopi yang serius. Tempat yang tepat untuk bekerja, bertemu, atau sekadar menikmati waktu sendiri.',
+    name: 'Nama Pelanggan',
+    role: 'Pengunjung mingguan',
+  },
 ];
 
-function StarRating() {
+function initials(name: string) {
+  return name
+    .split(' ')
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase();
+}
+
+function Stars() {
   return (
-    <div className="flex gap-1">
+    <div className="flex gap-1" aria-label="Rating 5 dari 5">
       {[1, 2, 3, 4, 5].map((star) => (
-        <svg key={star} className="w-3.5 h-3.5 text-warm fill-warm" viewBox="0 0 24 24">
+        <svg
+          key={star}
+          className="h-3.5 w-3.5 fill-warm text-warm"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
           <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
         </svg>
       ))}
@@ -20,41 +59,128 @@ function StarRating() {
 }
 
 export function TestimonialsSection() {
+  const reduced = useReducedMotion();
+  const [index, setIndex] = useState(0);
+  const count = QUOTES.length;
+  const quote = QUOTES[index];
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') setIndex((i) => (i - 1 + count) % count);
+      if (e.key === 'ArrowRight') setIndex((i) => (i + 1) % count);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [count]);
+
   return (
-    <section className="w-full bg-paper py-24 md:py-32 border-t border-ink/5">
+    <section
+      className="w-full border-t border-ink/5 bg-paper py-24 md:py-32"
+      aria-roledescription="carousel"
+      aria-label="Testimoni pelanggan"
+    >
       <div className="container mx-auto px-4 md:px-8">
-        <div className="mb-16">
-          <ScrollReveal>
-            <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground mb-4">Kata Pelanggan Kami</p>
-          </ScrollReveal>
-          <ScrollReveal delay={0.1}>
-            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl text-ink">Disukai Para Pecinta Kopi</h2>
-          </ScrollReveal>
+        <div className="mb-14 md:mb-20">
+          <SectionHeader
+            eyebrow="Kata Mereka"
+            lines={['Disukai para', { text: 'penikmat kopi.', italic: true }]}
+          />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {testimonials.map((item, idx) => (
-            <div key={idx} className="bg-ink/5 rounded-sm p-8 md:p-10 flex flex-col justify-between hover:bg-ink/10 transition-colors duration-500">
-              <div>
-                <svg className="w-8 h-8 text-ink/20 mb-6" fill="currentColor" viewBox="0 0 32 32">
-                  <path d="M10 8c-3.3 0-6 2.7-6 6v10h10V14H8c0-1.1.9-2 2-2h2V8h-2zm14 0c-3.3 0-6 2.7-6 6v10h10V14h-6c0-1.1.9-2 2-2h2V8h-2z" />
-                </svg>
-                <p className="mt-4 text-sm md:text-base italic leading-relaxed text-muted-text">
-                  &quot;{item.quote}&quot;
+        <div className="mx-auto grid max-w-5xl grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-16">
+          <div className="relative min-h-[260px] lg:col-span-8">
+            <svg
+              className="absolute -top-10 left-0 h-16 w-16 text-ink/10"
+              fill="currentColor"
+              viewBox="0 0 32 32"
+              aria-hidden="true"
+            >
+              <path d="M10 8c-3.3 0-6 2.7-6 6v10h10V14H8c0-1.1.9-2 2-2h2V8h-2zm14 0c-3.3 0-6 2.7-6 6v10h10V14h-6c0-1.1.9-2 2-2h2V8h-2z" />
+            </svg>
+
+            <AnimatePresence mode="wait">
+              <motion.blockquote
+                key={index}
+                className="relative cursor-grab touch-pan-y active:cursor-grabbing"
+                initial={reduced ? false : { opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={reduced ? undefined : { opacity: 0, y: -16 }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                drag={reduced ? false : 'x'}
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.12}
+                onDragEnd={(_, info) => {
+                  if (info.offset.x < -60) setIndex((i) => (i + 1) % count);
+                  else if (info.offset.x > 60) setIndex((i) => (i - 1 + count) % count);
+                }}
+              >
+                <p className="font-display text-2xl leading-snug text-ink md:text-3xl lg:text-4xl">
+                  &ldquo;{quote.quote}&rdquo;
                 </p>
-              </div>
-              
-              <div className="flex items-center gap-4">
-                <div className="relative w-12 h-12 rounded-full overflow-hidden">
-                  <Image src={item.avatar} alt={item.name} fill className="object-cover" />
+              </motion.blockquote>
+            </AnimatePresence>
+          </div>
+
+          <div className="lg:col-span-4">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={index}
+                initial={reduced ? false : { opacity: 0, x: 16 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={reduced ? undefined : { opacity: 0 }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                className="border-l-2 border-coffee/30 pl-6"
+              >
+                <div className="mb-4 flex items-center gap-4">
+                  <span
+                    aria-hidden="true"
+                    className="flex h-12 w-12 items-center justify-center rounded-full border border-ink/15 bg-warm/15 font-display text-sm text-coffee"
+                  >
+                    {initials(quote.name)}
+                  </span>
+                  <div>
+                    <p className="font-semibold text-ink">{quote.name}</p>
+                    <p className="text-sm text-muted-foreground">{quote.role}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-semibold text-ink text-sm mb-1">{item.name}</p>
-                  <StarRating />
-                </div>
+                <Stars />
+              </motion.div>
+            </AnimatePresence>
+
+            <div className="mt-8 flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => setIndex((i) => (i - 1 + count) % count)}
+                aria-label="Testimoni sebelumnya"
+                className="flex h-12 w-12 items-center justify-center rounded-full border border-ink/20 text-ink transition-colors hover:bg-ink hover:text-paper"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setIndex((i) => (i + 1) % count)}
+                aria-label="Testimoni berikutnya"
+                className="flex h-12 w-12 items-center justify-center rounded-full border border-ink/20 text-ink transition-colors hover:bg-ink hover:text-paper"
+              >
+                <ArrowRight className="h-4 w-4" />
+              </button>
+              <div className="ml-2 flex gap-2">
+                {QUOTES.map((_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setIndex(i)}
+                    aria-label={`Tampilkan testimoni ${i + 1}`}
+                    aria-current={i === index}
+                    className={cn(
+                      'h-1.5 w-1.5 rounded-full transition-all duration-300',
+                      i === index ? 'w-6 bg-coffee' : 'bg-ink/20 hover:bg-ink/40',
+                    )}
+                  />
+                ))}
               </div>
             </div>
-          ))}
+          </div>
         </div>
       </div>
     </section>

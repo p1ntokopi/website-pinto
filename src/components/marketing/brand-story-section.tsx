@@ -1,47 +1,62 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { buttonVariants } from '@/components/ui/button';
-import { ScrollReveal } from './scroll-reveal';
+import { ArrowRight } from 'lucide-react';
+import { images } from '@/config/images';
+import { SectionHeader } from './section-header';
+import { RevealFade } from './reveal-heading';
 
 export function BrandStorySection() {
   return (
-    <section className="w-full bg-paper py-24 md:py-32 overflow-hidden">
+    <section className="w-full overflow-hidden bg-paper py-24 md:py-32">
       <div className="container mx-auto px-4 md:px-8">
-        <div className="flex flex-col lg:flex-row gap-16 lg:gap-24 items-center">
-          <div className="w-full lg:w-[45%] flex flex-col justify-center order-2 lg:order-1 z-10">
-            <ScrollReveal>
-              <p className="text-xs font-semibold tracking-[0.2em] uppercase text-muted-foreground mb-6">
-                Kisah Kami
-              </p>
-            </ScrollReveal>
-            <ScrollReveal delay={0.1}>
-              <h2 className="font-display text-5xl md:text-6xl lg:text-[4.5rem] text-ink leading-[1.05] mb-8">
-                Lebih dari<br />
-                <i className="text-primary font-medium">Sekadar Kopi</i>
-              </h2>
-            </ScrollReveal>
-            <ScrollReveal delay={0.2}>
-              <p className="text-muted-foreground text-lg md:text-xl leading-relaxed mb-10 max-w-md">
-                P1NTO lahir dari hasrat sederhana akan kopi yang hebat dan koneksi yang bermakna. Dari biji yang dipilih dengan cermat hingga cangkir favorit Anda, kami hadir untuk membuat setiap momen menjadi istimewa.
-              </p>
-            </ScrollReveal>
-            <ScrollReveal delay={0.3}>
-              <div>
-                <Link href="/story" className={buttonVariants({ variant: "outline", className: "rounded-full h-14 px-8 text-lg border-ink text-ink hover:bg-ink hover:text-paper transition-colors duration-300" })}>
-                  Baca Kisah Kami
-                </Link>
-              </div>
-            </ScrollReveal>
-          </div>
-          
-          <div className="w-full lg:w-[55%] relative h-[60vh] lg:h-[80vh] order-1 lg:order-2 bg-warm/20 rounded-sm overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-warm/40 to-ink/20 z-0" />
-            <Image 
-              src="https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=1600&auto=format&fit=crop"
-              alt="Barista menuang kopi"
-              fill
-              className="object-cover z-10"
+        <div className="flex flex-col items-center gap-16 lg:flex-row lg:gap-24">
+          <div className="z-10 order-1 flex w-full flex-col justify-center lg:order-1 lg:w-[44%]">
+            <SectionHeader
+              eyebrow="Kisah Kami"
+              lines={[
+                'Lebih dari',
+                { text: 'Sekadar Kopi', italic: true },
+              ]}
+              titleClassName="text-4xl md:text-5xl lg:text-6xl"
             />
+            <RevealFade delay={0.2}>
+              <p className="mb-8 mt-6 max-w-md text-lg leading-relaxed text-muted-foreground md:text-xl">
+                P1NTO lahir di Bogor dari satu ide sederhana: kopi terbaik
+                layak diperlakukan dengan hormat — dari petani yang menanam,
+                hingga orang yang menyajikannya.
+              </p>
+              <p className="mb-10 max-w-md text-base leading-relaxed text-muted-foreground">
+                Kami menyangrai sendiri dalam batch kecil, meracik resep yang
+                jujur di bar, dan memperlakukan setiap tamu seperti orang yang
+                sedang kami tunggu.
+              </p>
+            </RevealFade>
+            <RevealFade delay={0.3}>
+              <Link
+                href="/story"
+                className="group inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-ink transition-colors hover:text-coffee"
+              >
+                <span className="border-b border-ink pb-1 transition-colors group-hover:border-coffee">
+                  Baca Kisah Kami
+                </span>
+                <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+              </Link>
+            </RevealFade>
+          </div>
+
+          <div className="order-2 w-full lg:order-2 lg:w-[56%]">
+            <RevealFade y={40}>
+              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-sm bg-warm/20 lg:aspect-[5/4] lg:h-[78vh]">
+                <Image
+                  src={images.cafe.barista}
+                  alt="Barista P1NTO menuang kopi"
+                  fill
+                  sizes="(min-width: 1024px) 55vw, 100vw"
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-br from-warm/20 to-transparent" />
+              </div>
+            </RevealFade>
           </div>
         </div>
       </div>

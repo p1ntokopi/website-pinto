@@ -1,6 +1,12 @@
-import { getMenu, formatRupiah } from '@/lib/shop';
-import { buttonVariants } from '@/components/ui/button';
-import Link from 'next/link';
+import { getMenu, getCoffeeBeans, type CoffeeBean } from '@/lib/shop';
+import { MenuHero } from '@/components/marketing/menu/menu-hero';
+import { MenuCategoryNav, type MenuNavItem } from '@/components/marketing/menu/menu-category-nav';
+import {
+  MenuCategorySection,
+  type MenuCategoryData,
+} from '@/components/marketing/menu/menu-category-section';
+import { MenuSignatures, type SignatureDrink } from '@/components/marketing/menu/menu-signatures';
+import { MenuRoastery } from '@/components/marketing/menu/menu-roastery';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,82 +16,73 @@ export const metadata = {
     'Jelajahi menu kopi, minuman, dan pastry kami — diracik dengan cermat dan disajikan satu cangkir demi satu cangkir.',
 };
 
+const CAFE_TYPES = new Set(['CAFE_DRINK', 'DESSERT', 'FOOD']);
+
+const SIGNATURE_SLUGS = ['sanger-latte', 'aren-latte', 'v-60', 'matcha-latte'];
+const SIGNATURE_LABELS: Record<string, string> = {
+  'sanger-latte': 'Signature',
+  'aren-latte': 'Klasik',
+  'v-60': 'Manual Brew',
+  'matcha-latte': 'Non-Kopi',
+};
+
 export default async function MenuPage() {
-  const sections = await getMenu();
+  const [sections, beans] = await Promise.all([getMenu(), getCoffeeBeans()]);
+
+  const cafeSections: MenuCategoryData[] = sections
+    .map(({ category, items }) => ({
+      id: category.id,
+      name: category.name,
+      description: category.description,
+      items: items.filter((i) => CAFE_TYPES.has(i.product_type)),
+    }))
+    .filter((s) => s.items.length > 0);
+
+  const navItems: MenuNavItem[] = cafeSections.map((s) => ({ id: s.id, name: s.name }));
+  navItems.push({ id: 'roastery', name: 'Roastery' });
+
+  const signatures: SignatureDrink[] = SIGNATURE_SLUGS.map((slug) => {
+    for (const section of cafeSections) {
+      const item = section.items.find((i) => i.slug === slug);
+      if (item) {
+        return { item, label: SIGNATURE_LABELS[slug] ?? 'Menu', categoryId: section.id };
+      }
+    }
+    return null;
+  }).filter((s): s is SignatureDrink => s !== null);
+
+  const bySlug = (slug: string) => beans.find((b) => b.slug === slug);
+  const featured =
+    bySlug('arabika-gayo') ?? bySlug('blend-a70-r30') ?? (beans[0] as CoffeeBean | undefined) ?? null;
+  const supporting = [
+    bySlug('arabika-toraja'),
+    bySlug('robusta-lampung'),
+    bySlug('blend-a70-r30'),
+    bySlug('blend-a30-r70'),
+  ].filter((b): b is CoffeeBean => Boolean(b));
 
   return (
     <>
-      <section className="w-full bg-paper py-20 md:py-28 border-b border-ink/5">
-        <div className="container mx-auto px-4 md:px-8 max-w-5xl">
-          <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-coffee mb-4">
-            Di Bar
-          </p>
-          <h1 className="font-display text-5xl md:text-6xl lg:text-7xl text-ink leading-[1.05] mb-6">
-            Menu Kami
-          </h1>
-          <p className="text-muted-foreground text-lg max-w-xl">
-            Biji pilihan, diracik dengan penuh perhatian — dari espresso hingga pastry, setiap item dibuat segar saat Anda memesan.
-          </p>
-        </div>
-      </section>
-
-      <section className="w-full bg-paper py-16 md:py-24 min-h-[40vh]">
-        <div className="container mx-auto px-4 md:px-8 max-w-5xl">
-          {sections.length === 0 ? (
-            <div className="text-center py-20">
-              <h2 className="font-display text-3xl text-ink mb-4">Menu Segera Hadir</h2>
-              <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-                Kami masih menyempurnakan menu kami. Kunjungi kafe untuk pilihan hari ini.
-              </p>
-              <Link
-                href="/locations"
-                className={buttonVariants({ variant: 'outline', className: 'rounded-full px-8 border-ink text-ink hover:bg-ink hover:text-paper' })}
-              >
-                Temukan Lokasi Kami
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-20">
-              {sections.map(({ category, items }) => (
-                <div key={category.id}>
-                  <div className="mb-10 flex items-end justify-between gap-6">
-                    <div>
-                      <h2 className="font-display text-4xl md:text-5xl text-ink">{category.name}</h2>
-                      {category.description && (
-                        <p className="text-muted-foreground mt-2 max-w-md">{category.description}</p>
-                      )}
-                    </div>
-                    <div className="hidden md:block w-16 h-px bg-ink/20 mb-3" aria-hidden />
-                  </div>
-
-                  {items.length === 0 ? (
-                    <p className="text-muted-foreground">Item segera hadir.</p>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-0">
-                      {items.map((item) => (
-                        <div
-                          key={item.id}
-                          className="py-5 flex items-baseline justify-between gap-6 border-b border-ink/10"
-                        >
-                          <div>
-                            <h3 className="font-medium text-lg text-ink">{item.name}</h3>
-                            {item.description && (
-                              <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
-                            )}
-                          </div>
-                          <span className="font-semibold text-ink whitespace-nowrap">
-                            {formatRupiah(item.base_price)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
+      <MenuHero />
+      <MenuCategoryNav items={navItems} />
+      {cafeSections.length === 0 ? (
+        <section className="w-full bg-paper py-24 text-center">
+          <div className="container mx-auto max-w-xl px-4">
+            <h2 className="font-display text-3xl text-ink">Menu Segera Hadir</h2>
+            <p className="mt-3 text-muted-foreground">
+              Kami masih menyempurnakan menu kami. Kunjungi kafe untuk pilihan hari ini.
+            </p>
+          </div>
+        </section>
+      ) : (
+        <>
+          {cafeSections.map((section, index) => (
+            <MenuCategorySection key={section.id} category={section} index={index} />
+          ))}
+          <MenuSignatures signatures={signatures} />
+        </>
+      )}
+      <MenuRoastery featured={featured} supporting={supporting} />
     </>
   );
 }

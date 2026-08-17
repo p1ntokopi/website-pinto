@@ -1,6 +1,4 @@
-'use client';
-
-import { motion, useReducedMotion } from 'framer-motion';
+import type { CSSProperties } from 'react';
 import { ReactNode } from 'react';
 
 interface ScrollRevealProps {
@@ -10,22 +8,24 @@ interface ScrollRevealProps {
   className?: string;
 }
 
-export function ScrollReveal({ children, delay = 0, y = 30, className = "" }: ScrollRevealProps) {
-  const prefersReducedMotion = useReducedMotion();
-
-  if (prefersReducedMotion) {
-    return <div className={className}>{children}</div>;
-  }
+/**
+ * Reveal CSS-only — animasi berjalan sekali saat mount dan selalu berakhir
+ * terlihat. Tidak bergantung pada IntersectionObserver/scroll-trigger.
+ */
+export function ScrollReveal({
+  children,
+  delay = 0,
+  y = 30,
+  className = '',
+}: ScrollRevealProps) {
+  const style: CSSProperties = {
+    animationDelay: `${delay}s`,
+    ['--reveal-y' as string]: `${y}px`,
+  };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-10%" }}
-      transition={{ duration: 0.8, delay, ease: [0.21, 0.47, 0.32, 0.98] }}
-      className={className}
-    >
+    <div className={`reveal-fade ${className}`} style={style}>
       {children}
-    </motion.div>
+    </div>
   );
 }

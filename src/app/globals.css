@@ -112,6 +112,80 @@
   }
 }
 
+/* Radial vignette overlay untuk hero */
+@utility bg-radial-vignette {
+  background-image: radial-gradient(
+    ellipse at center,
+    transparent 0%,
+    rgb(23 21 19 / 0.55) 100%
+  );
+}
+
+/* Hero — slow Ken Burns zoom pada media */
+.hero-zoom {
+  animation: hero-zoom 28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  will-change: transform;
+}
+@keyframes hero-zoom {
+  from {
+    transform: scale(1.08);
+  }
+  to {
+    transform: scale(1.18);
+  }
+}
+
+/* Hero — scroll indicator */
+.hero-scroll-dot {
+  animation: hero-scroll-dot 2.2s ease-in-out infinite;
+}
+@keyframes hero-scroll-dot {
+  0%,
+  100% {
+    transform: translateY(2px);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateY(8px);
+    opacity: 1;
+  }
+}
+
+/* Reveal — CSS-only entrance (berjalan sekali saat mount, dijamin berakhir terlihat) */
+.reveal-mask {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.12em;
+  margin-bottom: -0.12em;
+}
+.reveal-line {
+  display: block;
+  animation: reveal-line 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform;
+}
+@keyframes reveal-line {
+  from {
+    transform: translateY(112%);
+  }
+  to {
+    transform: none;
+  }
+}
+.reveal-fade {
+  animation: reveal-fade 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+@keyframes reveal-fade {
+  from {
+    opacity: 0;
+    transform: translateY(var(--reveal-y, 24px));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* Respect reduced-motion preferences */
 @media (prefers-reduced-motion: reduce) {
   *,

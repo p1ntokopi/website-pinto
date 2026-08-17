@@ -39,7 +39,7 @@ export function HeroPhotoTag({ number, label }: HeroPhotoTagProps) {
   return (
     <div 
       ref={tagRef}
-      className="absolute -bottom-6 left-6 md:bottom-12 md:-left-12 bg-paper text-ink border border-border shadow-xl p-5 md:p-7 flex flex-col items-center justify-center origin-top z-20 opacity-0"
+      className="bg-paper text-ink border border-border shadow-xl p-5 md:p-7 flex flex-col items-center justify-center origin-top z-20 opacity-0"
     >
       <div className="w-3 h-3 rounded-full bg-ink/10 mb-3 border border-ink/20 shadow-inner" />
       <span className="font-display text-5xl md:text-6xl font-bold leading-none mb-2 text-ink">{number}</span>
