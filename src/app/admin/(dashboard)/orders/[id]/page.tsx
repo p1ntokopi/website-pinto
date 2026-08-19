@@ -4,7 +4,7 @@ import { OrderActions } from '@/components/admin/orders/order-actions'
 import { OrderStatus, UserRole } from '@/lib/orders/status-machine'
 import { STATUS_CONFIG } from '@/lib/orders/status-config'
 import { Badge } from '@/components/ui/badge'
-import { ChevronLeft, Receipt, User, FileText, CreditCard } from 'lucide-react'
+import { ChevronLeft, Receipt, User, FileText, CreditCard, Printer } from 'lucide-react'
 import Link from 'next/link'
 import { Metadata } from 'next'
 import { cn } from '@/lib/utils'
@@ -103,6 +103,25 @@ export default async function OrderDetailPage({ params }: { params: { id: string
     REFUNDED: { label: 'Dikembalikan', color: 'bg-info/10 text-info border-info/25' },
   }
 
+  const METHOD_LABELS: Record<string, string> = {
+    BANK_TRANSFER: 'Transfer Bank',
+    EWALLET: 'E-Wallet',
+    QR_CODE: 'QRIS',
+    DIRECT_DEBIT: 'Debit Langsung',
+    CARD: 'Kartu',
+    RETAIL_OUTLET: 'Toko Ritel',
+    PAY_LATER: 'Pay Later',
+    CRYPTOCURRENCY: 'Crypto',
+    OTC: 'Tunai',
+  }
+
+  const paymentMethodLabel = (p: typeof payment) => {
+    if (!p) return '—'
+    if (p.payment_channel) return p.payment_channel
+    if (p.payment_method) return METHOD_LABELS[p.payment_method] ?? p.payment_method
+    return p.provider
+  }
+
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6 pb-20">
       <div className="flex flex-wrap items-center gap-3">
@@ -123,6 +142,13 @@ export default async function OrderDetailPage({ params }: { params: { id: string
           <StatusIcon className="h-3.5 w-3.5" />
           {config.label}
         </Badge>
+        <Link
+          href={`/admin/orders/${order.id}/receipt`}
+          className="ml-auto inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border border-coffee/30 bg-coffee/5 px-4 text-sm font-semibold text-coffee transition-colors hover:bg-coffee/10 focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
+        >
+          <Printer className="h-4 w-4" />
+          Cetak Struk
+        </Link>
       </div>
 
       <div className="flex flex-col justify-between gap-4 border border-border-custom/70 bg-card p-5 md:flex-row md:items-center">
@@ -263,7 +289,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
                     Metode
                   </span>
                   <span className="text-sm font-medium text-ink">
-                    {payment.payment_channel || payment.payment_method || payment.provider}
+                    {paymentMethodLabel(payment)}
                   </span>
                 </div>
 

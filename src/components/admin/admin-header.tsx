@@ -3,6 +3,7 @@
 import { Menu } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { NotificationControl } from '@/components/admin/notification-control'
 
 interface HeaderProps {
   user: {
@@ -10,6 +11,9 @@ interface HeaderProps {
     role: string
   }
   onMenuOpen?: () => void
+  unreadCount?: number
+  isConnected?: boolean
+  onMarkAllRead?: () => void
 }
 
 const TITLE_MAP: Array<{ prefix: string; title: string }> = [
@@ -37,7 +41,7 @@ function formatToday(): string {
   })
 }
 
-export function AdminHeader({ user, onMenuOpen }: HeaderProps) {
+export function AdminHeader({ user, onMenuOpen, unreadCount = 0, isConnected = true, onMarkAllRead }: HeaderProps) {
   const pathname = usePathname()
   const title = getPageTitle(pathname)
 
@@ -61,6 +65,11 @@ export function AdminHeader({ user, onMenuOpen }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-3">
+        <NotificationControl
+          unreadCount={unreadCount}
+          isConnected={isConnected}
+          onMarkAllRead={onMarkAllRead ?? (() => {})}
+        />
         <div className="flex items-center gap-3">
           <div className="hidden text-right sm:block">
             <div className="text-sm font-semibold leading-tight text-ink">{user.full_name}</div>

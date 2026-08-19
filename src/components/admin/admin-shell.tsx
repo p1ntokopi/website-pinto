@@ -7,6 +7,7 @@ import { LayoutDashboard, ShoppingBag, Armchair, Coffee, MoreHorizontal, X } fro
 import { cn } from '@/lib/utils'
 import { AdminSidebar } from '@/components/admin/admin-sidebar'
 import { AdminHeader } from '@/components/admin/admin-header'
+import { useOrderNotifications } from '@/hooks/use-order-notifications'
 
 interface AdminShellProps {
   user: { full_name: string; role: string }
@@ -24,6 +25,10 @@ const BOTTOM_NAV = [
 export function AdminShell({ user, role, children }: AdminShellProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const pathname = usePathname()
+
+  // Realtime new-order notifications for the whole admin dashboard.
+  // Mounted here (once) so subscriptions are never duplicated across pages.
+  const { unreadCount, markAllRead, isConnected } = useOrderNotifications()
 
   // Lock body scroll and close on Escape while the drawer is open
   useEffect(() => {
@@ -44,7 +49,13 @@ export function AdminShell({ user, role, children }: AdminShellProps) {
       <AdminSidebar role={role} user={user} />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <AdminHeader user={user} onMenuOpen={() => setMenuOpen(true)} />
+        <AdminHeader
+          user={user}
+          onMenuOpen={() => setMenuOpen(true)}
+          unreadCount={unreadCount}
+          isConnected={isConnected}
+          onMarkAllRead={markAllRead}
+        />
         <main className="flex-1 overflow-x-hidden px-4 pb-24 pt-5 lg:px-8 lg:pb-8 lg:pt-6">
           {children}
         </main>
@@ -67,10 +78,15 @@ export function AdminShell({ user, role, children }: AdminShellProps) {
               href={item.href}
               aria-current={isActive ? 'page' : undefined}
               className={cn(
-                'flex min-h-14 flex-col items-center justify-center gap-1 text-[10px] font-medium transition-colors',
+                'relative flex min-h-14 flex-col items-center justify-center gap-1 text-[10px] font-medium transition-colors',
                 isActive ? 'text-coffee' : 'text-muted-text'
               )}
             >
+              {item.href === '/admin/orders' && unreadCount > 0 && (
+                <span className="absolute right-[calc(50%-26px)] top-1.5 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-danger px-1 text-[9px] font-bold leading-none text-paper">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
               <Icon className={cn('h-5 w-5', isActive && 'stroke-[2.5]')} />
               {item.label}
             </Link>

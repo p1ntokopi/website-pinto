@@ -1,15 +1,22 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { Database } from '@/types/database.types'
 import { OrderStatus } from '@/lib/orders/status-machine'
 import { STATUS_CONFIG } from '@/lib/orders/status-config'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Search, ArrowRight, ShoppingBag } from 'lucide-react'
+import { Search, ArrowRight, ShoppingBag, Wifi, WifiOff } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+
+type PaymentInfo = {
+  status: string | null
+  amount: number | null
+  payment_method: string | null
+  payment_channel: string | null
+}
 
 type OrderRow = {
   id: string
@@ -22,14 +29,81 @@ type OrderRow = {
   customer_name: string | null
   created_at: string
   table: { id: string; table_number: string } | null
+  payment: PaymentInfo | null
+  itemCount: number
 }
 
 const ALL_STATUSES: OrderStatus[] = ['PENDING_PAYMENT', 'PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'COMPLETED']
+
+const SELECT_QUERY =
+  'id, order_number, order_type, fulfillment_type, subtotal, total, status, customer_name, created_at, table:tables(id, table_number), payments:payments(order_id, status, amount, payment_method, payment_channel), items:order_items(id)'
+
+const NEW_ORDER_WINDOW_MS = 90 * 1000
+
+function normalizeRow(raw: Record<string, unknown>): OrderRow {
+  const payments = Array.isArray(raw.payments) ? (raw.payments as PaymentInfo[]) : []
+  const latestPayment = payments[0] ?? null
+  const items = Array.isArray(raw.items) ? raw.items : []
+  const table = raw.table
+  return {
+    ...(raw as unknown as Omit<OrderRow, 'table' | 'payment' | 'itemCount'>),
+    table: Array.isArray(table) ? (table[0] as OrderRow['table']) ?? null : (table as OrderRow['table']),
+    payment: latestPayment
+      ? {
+          status: latestPayment.status,
+          amount: latestPayment.amount,
+          payment_method: latestPayment.payment_method,
+          payment_channel: latestPayment.payment_channel,
+        }
+      : null,
+    itemCount: items.length,
+  }
+}
+
+function isNewArrival(order: OrderRow): boolean {
+  if (order.status !== 'PENDING' && order.status !== 'PENDING_PAYMENT') return false
+  return Date.now() - new Date(order.created_at).getTime() < NEW_ORDER_WINDOW_MS
+}
+
+function paymentStatusOf(order: OrderRow): { label: string; cls: string } {
+  if (order.status === 'PENDING_PAYMENT') {
+    return { label: 'Menunggu Bayar', cls: 'bg-warning/10 text-warning border-warning/25' }
+  }
+  switch (order.payment?.status) {
+    case 'PAID':
+      return { label: 'Lunas', cls: 'bg-success/10 text-success border-success/25' }
+    case 'PENDING':
+      return { label: 'Belum Bayar', cls: 'bg-warning/10 text-warning border-warning/25' }
+    case 'EXPIRED':
+      return { label: 'Kedaluwarsa', cls: 'bg-muted text-muted-text border-border' }
+    case 'CANCELED':
+      return { label: 'Dibatalkan', cls: 'bg-muted text-muted-text border-border' }
+    case 'FAILED':
+      return { label: 'Gagal', cls: 'bg-destructive/10 text-destructive border-destructive/25' }
+    case 'REFUNDED':
+      return { label: 'Dikembalikan', cls: 'bg-info/10 text-info border-info/25' }
+    default:
+      return { label: '—', cls: 'bg-muted text-muted-text border-border' }
+  }
+}
 
 export function OrdersClient({ initialOrders }: { initialOrders: OrderRow[] }) {
   const [orders, setOrders] = useState<OrderRow[]>(initialOrders)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'ALL'>('ALL')
+  const [isConnected, setIsConnected] = useState(true)
+  const wasConnectedRef = useRef(true)
+
+  const loadOrders = useCallback(async (supabase: ReturnType<typeof createBrowserClient<Database>>) => {
+    const { data } = await supabase
+      .from('orders')
+      .select(SELECT_QUERY)
+      .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+      .order('created_at', { ascending: false })
+    if (data) {
+      setOrders((data as unknown as Record<string, unknown>[]).map(normalizeRow))
+    }
+  }, [])
 
   useEffect(() => {
     const supabase = createBrowserClient<Database>(
@@ -46,30 +120,36 @@ export function OrdersClient({ initialOrders }: { initialOrders: OrderRow[] }) {
           if (payload.eventType === 'INSERT') {
             const { data } = await supabase
               .from('orders')
-              .select(
-                'id, order_number, order_type, fulfillment_type, subtotal, total, status, customer_name, created_at, table:tables(id, table_number)'
-              )
+              .select(SELECT_QUERY)
               .eq('id', payload.new.id)
               .single()
 
             if (data) {
-              setOrders((prev) => [data as unknown as OrderRow, ...prev])
+              setOrders((prev) => [normalizeRow(data as unknown as Record<string, unknown>), ...prev])
             }
           } else if (payload.eventType === 'UPDATE') {
             setOrders((prev) =>
-              prev.map((o) => (o.id === payload.new.id ? { ...o, ...payload.new } : o))
+              prev.map((o) => (o.id === payload.new.id ? { ...o, ...(payload.new as Partial<OrderRow>) } : o))
             )
           } else if (payload.eventType === 'DELETE') {
             setOrders((prev) => prev.filter((o) => o.id !== payload.old.id))
           }
         }
       )
-      .subscribe()
+      .subscribe(async (status) => {
+        const connected = status === 'SUBSCRIBED'
+        setIsConnected(connected)
+        // Reconcile any orders missed while the channel was down.
+        if (connected && !wasConnectedRef.current) {
+          await loadOrders(supabase)
+        }
+        wasConnectedRef.current = connected
+      })
 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [loadOrders])
 
   const filteredOrders = orders.filter((o) => {
     if (statusFilter !== 'ALL' && o.status !== statusFilter) return false
@@ -169,18 +249,32 @@ export function OrdersClient({ initialOrders }: { initialOrders: OrderRow[] }) {
             aria-label="Cari pesanan"
           />
         </div>
-        {statusFilter !== 'ALL' || searchQuery ? (
-          <button
-            type="button"
-            onClick={() => {
-              setStatusFilter('ALL')
-              setSearchQuery('')
-            }}
-            className="shrink-0 text-sm font-medium text-coffee hover:underline focus-visible:ring-3 focus-visible:ring-ring/40 outline-none rounded-sm"
+        <div className="flex items-center gap-3">
+          <span
+            className={cn(
+              'inline-flex items-center gap-1.5 rounded-sm border px-2.5 py-1 text-xs font-semibold',
+              isConnected
+                ? 'border-success/25 bg-success/5 text-success'
+                : 'border-danger/25 bg-danger/5 text-danger animate-pulse'
+            )}
+            title={isConnected ? 'Tersambung real-time' : 'Real-time terputus, mencoba menyambung ulang'}
           >
-            Hapus filter
-          </button>
-        ) : null}
+            {isConnected ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
+            {isConnected ? 'Langsung' : 'Menyambung ulang'}
+          </span>
+          {statusFilter !== 'ALL' || searchQuery ? (
+            <button
+              type="button"
+              onClick={() => {
+                setStatusFilter('ALL')
+                setSearchQuery('')
+              }}
+              className="shrink-0 text-sm font-medium text-coffee hover:underline focus-visible:ring-3 focus-visible:ring-ring/40 outline-none rounded-sm"
+            >
+              Hapus filter
+            </button>
+          ) : null}
+        </div>
       </div>
 
       <div className="hidden overflow-hidden border border-border-custom/70 md:block">
@@ -197,7 +291,13 @@ export function OrdersClient({ initialOrders }: { initialOrders: OrderRow[] }) {
                 Meja
               </TableHead>
               <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-text">
+                Item
+              </TableHead>
+              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-text">
                 Total
+              </TableHead>
+              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-text">
+                Pembayaran
               </TableHead>
               <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-text">
                 Status
@@ -210,7 +310,7 @@ export function OrdersClient({ initialOrders }: { initialOrders: OrderRow[] }) {
           <TableBody>
             {filteredOrders.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-16 text-center text-muted-text">
+                <TableCell colSpan={8} className="py-16 text-center text-muted-text">
                   <ShoppingBag className="mx-auto mb-3 h-7 w-7 text-muted-text/50" />
                   Tidak ada pesanan yang cocok dengan filter saat ini.
                 </TableCell>
@@ -219,15 +319,31 @@ export function OrdersClient({ initialOrders }: { initialOrders: OrderRow[] }) {
               filteredOrders.map((order) => {
                 const config = STATUS_CONFIG[order.status]
                 const Icon = config.icon
+                const isNew = isNewArrival(order)
+                const pay = paymentStatusOf(order)
                 return (
-                  <TableRow key={order.id} className="border-b border-border-custom/60">
+                  <TableRow
+                    key={order.id}
+                    className={cn(
+                      'border-b border-border-custom/60',
+                      isNew && 'bg-coffee/[0.05]'
+                    )}
+                  >
                     <TableCell className="font-semibold text-ink">
-                      <Link
-                        href={`/admin/orders/${order.id}`}
-                        className="rounded-sm focus-visible:ring-3 focus-visible:ring-ring/40 outline-none hover:text-coffee"
-                      >
-                        {order.order_number}
-                      </Link>
+                      <span className="flex items-center gap-2">
+                        {isNew && (
+                          <span className="relative flex h-2 w-2">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-coffee opacity-60" />
+                            <span className="relative inline-flex h-2 w-2 rounded-full bg-coffee" />
+                          </span>
+                        )}
+                        <Link
+                          href={`/admin/orders/${order.id}`}
+                          className="rounded-sm focus-visible:ring-3 focus-visible:ring-ring/40 outline-none hover:text-coffee"
+                        >
+                          {order.order_number}
+                        </Link>
+                      </span>
                     </TableCell>
                     <TableCell className="text-sm text-muted-text">
                       {formatTime(order.created_at)}
@@ -241,8 +357,21 @@ export function OrdersClient({ initialOrders }: { initialOrders: OrderRow[] }) {
                         <span className="text-muted-text">Bawa pulang</span>
                       )}
                     </TableCell>
+                    <TableCell className="text-sm tabular-nums text-muted-text">
+                      {order.itemCount}
+                    </TableCell>
                     <TableCell className="text-sm font-semibold text-ink">
                       {formatPrice(order.total)}
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={cn(
+                          'inline-flex items-center rounded-sm border px-2 py-0.5 text-[11px] font-semibold',
+                          pay.cls
+                        )}
+                      >
+                        {pay.label}
+                      </span>
                     </TableCell>
                     <TableCell>
                       <span
@@ -283,14 +412,27 @@ export function OrdersClient({ initialOrders }: { initialOrders: OrderRow[] }) {
           filteredOrders.map((order) => {
             const config = STATUS_CONFIG[order.status]
             const Icon = config.icon
+            const isNew = isNewArrival(order)
+            const pay = paymentStatusOf(order)
             return (
               <Link
                 key={order.id}
                 href={`/admin/orders/${order.id}`}
-                className="block rounded-sm border border-border-custom bg-card p-4 transition-colors hover:border-coffee/40 focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
+                className={cn(
+                  'block rounded-sm border bg-card p-4 transition-colors hover:border-coffee/40 focus-visible:ring-3 focus-visible:ring-ring/40 outline-none',
+                  isNew ? 'border-coffee/50 bg-coffee/[0.04]' : 'border-border-custom'
+                )}
               >
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm font-semibold text-ink">{order.order_number}</span>
+                  <span className="flex items-center gap-2 text-sm font-semibold text-ink">
+                    {isNew && (
+                      <span className="relative flex h-2 w-2">
+                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-coffee opacity-60" />
+                        <span className="relative inline-flex h-2 w-2 rounded-full bg-coffee" />
+                      </span>
+                    )}
+                    {order.order_number}
+                  </span>
                   <span
                     className={cn(
                       'inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
@@ -303,12 +445,22 @@ export function OrdersClient({ initialOrders }: { initialOrders: OrderRow[] }) {
                 </div>
                 <p className="mt-1.5 text-xs text-muted-text">
                   {order.table ? `Meja ${order.table.table_number}` : 'Bawa pulang'} ·{' '}
-                  {formatTime(order.created_at)}
+                  {formatTime(order.created_at)} · {order.itemCount} item
                 </p>
                 <div className="mt-3 flex items-center justify-between border-t border-border-custom/60 pt-3">
-                  <span className="text-sm font-semibold text-ink">
-                    {formatPrice(order.total)}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-ink">
+                      {formatPrice(order.total)}
+                    </span>
+                    <span
+                      className={cn(
+                        'inline-flex items-center rounded-sm border px-1.5 py-0.5 text-[10px] font-semibold',
+                        pay.cls
+                      )}
+                    >
+                      {pay.label}
+                    </span>
+                  </div>
                   <span className="inline-flex items-center gap-1 text-xs font-medium text-coffee">
                     Kelola
                     <ArrowRight className="h-3.5 w-3.5" />

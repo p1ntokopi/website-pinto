@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { OrderStatus } from '@/lib/orders/status-machine'
 import { KitchenOrder } from '@/lib/orders/kitchen-types'
 import { updateOrderStatus } from '@/app/admin/(dashboard)/orders/actions'
+import { useToast } from '@/hooks/use-toast'
 import { Loader2, Clock, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -14,6 +15,7 @@ export function KitchenCard({ order, onStatusChangeOptimistic }: KitchenCardProp
   const [isUpdating, setIsUpdating] = useState(false)
   const [elapsed, setElapsed] = useState('')
   const [isLate, setIsLate] = useState(false)
+  const { toast } = useToast()
 
   useEffect(() => {
     const updateTime = () => {
@@ -38,7 +40,11 @@ export function KitchenCard({ order, onStatusChangeOptimistic }: KitchenCardProp
 
     const res = await updateOrderStatus(order.id, targetStatus)
     if (res?.error) {
-      console.error(res.error)
+      toast({
+        variant: 'destructive',
+        title: 'Gagal memperbarui status',
+        description: res.error,
+      })
     }
 
     setIsUpdating(false)

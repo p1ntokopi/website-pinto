@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Loader2, ArrowRight } from 'lucide-react'
 import { getAvailableTransitions, OrderStatus, UserRole } from '@/lib/orders/status-machine'
 import { updateOrderStatus } from '@/app/admin/(dashboard)/orders/actions'
+import { useToast } from '@/hooks/use-toast'
 import { cn } from '@/lib/utils'
 
 const PRIORITY: OrderStatus[] = ['CONFIRMED', 'PREPARING', 'READY', 'COMPLETED']
@@ -24,6 +25,7 @@ interface OrderAdvanceProps {
 
 export function OrderAdvance({ orderId, currentStatus, role, onSuccess }: OrderAdvanceProps) {
   const [isUpdating, setIsUpdating] = useState(false)
+  const { toast } = useToast()
 
   const available = getAvailableTransitions(currentStatus, role)
   const target = PRIORITY.find((t) => available.includes(t))
@@ -35,6 +37,12 @@ export function OrderAdvance({ orderId, currentStatus, role, onSuccess }: OrderA
     const res = await updateOrderStatus(orderId, target)
     if (res?.success) {
       onSuccess(orderId, target)
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Gagal memperbarui status',
+        description: res?.error ?? 'Terjadi kesalahan tak terduga.',
+      })
     }
     setIsUpdating(false)
   }

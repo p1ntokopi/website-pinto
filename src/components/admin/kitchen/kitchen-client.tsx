@@ -8,6 +8,8 @@ import { KitchenOrder } from '@/lib/orders/kitchen-types'
 import { KitchenCard } from './kitchen-card'
 import { Maximize, Minimize, Wifi, WifiOff } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { playNewOrderSound } from '@/lib/notifications/sound'
+import { getNotificationsEnabled, getSoundEnabled } from '@/lib/notifications/preferences'
 
 export function KitchenClient({ initialOrders }: { initialOrders: KitchenOrder[] }) {
   const [orders, setOrders] = useState<KitchenOrder[]>(initialOrders)
@@ -67,11 +69,10 @@ export function KitchenClient({ initialOrders }: { initialOrders: KitchenOrder[]
             const order = data as unknown as KitchenOrder | null
             if (order && ['PENDING', 'CONFIRMED', 'PREPARING', 'READY'].includes(order.status)) {
               setOrders(prev => [...prev, order])
-              // Play notification sound if browser allows
-              try {
-                const audio = new Audio('/notification.mp3') // Placeholder path, can be ignored if file doesn't exist
-                audio.play().catch(() => {})
-              } catch (_) {}
+              // Play the synthesized chime when notifications are enabled.
+              if (getNotificationsEnabled() && getSoundEnabled()) {
+                playNewOrderSound()
+              }
             }
           } else if (payload.eventType === 'UPDATE') {
             const newStatus = payload.new.status

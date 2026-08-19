@@ -18,16 +18,34 @@ export default async function OrdersPage() {
     .select(`
       id, order_number, order_type, fulfillment_type, subtotal, total, status, 
       customer_name, created_at,
-      table:tables(id, table_number)
+      table:tables(id, table_number),
+      payments:payments(order_id, status, amount, payment_method, payment_channel),
+      items:order_items(id)
     `)
     .gte("created_at", oneDayAgo)
     .order("created_at", { ascending: false })
 
-  // Normalize the to-one relation (Supabase returns it as an array)
-  const orders = (initialOrders || []).map((order) => ({
-    ...order,
-    table: Array.isArray(order.table) ? order.table[0] ?? null : order.table,
-  }))
+  // Normalize the to-one relation (Supabase returns it as an array) and reduce
+  // the payments relation to the latest payment record per order.
+  const orders = (initialOrders || []).map((order) => {
+    const payments = Array.isArray(order.payments) ? order.payments : []
+    const latestPayment = payments[0] ?? null
+    return {
+      ...order,
+      table: Array.isArray(order.table) ? order.table[0] ?? null : order.table,
+      payments: undefined,
+      payment: latestPayment
+        ? {
+            status: latestPayment.status,
+            amount: latestPayment.amount,
+            payment_method: latestPayment.payment_method,
+            payment_channel: latestPayment.payment_channel,
+          }
+        : null,
+      itemCount: Array.isArray(order.items) ? order.items.length : 0,
+      items: undefined,
+    }
+  })
 
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-6">

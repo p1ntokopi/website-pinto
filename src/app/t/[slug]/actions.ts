@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getSessionToken, setSessionToken } from '@/lib/ordering/session'
 import { redirect } from 'next/navigation'
-import { createPaymentSession } from '@/lib/payments/xendit'
+import { PaymentService } from '@/lib/payments/payment-service'
 
 export async function startOrResumeDiningSession(tableSlug: string) {
   const supabase = await createClient()
@@ -155,9 +155,9 @@ export async function initiatePayment(tableSlug: string, orderNumber: string) {
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
-  let sessionResponse
+  let sessionResult
   try {
-    sessionResponse = await createPaymentSession({
+    sessionResult = await PaymentService.createPayment('XENDIT', {
       referenceId: order.order_number,
       amount: order.total,
       description: `Pesanan ${order.order_number}`,
@@ -167,24 +167,24 @@ export async function initiatePayment(tableSlug: string, orderNumber: string) {
       metadata: { order_id: order.id, order_number: order.order_number },
     })
   } catch (err) {
-    console.error('Xendit session creation failed:', err)
+    console.error('Payment session creation failed:', err)
     return { error: 'Tidak dapat membuat pembayaran. Silakan coba lagi atau minta bantuan staf.' }
   }
 
-  if (!sessionResponse.payment_link_url) {
+  if (!sessionResult.paymentLinkUrl) {
     return { error: 'Pembayaran tidak tersedia saat ini. Silakan coba lagi.' }
   }
 
   const { error: insertError } = await admin.from('payments').insert({
     order_id: order.id,
     provider: 'XENDIT',
-    provider_transaction_id: sessionResponse.payment_session_id,
-    payment_session_id: sessionResponse.payment_session_id,
-    reference_id: sessionResponse.reference_id,
+    provider_transaction_id: sessionResult.providerTransactionId,
+    payment_session_id: sessionResult.providerTransactionId,
+    reference_id: order.order_number,
     status: 'PENDING',
     amount: order.total,
     expired_at: expiresAt.toISOString(),
-    raw_response: sessionResponse as unknown as Record<string, unknown>,
+    raw_response: { payment_link_url: sessionResult.paymentLinkUrl },
   })
 
   if (insertError) {
@@ -192,6 +192,6 @@ export async function initiatePayment(tableSlug: string, orderNumber: string) {
     return { error: 'Tidak dapat menyimpan pembayaran. Silakan coba lagi.' }
   }
 
-  return { paymentLinkUrl: sessionResponse.payment_link_url }
+  return { paymentLinkUrl: sessionResult.paymentLinkUrl }
 }
 
