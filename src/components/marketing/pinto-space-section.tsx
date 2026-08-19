@@ -84,7 +84,7 @@ export function PintoSpaceSection() {
               <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.25em] text-paper/50">
                 Jam Buka
               </p>
-              <p className="text-xl text-cream">08.00 — 22.00 · Setiap Hari</p>
+              <p className="text-xl text-cream">13.00 — 24.00 · Setiap Hari</p>
             </div>
             <div>
               <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.25em] text-paper/50">

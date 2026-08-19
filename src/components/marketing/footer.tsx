@@ -66,7 +66,7 @@ export function Footer() {
               <li>
                 Buka Setiap Hari
                 <br />
-                08.00 — 22.00
+                13.00 — 24.00
               </li>
               <li>
                 <a

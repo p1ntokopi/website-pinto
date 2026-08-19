@@ -15,7 +15,7 @@ const FAQ = [
   },
   {
     q: 'Jam buka kafe?',
-    a: 'Setiap hari, pukul 08.00 hingga 22.00.',
+    a: 'Setiap hari, pukul 13.00 hingga 24.00.',
   },
   {
     q: 'Bagaimana cara memesan di kafe?',

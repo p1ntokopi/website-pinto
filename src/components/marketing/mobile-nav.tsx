@@ -176,7 +176,7 @@ export function MobileNav() {
                 Chat kami via WhatsApp
               </Link>
               <p className="mt-6 text-center text-[10px] font-semibold uppercase tracking-[0.25em] text-muted-foreground">
-                Buka Setiap Hari · 08.00 — 22.00
+                Buka Setiap Hari · 13.00 — 24.00
               </p>
             </motion.div>
           </motion.div>

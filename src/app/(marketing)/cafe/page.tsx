@@ -6,7 +6,7 @@ import { Coffee, Croissant, Wifi, Users } from 'lucide-react';
 export const metadata = {
   title: 'Kafe Kami | P1NTO Coffee',
   description:
-    'Masuki P1NTO — ruang untuk kopi hebat, pastry segar, dan momen indah. Buka setiap hari 08.00 — 22.00.',
+    'Masuki P1NTO — ruang untuk kopi hebat, pastry segar, dan momen indah. Buka setiap hari 13.00 — 24.00.',
 };
 
 const amenities = [
@@ -140,7 +140,7 @@ export default function CafePage() {
         <div className="container mx-auto px-4 md:px-8 max-w-3xl text-center">
           <h2 className="font-display text-4xl md:text-5xl text-ink mb-6">Buka Setiap Hari</h2>
           <p className="text-muted-foreground text-xl mb-10">
-            08.00 — 22.00
+            13.00 — 24.00
             <br />
             Perumahan Bumi Insani, Jl. Flamboyan No. 8, Tajur Halang, Kabupaten Bogor
           </p>

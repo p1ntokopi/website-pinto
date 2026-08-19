@@ -39,7 +39,7 @@ export function MenuHero() {
                 <ArrowDown className="h-4 w-4 transition-transform duration-300 group-hover:translate-y-0.5" aria-hidden="true" />
               </ScrollLink>
               <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-muted-foreground">
-                Buka 08.00 — 22.00 WIB
+                Buka 13.00 — 24.00 WIB
               </span>
             </div>
           </RevealFade>

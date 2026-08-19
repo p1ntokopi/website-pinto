@@ -12,7 +12,7 @@ const FACTS = [
   { label: 'Berdiri Sejak', value: '2024' },
   { label: 'Berbasis di', value: 'Bogor, Jawa Barat' },
   { label: 'Biji Kopi Nusantara', value: '22+ Pilihan' },
-  { label: 'Buka Setiap Hari', value: '08.00 — 22.00' },
+  { label: 'Buka Setiap Hari', value: '13.00 — 24.00' },
 ];
 
 export function AboutSection() {
