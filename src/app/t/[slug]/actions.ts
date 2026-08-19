@@ -27,7 +27,7 @@ export async function startOrResumeDiningSession(tableSlug: string) {
   redirect(`/t/${tableSlug}/menu`)
 }
 
-export async function submitOrder(tableSlug: string, customerName: string, notes: string, cartItems: Record<string, unknown>[], _requestId: string) {
+export async function submitOrder(tableSlug: string, notes: string, cartItems: Record<string, unknown>[], requestId: string) {
   const supabase = await createClient()
   const sessionToken = await getSessionToken()
 
@@ -38,6 +38,10 @@ export async function submitOrder(tableSlug: string, customerName: string, notes
   // Basic validation on the server before hitting RPC
   if (!cartItems || cartItems.length === 0) {
     return { error: 'Keranjang Anda kosong.' }
+  }
+
+  if (!requestId) {
+    return { error: 'Permintaan tidak valid. Silakan coba lagi.' }
   }
 
   // Format cart items for the RPC
@@ -56,7 +60,7 @@ export async function submitOrder(tableSlug: string, customerName: string, notes
   const { data, error } = await supabase.rpc('create_customer_order', {
     p_table_slug: tableSlug,
     p_session_token: sessionToken,
-    p_customer_name: customerName,
+    p_request_id: requestId,
     p_notes: notes,
     p_items: formattedItems
   })

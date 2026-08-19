@@ -112,106 +112,102 @@ export function KitchenClient({ initialOrders }: { initialOrders: KitchenOrder[]
   return (
     <>
       {/* Header */}
-      <header className="h-16 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between px-4 sm:px-6 shrink-0 gap-4">
-        <div className="flex items-center gap-3 sm:gap-6 min-w-0">
-          <h1 className="font-display text-xl sm:text-2xl font-black tracking-tight text-white truncate">
-            P1NTO<span className="text-amber-500">KITCHEN</span>
+      <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-[#2C2923] bg-[#1E1B16] px-4 sm:px-6">
+        <div className="flex min-w-0 items-center gap-3 sm:gap-6">
+          <h1 className="truncate font-display text-xl font-black tracking-tight text-[#F7F5F0] sm:text-2xl">
+            P1NTO<span className="text-[#C89B6D]">KITCHEN</span>
           </h1>
-          <div className="hidden md:block bg-zinc-950 px-4 py-1.5 rounded-lg border border-zinc-800 font-mono text-xl font-bold text-zinc-300">
+          <div className="hidden rounded-sm border border-[#2C2923] bg-[#16140F] px-4 py-1.5 font-mono text-xl font-bold text-[#C89B6D] md:block">
             {currentTime}
           </div>
         </div>
 
-        <div className="flex items-center gap-3 sm:gap-6 shrink-0">
+        <div className="flex shrink-0 items-center gap-3 sm:gap-6">
           <div className="hidden sm:flex items-center gap-2">
             {isConnected ? (
-              <span className="flex items-center gap-2 text-emerald-500 font-medium text-sm bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20">
-                <Wifi className="w-4 h-4" /> LANGSUNG
+              <span className="flex items-center gap-2 rounded-sm border border-[#2E8B57]/30 bg-[#2E8B57]/10 px-3 py-1.5 text-sm font-medium text-[#6FBF8F]">
+                <Wifi className="h-4 w-4" /> LANGSUNG
               </span>
             ) : (
-              <span className="flex items-center gap-2 text-red-500 font-medium text-sm bg-red-500/10 px-3 py-1.5 rounded-full border border-red-500/20 animate-pulse">
-                <WifiOff className="w-4 h-4" /> MENGHUBUNGKAN ULANG...
+              <span className="flex animate-pulse items-center gap-2 rounded-sm border border-[#C94C4C]/30 bg-[#C94C4C]/10 px-3 py-1.5 text-sm font-medium text-[#E0655F]">
+                <WifiOff className="h-4 w-4" /> MENGHUBUNGKAN ULANG...
               </span>
             )}
           </div>
           <span
             className={cn(
-              'sm:hidden flex items-center gap-1.5 text-xs font-bold rounded-full px-2.5 py-1',
+              'sm:hidden flex items-center gap-1.5 rounded-sm border px-2.5 py-1 text-xs font-bold',
               isConnected
-                ? 'text-emerald-500 bg-emerald-500/10 border border-emerald-500/20'
-                : 'text-red-500 bg-red-500/10 border border-red-500/20 animate-pulse'
+                ? 'border-[#2E8B57]/30 bg-[#2E8B57]/10 text-[#6FBF8F]'
+                : 'border-[#C94C4C]/30 bg-[#C94C4C]/10 animate-pulse text-[#E0655F]'
             )}
             aria-label={isConnected ? 'Langsung' : 'Menghubungkan ulang'}
           >
-            {isConnected ? <Wifi className="w-3.5 h-3.5" /> : <WifiOff className="w-3.5 h-3.5" />}
+            {isConnected ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
           </span>
           <button
             type="button"
             onClick={toggleFullscreen}
             aria-label={isFullscreen ? 'Keluar layar penuh' : 'Layar penuh'}
-            className="p-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors focus-visible:ring-3 focus-visible:ring-amber-400/50 outline-none"
+            className="rounded-sm bg-[#2C2923] p-2 text-[#C89B6D] transition-colors hover:bg-[#3A362E] focus-visible:ring-3 focus-visible:ring-[#C58B2A]/50 outline-none"
           >
-            {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
+            {isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
           </button>
         </div>
       </header>
 
-      {/* Board */}
-      <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 p-6 overflow-hidden bg-zinc-950">
-        {/* NEW Column */}
-        <div className="flex flex-col bg-zinc-900/50 rounded-3xl border border-zinc-800/50 overflow-hidden">
-          <div className="p-4 border-b border-zinc-800/50 flex justify-between items-center bg-zinc-900">
-            <h2 className="font-bold text-xl text-zinc-300 tracking-wide">BARU / TERKONFIRMASI</h2>
-            <div className="bg-zinc-800 px-3 py-1 rounded-full text-sm font-bold text-white">
+      <div className="flex-1 grid grid-cols-1 gap-4 overflow-hidden bg-[#16140F] p-4 md:grid-cols-3 md:gap-6 md:p-6">
+        <div className="flex flex-col overflow-hidden rounded-lg border border-[#2C2923] bg-[#1A1814]">
+          <div className="flex items-center justify-between border-b border-[#2C2923] bg-[#201D18] p-4">
+            <h2 className="text-lg font-bold tracking-wide text-[#F7F5F0]">BARU / TERKONFIRMASI</h2>
+            <div className="rounded-sm bg-[#2C2923] px-3 py-1 text-sm font-bold text-[#F7F5F0]">
               {newOrders.length}
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 space-y-4 overflow-y-auto p-4">
             {newOrders.map(order => (
               <KitchenCard key={order.id} order={order} onStatusChangeOptimistic={handleOptimisticUpdate} />
             ))}
             {newOrders.length === 0 && (
-              <div className="h-full flex items-center justify-center text-zinc-600 font-medium text-lg">
+              <div className="flex h-full items-center justify-center text-lg font-medium text-[#6E665A]">
                 Tidak ada pesanan baru
               </div>
             )}
           </div>
         </div>
 
-        {/* PREPARING Column */}
-        <div className="flex flex-col bg-zinc-900/50 rounded-3xl border border-zinc-800/50 overflow-hidden">
-          <div className="p-4 border-b border-zinc-800/50 flex justify-between items-center bg-amber-500/10">
-            <h2 className="font-bold text-xl text-amber-500 tracking-wide">DIPROSES</h2>
-            <div className="bg-amber-500 text-amber-950 px-3 py-1 rounded-full text-sm font-bold">
+        <div className="flex flex-col overflow-hidden rounded-lg border border-[#2C2923] bg-[#1A1814]">
+          <div className="flex items-center justify-between border-b border-[#2C2923] bg-[#C58B2A]/10 p-4">
+            <h2 className="text-lg font-bold tracking-wide text-[#D9A441]">DIPROSES</h2>
+            <div className="rounded-sm bg-[#C58B2A] px-3 py-1 text-sm font-bold text-[#16140F]">
               {preparingOrders.length}
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 space-y-4 overflow-y-auto p-4">
             {preparingOrders.map(order => (
               <KitchenCard key={order.id} order={order} onStatusChangeOptimistic={handleOptimisticUpdate} />
             ))}
             {preparingOrders.length === 0 && (
-              <div className="h-full flex items-center justify-center text-zinc-600 font-medium text-lg">
+              <div className="flex h-full items-center justify-center text-lg font-medium text-[#6E665A]">
                 Dapur kosong
               </div>
             )}
           </div>
         </div>
 
-        {/* READY Column */}
-        <div className="flex flex-col bg-zinc-900/50 rounded-3xl border border-zinc-800/50 overflow-hidden">
-          <div className="p-4 border-b border-zinc-800/50 flex justify-between items-center bg-emerald-500/10">
-            <h2 className="font-bold text-xl text-emerald-500 tracking-wide">SIAP</h2>
-            <div className="bg-emerald-500 text-emerald-950 px-3 py-1 rounded-full text-sm font-bold">
+        <div className="flex flex-col overflow-hidden rounded-lg border border-[#2C2923] bg-[#1A1814]">
+          <div className="flex items-center justify-between border-b border-[#2C2923] bg-[#2E8B57]/10 p-4">
+            <h2 className="text-lg font-bold tracking-wide text-[#6FBF8F]">SIAP</h2>
+            <div className="rounded-sm bg-[#2E8B57] px-3 py-1 text-sm font-bold text-[#F7F5F0]">
               {readyOrders.length}
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 space-y-4 overflow-y-auto p-4">
             {readyOrders.map(order => (
               <KitchenCard key={order.id} order={order} onStatusChangeOptimistic={handleOptimisticUpdate} />
             ))}
             {readyOrders.length === 0 && (
-              <div className="h-full flex items-center justify-center text-zinc-600 font-medium text-lg">
+              <div className="flex h-full items-center justify-center text-lg font-medium text-[#6E665A]">
                 Tidak ada pesanan menunggu
               </div>
             )}

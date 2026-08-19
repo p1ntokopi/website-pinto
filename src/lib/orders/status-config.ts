@@ -7,18 +7,18 @@ export const STATUS_CONFIG: Record<
   { label: string; color: string; icon: React.ElementType }
 > = {
   PENDING: {
-    label: "Menunggu",
+    label: "Baru",
     color: "bg-warning/10 text-warning border-warning/25",
     icon: Clock,
   },
   CONFIRMED: {
     label: "Terkonfirmasi",
-    color: "bg-coffee/10 text-coffee border-coffee/25",
+    color: "bg-info/10 text-info border-info/25",
     icon: CheckCircle2,
   },
   PREPARING: {
-    label: "Disiapkan",
-    color: "bg-amber-100 text-amber-800 border-amber-200",
+    label: "Diproses",
+    color: "bg-coffee/10 text-coffee border-coffee/25",
     icon: Coffee,
   },
   READY: {

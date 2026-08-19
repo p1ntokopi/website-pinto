@@ -13,7 +13,7 @@ export interface Database {
         Args: {
           p_table_slug: string
           p_session_token: string
-          p_customer_name: string
+          p_request_id: string
           p_notes: string
           p_items: unknown
         }

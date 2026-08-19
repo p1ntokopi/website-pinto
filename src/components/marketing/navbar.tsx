@@ -14,8 +14,11 @@ const NAV_LINKS = [
   { href: '/menu', label: 'Menu' },
   { href: '/coffee', label: 'Kopi' },
   { href: '/story', label: 'Kisah' },
-  { href: '/journal', label: 'Jurnal' },
 ];
+
+function isActive(href: string, pathname: string) {
+  return href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`);
+}
 
 export function Navbar() {
   const pathname = usePathname();
@@ -44,42 +47,43 @@ export function Navbar() {
       )}
     >
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:h-20 md:px-8">
-        <Link href="/" className="group flex items-center gap-2">
+        <Link href="/" className="group flex shrink-0 items-center gap-2.5">
           <Image
             src="/Pintokupi.webp"
             alt="Logo P1NTO Coffee"
-            width={32}
-            height={32}
+            width={34}
+            height={34}
             className="rounded-md object-cover grayscale opacity-90 transition-opacity group-hover:opacity-100"
           />
-          <span className="font-display mt-1 text-2xl font-bold tracking-tight text-ink">
+          <span className="font-display text-2xl font-bold tracking-tight text-ink md:text-[1.7rem]">
             P1NTO
           </span>
         </Link>
 
         <nav
           aria-label="Navigasi utama"
-          className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-9 lg:flex"
+          className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-8 lg:flex"
         >
           {NAV_LINKS.map((link) => {
-            const active = pathname === link.href;
+            const active = isActive(link.href, pathname);
             return (
               <Link
                 key={link.href}
                 href={link.href}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'relative text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink',
+                  'group/link relative py-1 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink',
                   active ? 'text-ink' : 'text-muted-foreground hover:text-ink',
                 )}
               >
                 {link.label}
-                {active && (
-                  <motion.span
-                    layoutId="nav-active"
-                    className="absolute -bottom-2 left-0 right-0 h-px bg-coffee"
-                  />
-                )}
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    'absolute inset-x-0 -bottom-0.5 h-px origin-left bg-coffee transition-transform duration-300',
+                    active ? 'scale-x-100' : 'scale-x-0 group-hover/link:scale-x-100',
+                  )}
+                />
               </Link>
             );
           })}
@@ -99,7 +103,7 @@ export function Navbar() {
             <Link
               href="/locations"
               className={buttonVariants({
-                className: 'rounded-full bg-ink px-6 text-paper hover:bg-ink/90 shadow-none',
+                className: 'rounded-full bg-ink px-6 text-paper hover:bg-coffee shadow-none',
               })}
             >
               Pesan di Kafe

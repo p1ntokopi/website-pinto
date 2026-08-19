@@ -8,7 +8,6 @@ import { Minus, Plus, Trash2, Loader2, ShoppingBag } from 'lucide-react'
 
 import { useCart } from '@/components/ordering/cart-context'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { OrderingHeader } from '@/components/ordering/ordering-header'
@@ -16,12 +15,17 @@ import { useToast } from '@/hooks/use-toast'
 import { submitOrder } from '@/app/t/[slug]/actions'
 import { cn } from '@/lib/utils'
 
-export function CartClient({ tableSlug }: { tableSlug: string }) {
+export function CartClient({
+  tableSlug,
+  tableNumber,
+}: {
+  tableSlug: string
+  tableNumber: string | null
+}) {
   const { items, updateQuantity, removeItem, clearCart, cartTotal } = useCart()
   const router = useRouter()
   const { toast } = useToast()
 
-  const [customerName, setCustomerName] = useState('')
   const [orderNotes, setOrderNotes] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [confirmClear, setConfirmClear] = useState(false)
@@ -53,19 +57,11 @@ export function CartClient({ tableSlug }: { tableSlug: string }) {
 
   const handleCheckout = async () => {
     if (items.length === 0) return
-    if (!customerName.trim()) {
-      toast({
-        variant: 'destructive',
-        title: 'Nama Wajib Diisi',
-        description: 'Beri tahu kami nama Anda agar kami tahu siapa yang dipanggil.',
-      })
-      return
-    }
 
     setIsSubmitting(true)
     const requestId = Math.random().toString(36).substring(2, 15)
 
-    const result = await submitOrder(tableSlug, customerName, orderNotes, items, requestId)
+    const result = await submitOrder(tableSlug, orderNotes, items, requestId)
     setIsSubmitting(false)
 
     if (result.error) {
@@ -111,6 +107,7 @@ export function CartClient({ tableSlug }: { tableSlug: string }) {
       <OrderingHeader
         backHref={`/t/${tableSlug}/menu`}
         title="Pesanan Anda"
+        tableNumber={tableNumber ?? undefined}
         right={
           <button
             type="button"
@@ -245,24 +242,6 @@ export function CartClient({ tableSlug }: { tableSlug: string }) {
             <h2 className="font-display text-2xl text-ink">Detail Pesanan</h2>
 
             <div className="mt-5 space-y-2">
-              <Label htmlFor="customer-name" className="text-sm font-semibold text-ink">
-                Nama Anda <span className="text-danger">*</span>
-              </Label>
-              <Input
-                id="customer-name"
-                placeholder="Siapa yang akan kami panggil?"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                className="h-12 border-ink/15 bg-paper"
-                autoComplete="name"
-                autoCapitalize="words"
-              />
-              <p className="text-xs leading-relaxed text-muted-foreground">
-                Untuk panggilan saat pesanan Anda siap.
-              </p>
-            </div>
-
-            <div className="mt-5 space-y-2">
               <Label htmlFor="order-notes" className="text-sm font-semibold text-ink">
                 Catatan Umum <span className="font-normal text-muted-foreground">(opsional)</span>
               </Label>
@@ -275,6 +254,15 @@ export function CartClient({ tableSlug }: { tableSlug: string }) {
                 maxLength={300}
               />
             </div>
+
+            {tableNumber && (
+              <div className="mt-5 flex items-center justify-between rounded-sm bg-coffee/10 px-4 py-3">
+                <span className="text-sm text-muted-foreground">Pesanan untuk</span>
+                <span className="font-display text-lg font-semibold text-coffee">
+                  Meja {tableNumber}
+                </span>
+              </div>
+            )}
           </section>
 
           <section className="mt-8 border-t border-ink/10 pt-5">
@@ -291,7 +279,7 @@ export function CartClient({ tableSlug }: { tableSlug: string }) {
 
             <Button
               onClick={handleCheckout}
-              disabled={isSubmitting || !customerName.trim()}
+              disabled={isSubmitting}
               className="mt-6 hidden h-14 w-full bg-ink text-base font-semibold text-paper transition-transform duration-200 hover:bg-coffee active:scale-[0.99] disabled:opacity-50 lg:flex"
             >
               {isSubmitting ? (
@@ -312,7 +300,7 @@ export function CartClient({ tableSlug }: { tableSlug: string }) {
         <div className="mx-auto max-w-2xl p-3">
           <Button
             onClick={handleCheckout}
-            disabled={isSubmitting || !customerName.trim()}
+            disabled={isSubmitting}
             className="h-14 w-full bg-ink text-base font-semibold text-paper transition-transform duration-200 hover:bg-coffee active:scale-[0.99] disabled:opacity-50"
           >
             {isSubmitting ? (

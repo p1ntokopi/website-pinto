@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
-import { HeroPhotoTag } from './hero-photo-tag';
 import { HeroAnimations } from './hero-animations';
 import { AmbientVideo } from './ambient-video';
 import { media } from '@/config/media';
@@ -82,11 +81,6 @@ export function HeroSection() {
             </Link>
           </div>
         </div>
-      </div>
-
-      {/* Signature tag */}
-      <div className="absolute bottom-12 right-12 z-10 hidden lg:block">
-        <HeroPhotoTag number="EST" label="2024" />
       </div>
 
       {/* Scroll indicator */}

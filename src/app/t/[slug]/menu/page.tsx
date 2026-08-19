@@ -1,12 +1,12 @@
 import { createClient } from "@/lib/supabase/server"
 import { getSessionToken } from "@/lib/ordering/session"
-import { getCoffeeBeans } from "@/lib/shop"
 import { redirect } from "next/navigation"
 import {
   MenuPageClient,
   type MenuCategoryData,
 } from "@/components/ordering/menu-page-client"
-import { type MenuBean } from "@/components/ordering/menu-bean-section"
+
+const CAFE_TYPES = new Set(["CAFE_DRINK", "DESSERT", "FOOD"])
 
 export default async function MenuPage({ params }: { params: { slug: string } }) {
   const resolvedParams = await params
@@ -44,7 +44,7 @@ export default async function MenuPage({ params }: { params: { slug: string } })
   const { data: products } = await supabase
     .from("products")
     .select(`
-      id, name, slug, description, base_price, image_url, category_id,
+      id, name, slug, description, base_price, image_url, category_id, product_type,
       variants:product_variants(id)
     `)
     .eq("is_available", true)
@@ -58,7 +58,7 @@ export default async function MenuPage({ params }: { params: { slug: string } })
         description: cat.description,
         products:
           products
-            ?.filter((p) => p.category_id === cat.id)
+            ?.filter((p) => p.category_id === cat.id && CAFE_TYPES.has(p.product_type))
             .map((p) => ({
               id: p.id,
               name: p.name,
@@ -71,32 +71,11 @@ export default async function MenuPage({ params }: { params: { slug: string } })
       }))
       .filter((cat) => cat.products.length > 0) || []
 
-  const beanCategoryId = categories
-    ?.find((cat) => cat.name.toLowerCase().includes("biji"))
-    ?.id
-
-  // Coffee bean feature — real roastery data
-  const coffeeBeans = await getCoffeeBeans()
-  const beans: MenuBean[] = coffeeBeans.map((b) => ({
-    id: b.id,
-    slug: b.slug,
-    name: b.name,
-    base_price: b.base_price,
-    description: b.description,
-    process: b.process,
-    roast_level: b.roast_level,
-    origin: b.origin ? { country: b.origin.country, region: b.origin.region } : null,
-    flavorNotes: b.flavorNotes,
-    variants: b.variants.map((v) => ({ price: v.price, weight_grams: v.weight_grams })),
-  }))
-
   return (
     <MenuPageClient
       tableSlug={resolvedParams.slug}
       tableNumber={table.table_number}
       categories={productsByCategory}
-      beans={beans}
-      beanCategoryId={beanCategoryId}
     />
   )
 }

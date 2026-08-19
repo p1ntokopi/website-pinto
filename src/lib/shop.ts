@@ -21,6 +21,7 @@ export type CoffeeBean = {
   name: string;
   slug: string;
   base_price: number;
+  is_featured: boolean;
   description: string | null;
   process: string | null;
   roast_level: string | null;
@@ -95,6 +96,7 @@ async function fetchCoffeeData() {
         name: product.name,
         slug: product.slug,
         base_price: product.base_price,
+        is_featured: product.is_featured,
         description: product.description,
         process: coffee.process,
         roast_level: coffee.roast_level,

@@ -27,10 +27,10 @@ export default async function KitchenLayout({
 
   if (!profile || (profile.role !== 'admin' && profile.role !== 'kitchen')) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-950 p-4 text-zinc-50">
-        <div className="max-w-md text-center space-y-4">
+      <div className="flex min-h-screen items-center justify-center bg-[#16140F] p-4 text-[#F7F5F0]">
+        <div className="max-w-md space-y-4 text-center">
           <h1 className="font-display text-2xl font-bold">Akses Ditolak</h1>
-          <p className="text-zinc-400">Anda tidak memiliki izin akses dapur.</p>
+          <p className="text-[#A19B8F]">Anda tidak memiliki izin akses dapur.</p>
           <form action={signOutAction}>
             <Button type="submit" variant="outline" size="sm">Keluar</Button>
           </form>
@@ -41,7 +41,7 @@ export default async function KitchenLayout({
 
   // KDS uses a dark, high-contrast theme optimized for operations
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-50 font-sans selection:bg-amber-500/30">
+    <div className="min-h-screen bg-[#16140F] font-sans text-[#F7F5F0] selection:bg-[#C58B2A]/30">
       {children}
     </div>
   )

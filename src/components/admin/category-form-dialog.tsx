@@ -49,7 +49,7 @@ export function CategoryFormDialog({ open, onOpenChange, category }: CategoryFor
 
   const isEditing = !!category
 
-  const form = useForm<z.input<typeof formSchema>, any, z.infer<typeof formSchema>>({
+  const form = useForm<z.input<typeof formSchema>, undefined, z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: category?.name || '',

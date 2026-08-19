@@ -49,7 +49,7 @@ export function TableFormDialog({ open, onOpenChange, table }: TableFormDialogPr
 
   const isEditing = !!table
 
-  const form = useForm<z.input<typeof formSchema>, any, z.infer<typeof formSchema>>({
+  const form = useForm<z.input<typeof formSchema>, undefined, z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       table_number: table?.table_number || '',

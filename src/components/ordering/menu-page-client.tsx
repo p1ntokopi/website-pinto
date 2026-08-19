@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { ShoppingBag } from "lucide-react"
+import { ShoppingBag, MessageCircle } from "lucide-react"
 
 import { MenuCategoryNav } from "@/components/ordering/menu-category-nav"
 import { MenuProductRow } from "@/components/ordering/menu-product-row"
-import { MenuBeanSection, type MenuBean } from "@/components/ordering/menu-bean-section"
 import { CartBar } from "@/components/ordering/cart-bar"
 import { useCart } from "@/components/ordering/cart-context"
+import { waLink } from "@/config/whatsapp"
 import { cn } from "@/lib/utils"
 
 export type MenuCategoryData = {
@@ -30,16 +30,12 @@ interface MenuPageClientProps {
   tableSlug: string
   tableNumber: string | null
   categories: MenuCategoryData[]
-  beans: MenuBean[]
-  beanCategoryId?: string
 }
 
 export function MenuPageClient({
   tableSlug,
   tableNumber,
   categories,
-  beans,
-  beanCategoryId,
 }: MenuPageClientProps) {
   const [activeCategory, setActiveCategory] = useState(categories[0]?.id || "")
   const { cartCount } = useCart()
@@ -186,7 +182,33 @@ export function MenuPageClient({
             ))
           )}
 
-          <MenuBeanSection tableSlug={tableSlug} beans={beans} beanCategoryId={beanCategoryId} />
+          {/* Roastery — order via WhatsApp */}
+          <section
+            className="mt-16 flex flex-col items-start justify-between gap-6 border border-ink/10 bg-white/60 p-8 sm:flex-row sm:items-center"
+            aria-labelledby="roastery-wa-heading"
+          >
+            <div>
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.25em] text-coffee">
+                Dari Roastery Kami
+              </p>
+              <h2 id="roastery-wa-heading" className="font-display text-2xl text-ink">
+                Biji kopi & jasa roastery?
+              </h2>
+              <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
+                Menu ini khusus pesanan di kafe. Untuk membeli biji kopi atau bertanya, langsung
+                chat kami via WhatsApp.
+              </p>
+            </div>
+            <Link
+              href={waLink()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex shrink-0 items-center gap-2 rounded-sm bg-ink px-6 py-4 text-sm font-semibold text-paper transition-colors hover:bg-coffee"
+            >
+              <MessageCircle className="h-5 w-5" aria-hidden="true" />
+              Pesan via WhatsApp
+            </Link>
+          </section>
 
           <footer className="mt-20 border-t border-ink/10 py-8 text-center">
             <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">

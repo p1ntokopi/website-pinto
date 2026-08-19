@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Edit2, Trash2, Plus, AlertTriangle } from "lucide-react"
+import { Edit2, Trash2, Plus, AlertTriangle, Coffee } from "lucide-react"
 
 import { Database } from "@/types/database.types"
 import { Button } from "@/components/ui/button"
@@ -82,69 +82,74 @@ export function ProductList({ products }: { products: ProductWithCategory[] }) {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold font-display">Kelola Produk</h2>
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="font-display text-xl font-bold tracking-tight text-ink">Kelola Produk</h2>
         <Button render={<Link href="/admin/menu/products/new" />}>
-          <Plus className="w-4 h-4 mr-2" />
+          <Plus className="h-4 w-4" />
           Tambah Produk
         </Button>
       </div>
 
-      <div className="rounded-lg border bg-card">
+      <div className="hidden overflow-hidden border border-border-custom/70 md:block">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Produk</TableHead>
-              <TableHead>Kategori</TableHead>
-              <TableHead>Tipe</TableHead>
-              <TableHead>Harga Dasar</TableHead>
-              <TableHead>Tersedia</TableHead>
-              <TableHead className="text-right">Aksi</TableHead>
+            <TableRow className="border-b border-border-custom/70">
+              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-text">Produk</TableHead>
+              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-text">Kategori</TableHead>
+              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-text">Tipe</TableHead>
+              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-text">Harga Dasar</TableHead>
+              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-text">Tersedia</TableHead>
+              <TableHead className="text-right text-[11px] font-semibold uppercase tracking-wider text-muted-text">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {products.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-12 text-center text-muted-foreground">
-                  <p className="font-medium text-foreground">Belum ada produk</p>
-                  <p className="text-sm mt-1">Tambahkan produk pertama Anda untuk mulai berjualan.</p>
+                <TableCell colSpan={6} className="py-16 text-center text-muted-text">
+                  <Coffee className="mx-auto mb-3 h-7 w-7 text-muted-text/50" />
+                  <p className="font-medium text-ink">Belum ada produk</p>
+                  <p className="mt-1 text-sm">Tambahkan produk pertama Anda.</p>
                 </TableCell>
               </TableRow>
             ) : (
               products.map((product) => (
-                <TableRow key={product.id}>
-                  <TableCell className="font-medium">
+                <TableRow key={product.id} className="border-b border-border-custom/60">
+                  <TableCell>
                     <div className="flex items-center gap-3">
                       {product.image_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={product.image_url}
                           alt={product.name}
-                          className="h-10 w-10 rounded-md border object-cover"
+                          className="h-10 w-10 rounded-sm border border-border-custom object-cover"
                         />
                       ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-md border bg-muted text-[10px] uppercase text-muted-foreground">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-sm border border-border-custom bg-muted/60 text-[10px] font-semibold uppercase text-muted-text">
                           P1NTO
                         </div>
                       )}
-                      <div>
-                        {product.name}
+                      <div className="min-w-0">
+                        <span className="block truncate font-medium text-ink">{product.name}</span>
                         {product.is_featured && (
-                          <Badge variant="secondary" className="ml-2 text-[10px]">
+                          <Badge variant="secondary" className="mt-0.5 text-[10px]">
                             Unggulan
                           </Badge>
                         )}
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>{product.category?.name || "Tanpa Kategori"}</TableCell>
+                  <TableCell className="text-sm text-muted-text">
+                    {product.category?.name || "Tanpa Kategori"}
+                  </TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="text-xs">
+                    <Badge variant="outline" className="border-border-custom text-xs font-medium text-muted-text">
                       {product.product_type.replace("_", " ")}
                     </Badge>
                   </TableCell>
-                  <TableCell>{formatPrice(product.base_price)}</TableCell>
+                  <TableCell className="text-sm font-semibold text-ink">
+                    {formatPrice(product.base_price)}
+                  </TableCell>
                   <TableCell>
                     <Switch
                       checked={product.is_available}
@@ -153,27 +158,29 @@ export function ProductList({ products }: { products: ProductWithCategory[] }) {
                       aria-label={`Ubah ketersediaan untuk ${product.name}`}
                     />
                   </TableCell>
-                  <TableCell className="text-right space-x-2">
-                    <Button
-                      render={<Link href={`/admin/menu/products/${product.id}`} />}
-                      variant="outline"
-                      size="icon"
-                      aria-label={`Edit ${product.name}`}
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => {
-                        setDeleteTarget(product)
-                        setDeleteDialogOpen(true)
-                      }}
-                      disabled={isProcessing === product.id}
-                      aria-label={`Hapus ${product.name}`}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        render={<Link href={`/admin/menu/products/${product.id}`} />}
+                        variant="outline"
+                        size="icon"
+                        aria-label={`Edit ${product.name}`}
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => {
+                          setDeleteTarget(product)
+                          setDeleteDialogOpen(true)
+                        }}
+                        disabled={isProcessing === product.id}
+                        aria-label={`Hapus ${product.name}`}
+                      >
+                        <Trash2 className="h-4 w-4 text-danger" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -182,11 +189,93 @@ export function ProductList({ products }: { products: ProductWithCategory[] }) {
         </Table>
       </div>
 
+      <div className="space-y-3 md:hidden">
+        {products.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-sm border border-dashed border-border-custom px-6 py-14 text-center">
+            <Coffee className="mb-3 h-7 w-7 text-muted-text/50" />
+            <p className="text-sm font-medium text-ink">Belum ada produk</p>
+            <p className="mt-1 text-sm text-muted-text">Tambahkan produk pertama Anda.</p>
+          </div>
+        ) : (
+          products.map((product) => (
+            <div key={product.id} className="rounded-sm border border-border-custom bg-card p-4">
+              <div className="flex items-start gap-3">
+                {product.image_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={product.image_url}
+                    alt={product.name}
+                    className="h-14 w-14 shrink-0 rounded-sm border border-border-custom object-cover"
+                  />
+                ) : (
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-sm border border-border-custom bg-muted/60 text-[10px] font-semibold uppercase text-muted-text">
+                    P1NTO
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <span className="block truncate text-sm font-semibold text-ink">
+                        {product.name}
+                      </span>
+                      <span className="mt-0.5 block text-xs text-muted-text">
+                        {product.category?.name || "Tanpa Kategori"} ·{" "}
+                        {product.product_type.replace("_", " ")}
+                      </span>
+                    </div>
+                    <span className="shrink-0 text-sm font-semibold text-ink">
+                      {formatPrice(product.base_price)}
+                    </span>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between border-t border-border-custom/60 pt-3">
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={product.is_available}
+                        onCheckedChange={() => handleToggleAvailability(product)}
+                        disabled={isProcessing === product.id}
+                        aria-label={`Ubah ketersediaan untuk ${product.name}`}
+                      />
+                      <span className="text-xs font-medium text-muted-text">
+                        {product.is_available ? "Tersedia" : "Kosong"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        render={<Link href={`/admin/menu/products/${product.id}`} />}
+                        variant="outline"
+                        size="icon"
+                        className="min-h-10 min-w-10"
+                        aria-label={`Edit ${product.name}`}
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="min-h-10 min-w-10"
+                        onClick={() => {
+                          setDeleteTarget(product)
+                          setDeleteDialogOpen(true)
+                        }}
+                        disabled={isProcessing === product.id}
+                        aria-label={`Hapus ${product.name}`}
+                      >
+                        <Trash2 className="h-4 w-4 text-danger" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-destructive" />
+              <AlertTriangle className="h-5 w-5 text-danger" />
               Hapus Produk
             </DialogTitle>
             <DialogDescription>

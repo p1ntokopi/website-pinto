@@ -15,7 +15,6 @@ export function KitchenCard({ order, onStatusChangeOptimistic }: KitchenCardProp
   const [elapsed, setElapsed] = useState('')
   const [isLate, setIsLate] = useState(false)
 
-  // Calculate elapsed time
   useEffect(() => {
     const updateTime = () => {
       const now = new Date().getTime()
@@ -25,8 +24,7 @@ export function KitchenCard({ order, onStatusChangeOptimistic }: KitchenCardProp
       if (diffMins < 1) setElapsed('< 1 mnt')
       else setElapsed(`${diffMins} mnt`)
 
-      if (diffMins >= 15) setIsLate(true)
-      else setIsLate(false)
+      setIsLate(diffMins >= 15)
     }
 
     updateTime()
@@ -55,7 +53,7 @@ export function KitchenCard({ order, onStatusChangeOptimistic }: KitchenCardProp
         onClick={() => handleAction('PREPARING')}
         disabled={isUpdating}
         aria-label={`Mulai siapkan pesanan ${order.order_number}`}
-        className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-amber-500 py-4 text-lg font-bold text-amber-950 transition-colors hover:bg-amber-400 disabled:opacity-60 focus-visible:ring-3 focus-visible:ring-amber-400/50 outline-none"
+        className="mt-4 flex w-full min-h-14 items-center justify-center gap-2 rounded-sm bg-[#C58B2A] py-4 text-lg font-bold text-[#16140F] transition-colors hover:bg-[#D9A441] disabled:opacity-60 focus-visible:ring-3 focus-visible:ring-[#C58B2A]/50 outline-none"
       >
         {isUpdating && <Loader2 className="h-5 w-5 animate-spin" />}
         MULAI SIAPKAN
@@ -68,7 +66,7 @@ export function KitchenCard({ order, onStatusChangeOptimistic }: KitchenCardProp
         onClick={() => handleAction('READY')}
         disabled={isUpdating}
         aria-label={`Tandai pesanan ${order.order_number} siap`}
-        className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-500 py-4 text-lg font-bold text-emerald-950 transition-colors hover:bg-emerald-400 disabled:opacity-60 focus-visible:ring-3 focus-visible:ring-emerald-400/50 outline-none"
+        className="mt-4 flex w-full min-h-14 items-center justify-center gap-2 rounded-sm bg-[#2E8B57] py-4 text-lg font-bold text-[#F7F5F0] transition-colors hover:bg-[#3A9C68] disabled:opacity-60 focus-visible:ring-3 focus-visible:ring-[#2E8B57]/50 outline-none"
       >
         {isUpdating && <Loader2 className="h-5 w-5 animate-spin" />}
         TANDAI SIAP
@@ -79,28 +77,27 @@ export function KitchenCard({ order, onStatusChangeOptimistic }: KitchenCardProp
   return (
     <div
       className={cn(
-        'flex flex-col rounded-lg border-2 bg-zinc-900 p-5 shadow-xl transition-all',
+        'flex flex-col rounded-lg border bg-[#201D18] p-5',
         isLate && order.status !== 'READY'
-          ? 'border-red-500/50 bg-red-950/20'
-          : 'border-zinc-800'
+          ? 'border-[#C94C4C]/50 bg-[#C94C4C]/10'
+          : 'border-[#2C2923]'
       )}
     >
-      {/* Header */}
-      <div className="mb-4 flex items-start justify-between border-b border-zinc-800 pb-4">
+      <div className="mb-4 flex items-start justify-between border-b border-[#2C2923] pb-4">
         <div>
-          <h3 className="text-3xl font-black tracking-tight text-white">{order.order_number}</h3>
+          <h3 className="text-3xl font-black tracking-tight text-[#F7F5F0]">{order.order_number}</h3>
           {order.table && (
-            <div className="mt-1 text-xl font-bold text-amber-500">
+            <div className="mt-1 text-xl font-bold text-[#C89B6D]">
               MEJA {order.table.table_number}
             </div>
           )}
         </div>
         <div
           className={cn(
-            'flex items-center gap-1.5 rounded-lg px-3 py-1 font-mono text-lg font-bold',
+            'flex items-center gap-1.5 rounded-sm px-3 py-1 font-mono text-lg font-bold',
             isLate && order.status !== 'READY'
-              ? 'bg-red-500/20 text-red-400'
-              : 'bg-zinc-800 text-zinc-300'
+              ? 'bg-[#C94C4C]/20 text-[#E0655F]'
+              : 'bg-[#2C2923] text-[#A19B8F]'
           )}
         >
           <Clock className="h-4 w-4" />
@@ -108,32 +105,30 @@ export function KitchenCard({ order, onStatusChangeOptimistic }: KitchenCardProp
         </div>
       </div>
 
-      {/* Order Notes */}
       {order.notes && (
-        <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-500/20 bg-amber-500/10 p-3">
-          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
-          <p className="text-lg font-medium leading-snug text-amber-200">{order.notes}</p>
+        <div className="mb-4 flex items-start gap-3 rounded-sm border border-[#C58B2A]/30 bg-[#C58B2A]/10 p-3">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-[#C58B2A]" />
+          <p className="text-lg font-medium leading-snug text-[#E7C98F]">{order.notes}</p>
         </div>
       )}
 
-      {/* Items */}
       <div className="flex-1 space-y-4">
         {order.items?.map((item) => (
           <div key={item.id} className="flex items-start gap-4">
-            <div className="rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-1 text-2xl font-black text-amber-500">
+            <div className="rounded-sm border border-[#2C2923] bg-[#16140F] px-3 py-1 text-2xl font-black text-[#C89B6D]">
               {item.quantity}×
             </div>
             <div className="pt-1">
-              <h4 className="mb-1.5 text-xl font-bold leading-none text-white">
+              <h4 className="mb-1.5 text-xl font-bold leading-none text-[#F7F5F0]">
                 {item.product_name_snapshot}
               </h4>
-              <div className="space-y-1 text-base font-medium leading-snug text-zinc-400">
+              <div className="space-y-1 text-base font-medium leading-snug text-[#A19B8F]">
                 {item.variant_name_snapshot && <p>{item.variant_name_snapshot}</p>}
                 {item.options?.map((opt, idx) => (
                   <p key={idx}>+ {opt.option_value_snapshot}</p>
                 ))}
                 {item.notes && (
-                  <p className="mt-1 rounded bg-amber-500/10 px-2 py-1 italic text-amber-300">
+                  <p className="mt-1 rounded-sm bg-[#C58B2A]/10 px-2 py-1 italic text-[#E7C98F]">
                     Catatan: {item.notes}
                   </p>
                 )}
@@ -143,7 +138,6 @@ export function KitchenCard({ order, onStatusChangeOptimistic }: KitchenCardProp
         ))}
       </div>
 
-      {/* Action */}
       {actionButton}
     </div>
   )

@@ -16,7 +16,7 @@ export default async function CartPage({ params }: { params: { slug: string } })
   // Verify Table & Session
   const { data: table } = await supabase
     .from('tables')
-    .select('id, is_active')
+    .select('id, table_number, is_active')
     .eq('slug', resolvedParams.slug)
     .single()
 
@@ -34,5 +34,5 @@ export default async function CartPage({ params }: { params: { slug: string } })
     redirect(`/t/${resolvedParams.slug}`)
   }
 
-  return <CartClient tableSlug={resolvedParams.slug} />
+  return <CartClient tableSlug={resolvedParams.slug} tableNumber={table.table_number ?? null} />
 }

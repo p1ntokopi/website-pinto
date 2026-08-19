@@ -30,12 +30,17 @@ export default async function OrdersPage() {
   }))
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-3xl font-bold tracking-tight">Pesanan</h1>
-          <p className="text-muted-foreground mt-1">Kelola alur kerja operasional hari ini.</p>
-        </div>
+    <div className="mx-auto w-full max-w-[1240px] space-y-6">
+      <div>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-coffee">
+          Operasional
+        </p>
+        <h1 className="mt-1 font-display text-3xl font-bold tracking-tight text-ink">
+          Pesanan
+        </h1>
+        <p className="mt-2 text-sm text-muted-text">
+          Kelola alur kerja operasional hari ini.
+        </p>
       </div>
 
       <OrdersClient initialOrders={orders || []} />

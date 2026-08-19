@@ -55,7 +55,7 @@ const [isSubmitting, setIsSubmitting] = useState(false)
   const router = useRouter()
   const isEditing = !!product
 
-  const form = useForm<z.input<typeof formSchema>, any, z.infer<typeof formSchema>>({
+  const form = useForm<z.input<typeof formSchema>, undefined, z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       category_id: product?.category_id || '',
@@ -98,8 +98,12 @@ setUploadingImage(true)
 
       setImageUrl(publicUrl)
       toast({ title: 'Berhasil', description: 'Gambar berhasil diunggah.' })
-    } catch (err: any) {
-      toast({ variant: 'destructive', title: 'Pengunggahan Gagal', description: err.message })
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'Pengunggahan Gagal',
+        description: err instanceof Error ? err.message : 'Terjadi kesalahan saat mengunggah.',
+      })
     } finally {
       setUploadingImage(false)
     }

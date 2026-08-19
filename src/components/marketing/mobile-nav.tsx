@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { Menu, X, ArrowUpRight } from 'lucide-react';
+import { Menu, X, ArrowUpRight, MessageCircle } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
+import { waLink } from '@/config/whatsapp';
 import { cn } from '@/lib/utils';
 
 const LINKS = [
@@ -18,6 +19,10 @@ const LINKS = [
 ];
 
 const EASE = [0.22, 1, 0.36, 1] as const;
+
+function isActive(href: string, pathname: string) {
+  return href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`);
+}
 
 export function MobileNav() {
   const reduced = useReducedMotion();
@@ -44,7 +49,7 @@ export function MobileNav() {
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="md:hidden inline-flex h-11 w-11 items-center justify-center rounded-full text-ink transition-colors hover:bg-ink/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+        className="lg:hidden inline-flex h-11 w-11 items-center justify-center rounded-full text-ink transition-colors hover:bg-ink/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
         aria-label={open ? 'Tutup menu' : 'Buka menu'}
         aria-expanded={open}
         aria-controls="mobile-menu"
@@ -63,7 +68,7 @@ export function MobileNav() {
             animate={{ opacity: 1 }}
             exit={reduced ? undefined : { opacity: 0 }}
             transition={{ duration: 0.3, ease: EASE }}
-            className="fixed inset-0 z-[60] flex flex-col bg-paper md:hidden"
+            className="fixed inset-0 z-[60] flex flex-col bg-paper lg:hidden"
           >
             {/* Header bar */}
             <div className="flex h-16 shrink-0 items-center justify-between border-b border-ink/10 px-4">
@@ -88,7 +93,7 @@ export function MobileNav() {
             >
               <ol className="space-y-1">
                 {LINKS.map((link, i) => {
-                  const active = pathname === link.href;
+                  const active = isActive(link.href, pathname);
                   return (
                     <motion.li
                       key={link.href}
@@ -103,6 +108,7 @@ export function MobileNav() {
                       <Link
                         href={link.href}
                         onClick={() => setOpen(false)}
+                        aria-current={active ? 'page' : undefined}
                         className={cn(
                           'group flex items-baseline justify-between border-b border-ink/10 py-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink',
                           active ? 'text-coffee' : 'text-ink',
@@ -159,6 +165,16 @@ export function MobileNav() {
                   Pesan di Kafe
                 </Link>
               </div>
+              <Link
+                href={waLink()}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setOpen(false)}
+                className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+              >
+                <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                Chat kami via WhatsApp
+              </Link>
               <p className="mt-6 text-center text-[10px] font-semibold uppercase tracking-[0.25em] text-muted-foreground">
                 Buka Setiap Hari · 08.00 — 22.00
               </p>

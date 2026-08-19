@@ -1,9 +1,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, MessageCircle } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
 import { formatRupiah, type CoffeeBean } from '@/lib/shop';
 import { beanImage } from '@/config/images';
+import { waLink } from '@/config/whatsapp';
 import { SectionHeader } from '../section-header';
 import { RevealFade } from '../reveal-heading';
 
@@ -95,15 +96,29 @@ export function MenuRoastery({
                   {featured.origin?.region && spec('Wilayah', featured.origin.region)}
                 </div>
 
-                <Link
-                  href={`/coffee/${featured.slug}`}
-                  className={buttonVariants({
-                    size: 'lg',
-                    className: 'mt-8 h-14 rounded-full bg-warm px-8 text-base text-ink hover:bg-cream',
-                  })}
-                >
-                  Lihat Biji Ini
-                </Link>
+                <div className="mt-8 flex flex-wrap items-center gap-4">
+                  <Link
+                    href={waLink()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={buttonVariants({
+                      size: 'lg',
+                      className: 'h-14 rounded-full bg-warm px-8 text-base text-ink hover:bg-cream',
+                    })}
+                  >
+                    <MessageCircle className="mr-2 h-5 w-5" />
+                    Pesan via WhatsApp
+                  </Link>
+                  <Link
+                    href={`/coffee/${featured.slug}`}
+                    className={buttonVariants({
+                      size: 'lg',
+                      className: 'h-14 rounded-full border border-paper/25 bg-transparent px-8 text-base text-cream hover:bg-paper hover:text-ink',
+                    })}
+                  >
+                    Lihat Biji Ini
+                  </Link>
+                </div>
               </RevealFade>
             </div>
           </div>

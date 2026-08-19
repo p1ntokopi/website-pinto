@@ -67,13 +67,13 @@ export function LiveTablesClient({ initialTables }: LiveTablesClientProps) {
           return (
             <div
               key={table.id}
-              className="flex h-40 flex-col items-center justify-center rounded-lg border border-border/30 bg-muted/30 p-4 opacity-50"
+              className="flex h-40 flex-col items-center justify-center rounded-sm border border-border-custom/70 bg-muted/30 p-4 opacity-50"
             >
-              <Ban className="mb-2 h-8 w-8 text-muted-foreground/50" />
-              <div className="text-xl font-bold text-muted-foreground">
+              <Ban className="mb-2 h-8 w-8 text-muted-text/50" />
+              <div className="text-xl font-bold text-muted-text">
                 T{table.table_number}
               </div>
-              <div className="text-xs font-semibold uppercase text-muted-foreground">
+              <div className="text-xs font-semibold uppercase text-muted-text">
                 Nonaktif
               </div>
             </div>
@@ -84,10 +84,10 @@ export function LiveTablesClient({ initialTables }: LiveTablesClientProps) {
           <div
             key={table.id}
             className={cn(
-              'flex h-48 flex-col rounded-lg border p-4 shadow-card transition-all hover:shadow-raised',
+              'flex h-48 flex-col rounded-sm border p-4 transition-colors',
               isOccupied
-                ? 'border-warning/30 bg-warning/5'
-                : 'border-border/50 bg-white hover:border-primary/50'
+                ? 'border-warning/40 bg-warning/5 hover:bg-warning/10'
+                : 'border-border-custom bg-card hover:border-coffee/40'
             )}
           >
             <div className="mb-auto flex items-start justify-between">
@@ -99,19 +99,19 @@ export function LiveTablesClient({ initialTables }: LiveTablesClientProps) {
               >
                 T{table.table_number}
               </div>
-              <div className="flex items-center gap-1 rounded-md bg-muted/50 px-2 py-1 text-xs font-semibold text-muted-foreground">
+              <div className="flex items-center gap-1 rounded-sm bg-muted/60 px-2 py-1 text-xs font-semibold text-muted-text">
                 <Users className="h-3 w-3" /> {table.capacity}
               </div>
             </div>
 
             {isOccupied ? (
               <div className="mt-4 space-y-3">
-                <div className="flex items-center gap-2 text-xs font-semibold text-warning/80">
+                <div className="flex items-center gap-2 text-xs font-semibold text-warning/90">
                   <Clock className="h-3.5 w-3.5" />
                   Sejak {formatTime(table.session!.created_at)}
                 </div>
 
-                <div className="rounded-lg border border-warning/20 bg-warning/10 p-3">
+                <div className="rounded-sm border border-warning/25 bg-warning/10 p-3">
                   <div className="mb-1 flex items-center justify-between">
                     <span className="flex items-center gap-1 text-xs font-semibold text-warning">
                       <Receipt className="h-3 w-3" /> {orderCount} Pesanan
@@ -127,12 +127,12 @@ export function LiveTablesClient({ initialTables }: LiveTablesClientProps) {
                       {table.session!.orders.map((o) => o.order_number).join(', ')}
                     </div>
                   ) : (
-                    <div className="mt-2 text-xs italic text-warning/60">Belum ada pesanan</div>
+                    <div className="mt-2 text-xs italic text-warning/70">Belum ada pesanan</div>
                   )}
                 </div>
               </div>
             ) : (
-              <div className="mt-auto flex flex-col items-center justify-center pt-4 text-muted-foreground">
+              <div className="mt-auto flex flex-col items-center justify-center pt-4 text-muted-text">
                 <div className="text-sm font-semibold uppercase tracking-wider">Tersedia</div>
               </div>
             )}

@@ -36,14 +36,20 @@ type CartContextType = {
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
+export function CartProvider({
+  children,
+  storageKey = 'p1nto_cart',
+}: {
+  children: React.ReactNode
+  storageKey?: string
+}) {
   const [items, setItems] = useState<CartItem[]>([])
   const [isLoaded, setIsLoaded] = useState(false)
 
   // Load from localStorage on mount
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('p1nto_cart')
+      const saved = localStorage.getItem(storageKey)
       if (saved) {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setItems(JSON.parse(saved))
@@ -52,14 +58,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       console.error('Failed to load cart', e)
     }
     setIsLoaded(true)
-  }, [])
+  }, [storageKey])
 
   // Save to localStorage when items change
   useEffect(() => {
     if (isLoaded) {
-      localStorage.setItem('p1nto_cart', JSON.stringify(items))
+      localStorage.setItem(storageKey, JSON.stringify(items))
     }
-  }, [items, isLoaded])
+  }, [items, isLoaded, storageKey])
 
   const addItem = (newItem: Omit<CartItem, 'id'>) => {
     setItems((prev) => {

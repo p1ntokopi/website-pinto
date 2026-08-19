@@ -40,10 +40,13 @@ export default async function AdminCategoriesPage() {
   }))
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="mx-auto w-full max-w-[1240px] space-y-6">
       <div>
-        <h1 className="text-3xl font-display font-bold text-primary">Kategori Menu</h1>
-        <p className="text-muted-foreground mt-1">Atur item menu Anda ke dalam kategori yang jelas.</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-coffee">Katalog</p>
+        <h1 className="mt-1 font-display text-3xl font-bold tracking-tight text-ink">Kategori</h1>
+        <p className="mt-2 text-sm text-muted-text">
+          Atur item menu ke dalam kategori yang jelas.
+        </p>
       </div>
 
       <CategoryList categories={categoriesWithCounts} />

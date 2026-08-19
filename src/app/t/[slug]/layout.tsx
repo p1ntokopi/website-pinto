@@ -11,9 +11,17 @@ export const metadata: Metadata = {
   },
 }
 
-export default function CustomerOrderingLayout({ children }: { children: ReactNode }) {
+export default async function CustomerOrderingLayout({
+  children,
+  params,
+}: {
+  children: ReactNode
+  params: Promise<{ slug: string }>
+}) {
+  const { slug } = await params
+
   return (
-    <CartProvider>
+    <CartProvider storageKey={`p1nto_cart_${slug}`}>
       <div className="min-h-screen bg-background text-ink selection:bg-coffee/20">
         {children}
       </div>

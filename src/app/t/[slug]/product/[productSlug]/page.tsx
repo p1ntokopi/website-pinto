@@ -2,6 +2,9 @@ import { createClient } from '@/lib/supabase/server'
 import { getSessionToken } from '@/lib/ordering/session'
 import { redirect, notFound } from 'next/navigation'
 import { ProductDetailClient } from '@/components/ordering/product-detail-client'
+import { waLink } from '@/config/whatsapp'
+
+const NON_CAFE_TYPES = new Set(['COFFEE_BEAN', 'SERVICE'])
 
 export default async function ProductDetailPage({ params }: { params: { slug: string, productSlug: string } }) {
   const resolvedParams = await params
@@ -22,7 +25,7 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
   // Fetch Product
   const { data: product } = await supabase
     .from('products')
-    .select('id, name, description, base_price, image_url, is_available')
+    .select('id, name, description, base_price, image_url, product_type, is_available')
     .eq('slug', resolvedParams.productSlug)
     .single()
 
@@ -33,6 +36,11 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
   if (!product.is_available) {
     // Show unavailable state, but for M3 simplicity we redirect to menu
     redirect(`/t/${resolvedParams.slug}/menu`)
+  }
+
+  // Beans & roastery services are not ordered via the table — direct to WhatsApp
+  if (NON_CAFE_TYPES.has(product.product_type)) {
+    redirect(waLink())
   }
 
   // Fetch Variants
@@ -56,7 +64,6 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
   // Filter available values and sort them
   const options = optionsData?.map(opt => ({
     ...opt,
-    // @ts-ignore - Supabase type return nesting
     values: opt.values.sort((a, b) => a.sort_order - b.sort_order)
   })) || []
 

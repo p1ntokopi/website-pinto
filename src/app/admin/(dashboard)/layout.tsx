@@ -3,7 +3,6 @@ import { createClient } from '@/lib/supabase/server'
 import { AdminShell } from '@/components/admin/admin-shell'
 import { Button } from '@/components/ui/button'
 import { signOutAction } from '@/app/auth/signout/actions'
-import { Database } from '@/types/database.types'
 
 export default async function AdminLayout({
   children,

@@ -1,9 +1,12 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, MapPin } from 'lucide-react';
+import { ArrowLeft, ArrowRight, MapPin } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
-import { getCoffeeBeanBySlug, formatRupiah } from '@/lib/shop';
+import { getCoffeeBeanBySlug, getCoffeeBeans, formatRupiah } from '@/lib/shop';
+import { beanImage } from '@/config/images';
+import { beanCategory, beanTasteIds, displayName } from '@/lib/coffee-utils';
+import { WhatsAppLink } from '@/components/marketing/coffee/whatsapp-link';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,21 +21,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-const BEAN_IMAGES: Record<string, string> = {
-  'bean-ethiopia-guji': 'https://images.unsplash.com/photo-1559525839-b184a4d698c7?q=80&w=1600&auto=format&fit=crop',
-  'bean-colombia-huila': 'https://images.unsplash.com/photo-1587734195503-904fca47e0e9?q=80&w=1600&auto=format&fit=crop',
-  'bean-aceh-gayo': 'https://images.unsplash.com/photo-1447933601403-0c6688de566e?q=80&w=1600&auto=format&fit=crop',
-  'bean-p1nto-house': 'https://images.unsplash.com/photo-1620189507195-68309c04c4d0?q=80&w=1600&auto=format&fit=crop',
-};
-
-const FALLBACK_IMAGE =
-  'https://images.unsplash.com/photo-1559525839-b184a4d698c7?q=80&w=1600&auto=format&fit=crop';
-
 function detailRow(label: string, value: string | number | null | undefined) {
   if (value === null || value === '') return null;
   return (
     <div className="flex items-baseline justify-between gap-6 border-b border-ink/10 py-3">
-      <span className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground">{label}</span>
+      <span className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground">
+        {label}
+      </span>
       <span className="text-right text-ink">{value}</span>
     </div>
   );
@@ -47,7 +42,18 @@ export default async function CoffeeDetailPage({
   const bean = await getCoffeeBeanBySlug(slug);
   if (!bean) notFound();
 
-  const image = BEAN_IMAGES[bean.slug] ?? FALLBACK_IMAGE;
+  const [beans] = await Promise.all([getCoffeeBeans()]);
+
+  const related = beans
+    .filter((b) => b.slug !== bean.slug)
+    .sort((a, b) => {
+      const score = (x: (typeof a)['flavorNotes']) =>
+        (beanCategory(a.name) === beanCategory(bean.name) ? 1 : 0) +
+        (beanTasteIds(x).some((t) => beanTasteIds(bean.flavorNotes).includes(t)) ? 1 : 0);
+      return score(b.flavorNotes) - score(a.flavorNotes);
+    })
+    .slice(0, 3);
+
   const altitudeMin = bean.altitude_min;
   const altitudeMax = bean.altitude_max;
   let altitude: string | null = null;
@@ -55,13 +61,15 @@ export default async function CoffeeDetailPage({
   else if (altitudeMin) altitude = `${altitudeMin} m`;
   else if (altitudeMax) altitude = `${altitudeMax} m`;
 
+  const notes = bean.flavorNotes.join(' · ');
+
   return (
     <>
-      <section className="w-full bg-paper py-12 md:py-16 border-b border-ink/5">
-        <div className="container mx-auto px-4 md:px-8 max-w-6xl">
+      <section className="w-full border-b border-ink/5 bg-paper py-12 md:py-16">
+        <div className="container mx-auto max-w-6xl px-4 md:px-8">
           <Link
             href="/coffee"
-            className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-ink transition-colors"
+            className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-ink"
           >
             <ArrowLeft className="h-4 w-4" /> Semua Kopi
           </Link>
@@ -69,35 +77,40 @@ export default async function CoffeeDetailPage({
       </section>
 
       <section className="w-full bg-paper py-12 md:py-20">
-        <div className="container mx-auto px-4 md:px-8 max-w-6xl">
-          <div className="flex flex-col lg:flex-row gap-12 lg:gap-20">
-            <div className="w-full lg:w-1/2">
-              <div className="relative aspect-square w-full rounded-sm overflow-hidden bg-ink/5">
-                <Image src={image} alt={bean.name} fill sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" />
+        <div className="container mx-auto max-w-6xl px-4 md:px-8">
+          <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-20">
+            <div className="lg:col-span-6">
+              <div className="relative aspect-[4/3] w-full overflow-hidden rounded-sm bg-ink/5">
+                <Image
+                  src={beanImage(bean.slug)}
+                  alt={bean.name}
+                  fill
+                  sizes="(min-width: 1024px) 50vw, 100vw"
+                  className="object-cover"
+                />
               </div>
             </div>
 
-            <div className="w-full lg:w-1/2 flex flex-col">
-              <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-coffee mb-4">
+            <div className="flex flex-col lg:col-span-6">
+              <p className="mb-4 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.3em] text-coffee">
+                <span className="h-px w-8 bg-coffee/40" aria-hidden="true" />
                 {bean.origin ? `${bean.origin.country} · ${bean.origin.region ?? ''}` : 'Roastery P1NTO'}
               </p>
-              <h1 className="font-display text-5xl md:text-6xl text-ink leading-[1.05] mb-6">{bean.name}</h1>
+              <h1 className="mb-6 font-display text-4xl leading-[1.05] text-ink md:text-6xl">
+                {displayName(bean.name)}
+              </h1>
               {bean.description && (
-                <p className="text-muted-foreground text-lg leading-relaxed mb-8">{bean.description}</p>
+                <p className="mb-8 text-lg leading-relaxed text-muted-foreground">{bean.description}</p>
               )}
 
-              {bean.flavorNotes.length > 0 && (
+              {notes && (
                 <div className="mb-8">
-                  <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground mb-3">
+                  <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                     Profil Rasa
                   </p>
-                  <div className="flex flex-wrap gap-2">
-                    {bean.flavorNotes.map((note) => (
-                      <span key={note} className="rounded-full border border-ink/20 px-4 py-1.5 text-sm text-ink">
-                        {note}
-                      </span>
-                    ))}
-                  </div>
+                  <p className="font-display text-xl italic leading-snug text-ink/80 md:text-2xl">
+                    {notes}.
+                  </p>
                 </div>
               )}
 
@@ -111,7 +124,7 @@ export default async function CoffeeDetailPage({
 
               {bean.variants.length > 0 && (
                 <div className="mb-8">
-                  <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-muted-foreground mb-3">
+                  <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                     Ukuran Tersedia
                   </p>
                   <ul className="divide-y divide-ink/10 border-y border-ink/10">
@@ -119,7 +132,7 @@ export default async function CoffeeDetailPage({
                       <li key={variant.id} className="flex items-center justify-between py-3">
                         <div>
                           <span className="font-medium text-ink">{variant.weight_grams}g</span>
-                          <span className="text-sm text-muted-foreground ml-3">{variant.grind_type}</span>
+                          <span className="ml-3 text-sm text-muted-foreground">{variant.grind_type}</span>
                         </div>
                         <span className="font-semibold text-ink">{formatRupiah(variant.price)}</span>
                       </li>
@@ -128,25 +141,21 @@ export default async function CoffeeDetailPage({
                 </div>
               )}
 
-              <div className="mt-auto flex flex-col sm:flex-row gap-4">
+              <div className="mt-auto flex flex-col gap-4 pt-2 sm:flex-row">
+                <WhatsAppLink
+                  solid
+                  className="h-14 rounded-full bg-coffee px-8 text-base text-paper hover:bg-ink"
+                >
+                  Pesan via WhatsApp
+                </WhatsAppLink>
                 <Link
                   href="/locations"
                   className={buttonVariants({
                     size: 'lg',
-                    className: 'rounded-full h-14 px-8 bg-ink text-paper hover:bg-ink/90 shadow-none',
+                    className: 'h-14 rounded-full bg-ink px-8 text-paper shadow-none hover:bg-coffee',
                   })}
                 >
                   <MapPin className="mr-2 h-4 w-4" /> Beli di Kafe Kami
-                </Link>
-                <Link
-                  href="/coffee"
-                  className={buttonVariants({
-                    variant: 'outline',
-                    size: 'lg',
-                    className: 'rounded-full h-14 px-8 border-ink text-ink hover:bg-ink hover:text-paper',
-                  })}
-                >
-                  Lihat Biji Lainnya
                 </Link>
               </div>
             </div>
@@ -155,20 +164,75 @@ export default async function CoffeeDetailPage({
       </section>
 
       {(bean.story || bean.brewing_notes) && (
-        <section className="w-full bg-ink text-paper py-20 md:py-28">
-          <div className="container mx-auto px-4 md:px-8 max-w-3xl">
+        <section className="w-full bg-ink py-20 text-paper md:py-28">
+          <div className="container mx-auto max-w-3xl px-4 md:px-8">
             {bean.story && (
               <div className="mb-12">
-                <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-warm mb-4">Kisah</p>
-                <p className="font-display text-3xl md:text-4xl text-cream leading-snug">{bean.story}</p>
+                <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-warm">Kisah</p>
+                <p className="font-display text-3xl leading-snug text-cream md:text-4xl">{bean.story}</p>
               </div>
             )}
             {bean.brewing_notes && (
               <div>
-                <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-warm mb-4">Catatan Seduh</p>
-                <p className="text-paper/80 text-lg leading-relaxed">{bean.brewing_notes}</p>
+                <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.2em] text-warm">
+                  Catatan Seduh
+                </p>
+                <p className="text-lg leading-relaxed text-paper/80">{bean.brewing_notes}</p>
               </div>
             )}
+          </div>
+        </section>
+      )}
+
+      {related.length > 0 && (
+        <section className="w-full border-t border-ink/10 bg-paper">
+          <div className="container mx-auto max-w-6xl px-4 py-16 md:px-8 md:py-20">
+            <div className="mb-10 flex items-end justify-between gap-6">
+              <div>
+                <p className="mb-3 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.3em] text-coffee">
+                  <span className="h-px w-8 bg-coffee/40" aria-hidden="true" />
+                  Lanjutkan menjelajah
+                </p>
+                <h2 className="font-display text-3xl leading-tight text-ink md:text-4xl">
+                  Biji Serupa
+                </h2>
+              </div>
+              <Link
+                href="/coffee"
+                className="hidden shrink-0 items-center gap-2 text-sm font-semibold text-ink transition-colors hover:text-coffee md:inline-flex"
+              >
+                Semua Biji <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            </div>
+
+            <ul>
+              {related.map((item) => {
+                const meta = [item.process, item.roast_level].filter(Boolean).join(' · ');
+                return (
+                  <li
+                    key={item.slug}
+                    className="group border-t border-ink/10 transition-colors last:border-b hover:bg-white/60"
+                  >
+                    <Link
+                      href={`/coffee/${item.slug}`}
+                      className="flex items-baseline justify-between gap-6 px-2 py-6 md:px-4"
+                    >
+                      <div className="min-w-0">
+                        <h3 className="truncate font-display text-2xl text-ink transition-colors group-hover:text-coffee">
+                          {displayName(item.name)}
+                        </h3>
+                        <p className="mt-1 text-xs uppercase tracking-widest text-muted-foreground">
+                          {item.origin?.region ?? item.origin?.country ?? 'Nusantara'} · {meta}
+                        </p>
+                      </div>
+                      <span className="shrink-0 text-sm font-semibold tabular-nums text-ink">
+                        {formatRupiah(item.variants[0]?.price ?? item.base_price)}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
         </section>
       )}

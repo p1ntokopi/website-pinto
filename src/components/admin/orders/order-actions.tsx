@@ -56,13 +56,13 @@ export function OrderActions({ orderId, currentStatus, userRole }: { orderId: st
       )}
 
       {availableTransitions.includes('PREPARING') && (
-        <Button onClick={() => handleStatusChange('PREPARING')} disabled={isUpdating} className="bg-warning text-white hover:bg-warning/90">
+        <Button onClick={() => handleStatusChange('PREPARING')} disabled={isUpdating} className="bg-warning text-ink hover:bg-warning/90">
           {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Mulai Siapkan'}
         </Button>
       )}
 
       {availableTransitions.includes('READY') && (
-        <Button onClick={() => handleStatusChange('READY')} disabled={isUpdating} className="bg-success text-white hover:bg-success/90">
+        <Button onClick={() => handleStatusChange('READY')} disabled={isUpdating} className="bg-success text-paper hover:bg-success/90">
           {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Tandai Siap'}
         </Button>
       )}
@@ -102,7 +102,7 @@ export function OrderActions({ orderId, currentStatus, userRole }: { orderId: st
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setCancelDialogOpen(false)}>Pertahankan Pesanan</Button>
-              <Button variant="destructive" onClick={() => handleStatusChange('CANCELLED', cancelReason)} disabled={isUpdating} className="rounded-xl">
+              <Button variant="destructive" onClick={() => handleStatusChange('CANCELLED', cancelReason)} disabled={isUpdating} className="rounded-sm">
                 {isUpdating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                 Konfirmasi Pembatalan
               </Button>

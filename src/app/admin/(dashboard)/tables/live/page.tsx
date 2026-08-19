@@ -51,20 +51,27 @@ export default async function LiveTablesPage() {
   }) || []
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="mx-auto w-full max-w-[1240px] space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-3xl font-display font-bold text-primary">Meja Langsung</h1>
-          <p className="text-muted-foreground mt-1">Okupansi kafe dan pesanan meja secara real-time.</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-coffee">
+            Operasional
+          </p>
+          <h1 className="mt-1 font-display text-3xl font-bold tracking-tight text-ink">
+            Meja Langsung
+          </h1>
+          <p className="mt-2 text-sm text-muted-text">
+            Okupansi kafe dan pesanan meja secara real-time.
+          </p>
         </div>
-        <div className="flex gap-4">
-          <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-border/50 shadow-sm">
-            <Users className="w-4 h-4 text-emerald-600" />
-            <span className="text-sm font-semibold">{sessions?.length || 0} Meja Aktif</span>
+        <div className="flex gap-3">
+          <div className="flex items-center gap-2 rounded-sm border border-border-custom bg-card px-4 py-2">
+            <Users className="h-4 w-4 text-success" />
+            <span className="text-sm font-semibold text-ink">{sessions?.length || 0} Meja Aktif</span>
           </div>
-          <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-border/50 shadow-sm">
-            <Receipt className="w-4 h-4 text-amber-600" />
-            <span className="text-sm font-semibold">{orders.length || 0} Pesanan Terbuka</span>
+          <div className="flex items-center gap-2 rounded-sm border border-border-custom bg-card px-4 py-2">
+            <Receipt className="h-4 w-4 text-warning" />
+            <span className="text-sm font-semibold text-ink">{orders.length || 0} Pesanan Terbuka</span>
           </div>
         </div>
       </div>
