@@ -37,7 +37,7 @@ export function MenuRoastery({
         <div className="mb-14 flex flex-col justify-between gap-8 md:mb-20 md:flex-row md:items-end">
           <SectionHeader
             dark
-            eyebrow="P1NTO Roastery"
+            eyebrow="Pinto Roastery"
             lines={['Biji dari', 'satu pulau,', { text: 'banyak rasa.', italic: true }]}
             titleClassName="text-4xl md:text-5xl lg:text-6xl"
             description="Dipanggang in-house setiap minggu. Bawa pulang perhatian dari setiap cangkir di bar."
@@ -61,7 +61,7 @@ export function MenuRoastery({
               <div className="relative aspect-[4/5] overflow-hidden rounded-sm bg-paper/5">
                 <Image
                   src={beanImage(featured.slug)}
-                  alt={`${featured.name} — kopi sangrai P1NTO`}
+                  alt={`${featured.name} — kopi sangrai Pinto`}
                   fill
                   priority
                   sizes="(min-width: 1024px) 58vw, 100vw"

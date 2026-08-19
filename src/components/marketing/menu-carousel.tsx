@@ -33,7 +33,7 @@ export function MenuCarousel({ items }: { items: MenuCarouselItem[] }) {
       <div
         ref={scrollerRef}
         role="group"
-        aria-label="Favorit P1NTO — geser untuk melihat"
+        aria-label="Favorit Pinto — geser untuk melihat"
         className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-4 pb-2"
       >
         {items.map(({ item, label }, i) => (

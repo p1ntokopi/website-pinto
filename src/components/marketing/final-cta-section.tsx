@@ -19,7 +19,7 @@ export function FinalCtaSection() {
       <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center">
         <p className="mb-8 flex items-center gap-4 text-[10px] font-semibold uppercase tracking-[0.3em] text-warm md:text-xs">
           <span className="h-px w-10 bg-warm/50" />
-          P1NTO Coffee
+          Pinto Coffee
           <span className="h-px w-10 bg-warm/50" />
         </p>
 

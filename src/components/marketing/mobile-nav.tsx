@@ -63,7 +63,7 @@ export function MobileNav() {
             id="mobile-menu"
             role="dialog"
             aria-modal="true"
-            aria-label="Menu utama P1NTO"
+            aria-label="Menu utama Pinto"
             initial={reduced ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={reduced ? undefined : { opacity: 0 }}
@@ -73,7 +73,7 @@ export function MobileNav() {
             {/* Header bar */}
             <div className="flex h-16 shrink-0 items-center justify-between border-b border-ink/10 px-4">
               <span className="font-display text-2xl font-bold tracking-tight text-ink">
-                P1NTO
+                Pinto
               </span>
               <button
                 ref={closeRef}

@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { OrderingHeader } from '@/components/ordering/ordering-header'
 
 export const metadata: Metadata = {
-  title: 'Status Pesanan - P1NTO',
+  title: 'Status Pesanan - Pinto',
 }
 
 export default async function OrderTrackingPage({

@@ -126,7 +126,7 @@ export function ProductList({ products }: { products: ProductWithCategory[] }) {
                         />
                       ) : (
                         <div className="flex h-10 w-10 items-center justify-center rounded-sm border border-border-custom bg-muted/60 text-[10px] font-semibold uppercase text-muted-text">
-                          P1NTO
+                          Pinto
                         </div>
                       )}
                       <div className="min-w-0">
@@ -209,7 +209,7 @@ export function ProductList({ products }: { products: ProductWithCategory[] }) {
                   />
                 ) : (
                   <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-sm border border-border-custom bg-muted/60 text-[10px] font-semibold uppercase text-muted-text">
-                    P1NTO
+                    Pinto
                   </div>
                 )}
                 <div className="min-w-0 flex-1">

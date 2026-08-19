@@ -125,7 +125,7 @@ export function BrandValuesSection() {
             <div
               ref={scrollerRef}
               role="group"
-              aria-label="Nilai P1NTO — geser untuk melihat"
+              aria-label="Nilai Pinto — geser untuk melihat"
               className="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-4 pb-2"
             >
               {values.map((value, i) => (

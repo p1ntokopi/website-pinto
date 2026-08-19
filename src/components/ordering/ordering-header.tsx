@@ -43,7 +43,7 @@ export function OrderingHeader({
           ) : (
             <div className="flex flex-col leading-none">
               <span className="font-display text-lg font-bold uppercase tracking-[0.22em] text-ink">
-                P1NTO
+                Pinto
               </span>
               <span className="mt-1 text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
                 Kopi

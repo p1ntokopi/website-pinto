@@ -48,7 +48,7 @@ export function MenuProductRow({ product, tableSlug }: MenuProductRowProps) {
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-[9px] font-semibold uppercase tracking-[0.2em] text-coffee/70">
-            P1NTO
+            Pinto
           </div>
         )}
       </div>
@@ -104,7 +104,7 @@ export function MenuProductRow({ product, tableSlug }: MenuProductRowProps) {
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-[9px] font-semibold uppercase tracking-[0.2em] text-coffee/70">
-              P1NTO
+              Pinto
             </div>
           )}
         </div>

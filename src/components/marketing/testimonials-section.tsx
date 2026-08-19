@@ -7,7 +7,7 @@ import { SectionHeader } from './section-header';
 import { cn } from '@/lib/utils';
 
 /**
- * PLACEHOLDER — ganti dengan testimoni asli pelanggan P1NTO.
+ * PLACEHOLDER — ganti dengan testimoni asli pelanggan Pinto.
  * Jangan gunakan nama atau cerita fiktif untuk produksi.
  * Struktur carousel sudah final; cukup ganti isi array ini.
  */
@@ -16,11 +16,11 @@ const QUOTES = [
     quote:
       'Tempatnya terasa seperti rumah sendiri. Kopinya konsisten, dan selalu ada ruang untuk duduk lebih lama dari yang direncanakan.',
     name: 'Nama Pelanggan',
-    role: 'Pelanggan tetap P1NTO',
+    role: 'Pelanggan tetap Pinto',
   },
   {
     quote:
-      'Saya mulai dari satu cangkir, lalu membawa pulang bijinya. Sekarang menyeduh kopi P1NTO di rumah setiap pagi.',
+      'Saya mulai dari satu cangkir, lalu membawa pulang bijinya. Sekarang menyeduh kopi Pinto di rumah setiap pagi.',
     name: 'Nama Pelanggan',
     role: 'Pembeli biji kopi',
   },

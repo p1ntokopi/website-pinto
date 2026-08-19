@@ -1,8 +1,8 @@
 /**
- * CURATED IMAGE LIBRARY — P1NTO COFFEE
+ * CURATED IMAGE LIBRARY — Pinto Coffee
  * ---------------------------------------------------------------
  * Semua URL di bawah adalah foto editorial PLACEHOLDER dari Unsplash.
- * Ganti dengan foto asli P1NTO (produk, barista, interior, biji kopi)
+ * Ganti dengan foto asli Pinto (produk, barista, interior, biji kopi)
  * lalu perbarui URL di sini — seluruh halaman akan mengikuti otomatis.
  *
  * Target produksi: R2 bucket `pintokopi-assets` → folder `/images/*`
@@ -40,7 +40,7 @@ export const images = {
     bagFeet: u('photo-1514432324607-a09d9b4aefdd'),
   },
 
-  /** Kafe / suasana P1NTO. */
+  /** Kafe / suasana Pinto. */
   cafe: {
     interior: u('photo-1554118811-1e0d58224f24', 1600),
     interiorWarm: u('photo-1501339847302-ac426a4a7cbb', 1600),

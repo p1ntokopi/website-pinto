@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { CategoryList } from '@/components/admin/category-list'
 
 export const metadata: Metadata = {
-  title: 'Kategori - P1NTO Admin',
+  title: 'Kategori - Pinto Admin',
 }
 
 export default async function AdminCategoriesPage() {

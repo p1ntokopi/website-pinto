@@ -181,7 +181,7 @@ export function CoffeeQuiz({ beans }: { beans: BeanSummary[] }) {
                   <div className="text-center">
                     <p className="mb-4 flex items-center justify-center gap-3 text-[10px] font-semibold uppercase tracking-[0.3em] text-coffee">
                       <span className="h-px w-8 bg-coffee/40" />
-                      Your P1NTO Match
+                      Your Pinto Match
                       <span className="h-px w-8 bg-coffee/40" />
                     </p>
                     <h3 className="font-display text-4xl leading-[1.05] text-ink md:text-6xl">

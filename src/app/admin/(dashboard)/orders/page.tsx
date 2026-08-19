@@ -3,7 +3,7 @@ import { OrdersClient } from '@/components/admin/orders/orders-client'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Manajemen Pesanan - P1NTO Admin',
+  title: 'Manajemen Pesanan - Pinto Admin',
 }
 
 export default async function OrdersPage() {

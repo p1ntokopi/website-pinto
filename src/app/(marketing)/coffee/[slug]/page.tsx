@@ -13,10 +13,10 @@ export const dynamic = 'force-dynamic';
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const bean = await getCoffeeBeanBySlug(slug);
-  if (!bean) return { title: 'Kopi Tidak Ditemukan | P1NTO Coffee' };
+  if (!bean) return { title: 'Kopi Tidak Ditemukan | Pinto Coffee' };
 
   return {
-    title: `${bean.name} | P1NTO Coffee`,
+    title: `${bean.name} | Pinto Coffee`,
     description: bean.description ?? `Single origin dari ${bean.origin?.country ?? 'roastery kami'}.`,
   };
 }
@@ -94,7 +94,7 @@ export default async function CoffeeDetailPage({
             <div className="flex flex-col lg:col-span-6">
               <p className="mb-4 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.3em] text-coffee">
                 <span className="h-px w-8 bg-coffee/40" aria-hidden="true" />
-                {bean.origin ? `${bean.origin.country} · ${bean.origin.region ?? ''}` : 'Roastery P1NTO'}
+                {bean.origin ? `${bean.origin.country} · ${bean.origin.region ?? ''}` : 'Roastery Pinto'}
               </p>
               <h1 className="mb-6 font-display text-4xl leading-[1.05] text-ink md:text-6xl">
                 {displayName(bean.name)}

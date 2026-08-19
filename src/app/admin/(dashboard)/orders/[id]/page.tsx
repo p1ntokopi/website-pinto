@@ -10,7 +10,7 @@ import { Metadata } from 'next'
 import { cn } from '@/lib/utils'
 
 export const metadata: Metadata = {
-  title: 'Detail Pesanan - P1NTO Admin',
+  title: 'Detail Pesanan - Pinto Admin',
 }
 
 type OrderItem = {

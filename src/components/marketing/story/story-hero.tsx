@@ -27,7 +27,7 @@ export function StoryHero() {
 
           <RevealFade delay={0.2}>
             <p className="mt-7 max-w-md text-lg leading-relaxed text-muted-foreground">
-              P1NTO lahir dari hasrat sederhana: membuat kopi yang mempertemukan
+              Pinto lahir dari hasrat sederhana: membuat kopi yang mempertemukan
               orang, tempat, dan cerita.
             </p>
           </RevealFade>
@@ -56,7 +56,7 @@ export function StoryHero() {
           <figure className="relative aspect-[4/3] w-full overflow-hidden rounded-sm bg-cream/40 sm:aspect-[16/10] lg:aspect-[7/5]">
             <Image
               src={images.cafe.barista}
-              alt="Barista P1NTO menuang kopi di bar"
+              alt="Barista Pinto menuang kopi di bar"
               fill
               priority
               sizes="(min-width: 1024px) 58vw, 100vw"
@@ -64,7 +64,7 @@ export function StoryHero() {
             />
             <figcaption className="absolute bottom-5 left-5 hidden items-center gap-3 md:flex">
               <span className="border border-cream/40 bg-ink/45 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.25em] text-cream backdrop-blur-sm">
-                Bar — Tempat P1NTO dimulai
+                Bar — Tempat Pinto dimulai
               </span>
             </figcaption>
           </figure>

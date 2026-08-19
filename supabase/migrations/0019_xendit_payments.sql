@@ -217,7 +217,7 @@ begin
   end if;
 
   -- 3. Generate Order Number
-  v_order_number := 'P1NTO-' || to_char(now(), 'YYMMDD') || '-' || lpad(cast(floor(random() * 10000) as text), 4, '0');
+  v_order_number := 'Pinto-' || to_char(now(), 'YYMMDD') || '-' || lpad(cast(floor(random() * 10000) as text), 4, '0');
 
   -- 4. Create Order Record (Initial, awaiting payment)
   insert into public.orders (

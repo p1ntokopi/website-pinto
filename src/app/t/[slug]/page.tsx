@@ -28,7 +28,7 @@ export default async function TableLandingPage({
           Kode QR ini mungkin tidak valid atau meja tidak tersedia.
         </p>
         <Button render={<Link href="/" />} variant="outline">
-          Kembali ke P1NTO
+          Kembali ke Pinto
         </Button>
       </div>
     )
@@ -43,7 +43,7 @@ export default async function TableLandingPage({
           Meja ini saat ini tidak menerima pesanan.
         </p>
         <Button render={<Link href="/" />} variant="outline">
-          Kembali ke P1NTO
+          Kembali ke Pinto
         </Button>
       </div>
     )
@@ -53,10 +53,10 @@ export default async function TableLandingPage({
     <div className="flex min-h-[90vh] flex-col items-center justify-center p-6 text-center max-w-md mx-auto">
       <div className="mb-10">
         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground mb-3">
-          P1NTO Coffee
+          Pinto Coffee
         </p>
         <h1 className="font-display text-5xl font-bold tracking-tight text-ink leading-none">
-          P1NTO
+          Pinto
         </h1>
       </div>
 

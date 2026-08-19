@@ -49,7 +49,7 @@ export function MenuHero() {
           <div className="relative aspect-[4/5] w-full overflow-hidden rounded-sm bg-cream/40">
             <Image
               src={images.cafe.latte}
-              alt="Minuman khas P1NTO Coffee"
+              alt="Minuman khas Pinto Coffee"
               fill
               priority
               sizes="(min-width: 768px) 40vw, 100vw"

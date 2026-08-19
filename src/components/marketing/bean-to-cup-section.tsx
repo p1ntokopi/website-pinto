@@ -126,7 +126,7 @@ export function BeanToCupSection() {
               >
                 <Image
                   src={step.image}
-                  alt={`${step.title} — perjalanan kopi P1NTO`}
+                  alt={`${step.title} — perjalanan kopi Pinto`}
                   fill
                   sizes="100vw"
                   className="object-cover"
@@ -156,7 +156,7 @@ export function BeanToCupSection() {
                 >
                   <Image
                     src={STEPS[active].image}
-                    alt={`${STEPS[active].title} — perjalanan kopi P1NTO`}
+                    alt={`${STEPS[active].title} — perjalanan kopi Pinto`}
                     fill
                     sizes="46vw"
                     className="object-cover"

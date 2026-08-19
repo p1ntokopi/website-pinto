@@ -25,7 +25,7 @@ export function StoryIntro() {
 
             <RevealFade delay={0.2}>
               <p className="mt-8 max-w-2xl text-lg leading-relaxed text-muted-foreground md:text-xl">
-                P1NTO lahir di Bogor dari satu ide sederhana: kopi terbaik layak
+                Pinto lahir di Bogor dari satu ide sederhana: kopi terbaik layak
                 diperlakukan dengan hormat — dari petani yang menanamnya hingga
                 orang yang menyajikannya.
               </p>
@@ -52,7 +52,7 @@ export function StoryIntro() {
           </div>
           <figcaption className="mt-3 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.25em] text-muted-foreground">
             <span>Biji hijau — awal setiap cerita</span>
-            <span className="hidden md:inline">P1NTO Roastery</span>
+            <span className="hidden md:inline">Pinto Roastery</span>
           </figcaption>
         </figure>
       </RevealFade>

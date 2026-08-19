@@ -15,7 +15,7 @@ export function RoasteryStory() {
             <figure className="relative aspect-[4/3] w-full overflow-hidden rounded-sm bg-cream/10 sm:aspect-[16/10] lg:aspect-[7/5]">
               <Image
                 src={images.beans.hands}
-                alt="Tangan barista P1NTO menangani biji kopi hijau"
+                alt="Tangan barista Pinto menangani biji kopi hijau"
                 fill
                 sizes="(min-width: 1024px) 58vw, 100vw"
                 className="object-cover"
@@ -76,7 +76,7 @@ export function RoasteryStory() {
                   href="/about"
                   className="border-b border-paper/30 pb-1 text-sm font-semibold text-paper transition-colors hover:border-warm hover:text-warm"
                 >
-                  Kenali P1NTO lebih dekat
+                  Kenali Pinto lebih dekat
                 </Link>
               </div>
             </RevealFade>
@@ -93,7 +93,7 @@ export function RoasteryStory() {
               Siap menyeduh?
             </p>
             <h2 className="font-display text-4xl leading-[1.05] text-ink md:text-5xl">
-              Bawa pulang P1NTO
+              Bawa pulang Pinto
               <span className="text-coffee">.</span>
             </h2>
             <p className="mt-4 max-w-md text-base leading-relaxed text-muted-foreground">

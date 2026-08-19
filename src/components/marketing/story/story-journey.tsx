@@ -8,7 +8,7 @@ const JOURNEY = [
   {
     year: '2024',
     title: 'Awal Mula',
-    desc: 'P1NTO membuka bar pertamanya di Bogor — satu mesin espresso, empat kursi, dan keyakinan bahwa kopi bisa mendekatkan orang.',
+    desc: 'Pinto membuka bar pertamanya di Bogor — satu mesin espresso, empat kursi, dan keyakinan bahwa kopi bisa mendekatkan orang.',
   },
   {
     year: '2025',

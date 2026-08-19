@@ -4,9 +4,9 @@ import { buttonVariants } from '@/components/ui/button';
 import { Coffee, Croissant, Wifi, Users } from 'lucide-react';
 
 export const metadata = {
-  title: 'Kafe Kami | P1NTO Coffee',
+  title: 'Kafe Kami | Pinto Coffee',
   description:
-    'Masuki P1NTO — ruang untuk kopi hebat, pastry segar, dan momen indah. Buka setiap hari 13.00 — 24.00.',
+    'Masuki Pinto — ruang untuk kopi hebat, pastry segar, dan momen indah. Buka setiap hari 13.00 — 24.00.',
 };
 
 const amenities = [
@@ -33,7 +33,7 @@ const amenities = [
 ];
 
 const gallery = [
-  { src: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=1200&auto=format&fit=crop', alt: 'Interior Kafe P1NTO' },
+  { src: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=1200&auto=format&fit=crop', alt: 'Interior Kafe Pinto' },
   { src: 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=800&auto=format&fit=crop', alt: 'Barista menuang kopi' },
   { src: 'https://images.unsplash.com/photo-1525640788966-69bdb028aa73?q=80&w=800&auto=format&fit=crop', alt: 'Detail meja kopi' },
   { src: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=800&auto=format&fit=crop', alt: 'Eksterior kafe' },
@@ -62,7 +62,7 @@ export default function CafePage() {
             <div className="relative aspect-[4/5] rounded-sm overflow-hidden bg-warm/20">
               <Image
                 src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=1200&auto=format&fit=crop"
-                alt="Interior Kafe P1NTO"
+                alt="Interior Kafe Pinto"
                 fill
                 sizes="(min-width: 1024px) 50vw, 100vw"
                 className="object-cover"
@@ -126,7 +126,7 @@ export default function CafePage() {
               <div
                 key={img.src}
                 className={`relative overflow-hidden rounded-sm bg-paper/5 ${
-                  img.alt === 'Interior Kafe P1NTO' ? 'col-span-2 row-span-2 aspect-[4/5]' : 'aspect-square'
+                  img.alt === 'Interior Kafe Pinto' ? 'col-span-2 row-span-2 aspect-[4/5]' : 'aspect-square'
                 }`}
               >
                 <Image src={img.src} alt={img.alt} fill sizes="(min-width: 768px) 25vw, 50vw" className="object-cover" />

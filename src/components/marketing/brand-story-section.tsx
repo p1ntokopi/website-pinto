@@ -21,7 +21,7 @@ export function BrandStorySection() {
             />
             <RevealFade delay={0.2}>
               <p className="mb-8 mt-6 max-w-md text-lg leading-relaxed text-muted-foreground md:text-xl">
-                P1NTO lahir di Bogor dari satu ide sederhana: kopi terbaik
+                Pinto lahir di Bogor dari satu ide sederhana: kopi terbaik
                 layak diperlakukan dengan hormat — dari petani yang menanam,
                 hingga orang yang menyajikannya.
               </p>
@@ -49,7 +49,7 @@ export function BrandStorySection() {
               <div className="relative aspect-[4/3] w-full overflow-hidden rounded-sm bg-warm/20 lg:aspect-[5/4] lg:h-[78vh]">
                 <Image
                   src={images.cafe.barista}
-                  alt="Barista P1NTO menuang kopi"
+                  alt="Barista Pinto menuang kopi"
                   fill
                   sizes="(min-width: 1024px) 55vw, 100vw"
                   className="object-cover"

@@ -59,7 +59,7 @@ export function AdminSidebar({ role, user, mobile = false }: SidebarProps) {
           P
         </div>
         <div className="leading-none">
-          <div className="font-display text-xl font-bold tracking-tight text-ink">P1NTO</div>
+          <div className="font-display text-xl font-bold tracking-tight text-ink">Pinto</div>
           <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-text">
             Coffee Admin
           </div>

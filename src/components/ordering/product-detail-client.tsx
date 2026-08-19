@@ -162,7 +162,7 @@ export function ProductDetailClient({
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-muted-foreground/30">
-              <span className="text-xl font-medium uppercase tracking-widest">P1NTO</span>
+              <span className="text-xl font-medium uppercase tracking-widest">Pinto</span>
             </div>
           )}
         </div>

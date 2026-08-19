@@ -5,7 +5,7 @@ import { ChevronLeft } from 'lucide-react'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Tambah Produk - P1NTO Admin',
+  title: 'Tambah Produk - Pinto Admin',
 }
 
 export default async function NewProductPage() {

@@ -50,8 +50,8 @@ begin
   end if;
 
   -- 3. Generate Order Number
-  -- Format: P1NTO-YYMMDD-XXXX
-  v_order_number := 'P1NTO-' || to_char(now(), 'YYMMDD') || '-' || lpad(cast(floor(random() * 10000) as text), 4, '0');
+  -- Format: Pinto-YYMMDD-XXXX
+  v_order_number := 'Pinto-' || to_char(now(), 'YYMMDD') || '-' || lpad(cast(floor(random() * 10000) as text), 4, '0');
   -- In a real production system, use a sequence for the XXXX part to guarantee uniqueness without collision loops.
   -- For M3, random is sufficient but we should catch unique violations if they occur (rare for 10000).
 

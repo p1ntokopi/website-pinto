@@ -2,15 +2,15 @@ import { RevealFade } from '@/components/marketing/reveal-heading';
 import { WhatsAppLink } from '@/components/marketing/coffee/whatsapp-link';
 
 /**
- * TANYA JAWAB — P1NTO
+ * TANYA JAWAB — Pinto
  * -------------------------------------------------------------
  * Tambahkan pertanyaan baru di array `FAQ` di bawah.
  * Format: { q: 'Pertanyaan', a: 'Jawaban' }
- * Gunakan informasi yang benar-benar akurat tentang P1NTO.
+ * Gunakan informasi yang benar-benar akurat tentang Pinto.
  */
 const FAQ = [
   {
-    q: 'Di mana lokasi P1NTO?',
+    q: 'Di mana lokasi Pinto?',
     a: 'Perumahan Bumi Insani, Jl. Flamboyan No. 8, Tajur Halang, Kabupaten Bogor.',
   },
   {

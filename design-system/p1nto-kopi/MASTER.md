@@ -6,7 +6,7 @@
 
 ---
 
-**Project:** P1nto Kopi
+**Project:** Pinto Kopi
 **Generated:** 2026-08-15
 **Category:** Food & Beverage — Premium Editorial Coffee Brand
 **Direction:** Warm · Premium · Editorial · Photography-led · Minimal (PRD §25)
@@ -85,7 +85,7 @@ Dark sections use `bg-ink text-paper`; secondary text on ink uses `text-paper/60
 
 **Pattern:** Editorial Storytelling Landing
 
-1. Hero — headline thesis + photo, 2 CTAs (Beli Kopi / Kunjungi P1NTO), EST tag.
+1. Hero — headline thesis + photo, 2 CTAs (Beli Kopi / Kunjungi Pinto), EST tag.
 2. Brand values (4 columns, Lucide icons).
 3. Signature menu (4-item grid).
 4. Roastery (dark band, bean cards).

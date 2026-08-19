@@ -50,13 +50,13 @@ export function Navbar() {
         <Link href="/" className="group flex shrink-0 items-center gap-2.5">
           <Image
             src="/Pintokupi.webp"
-            alt="Logo P1NTO Coffee"
+            alt="Logo Pinto Coffee"
             width={34}
             height={34}
             className="rounded-md object-cover grayscale opacity-90 transition-opacity group-hover:opacity-100"
           />
           <span className="font-display text-2xl font-bold tracking-tight text-ink md:text-[1.7rem]">
-            P1NTO
+            Pinto
           </span>
         </Link>
 

@@ -12,9 +12,9 @@ import { TestimonialsSection } from '@/components/marketing/testimonials-section
 import { FinalCtaSection } from '@/components/marketing/final-cta-section';
 
 export const metadata = {
-  title: 'Roastery & Kafe di Bogor — P1NTO Coffee',
+  title: 'Roastery & Kafe di Bogor — Pinto Coffee',
   description:
-    'P1NTO Coffee — kafe dan roastery di Bogor. Biji kopi Nusantara pilihan, disangrai in-house, dan disajikan untuk setiap momen. Kunjungi kafe atau bawa pulang bijinya.',
+    'Pinto Coffee — kafe dan roastery di Bogor. Biji kopi Nusantara pilihan, disangrai in-house, dan disajikan untuk setiap momen. Kunjungi kafe atau bawa pulang bijinya.',
 };
 
 export default function MarketingPage() {

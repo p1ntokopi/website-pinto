@@ -8,9 +8,9 @@ import { StoryFaq } from '@/components/marketing/story/story-faq';
 import { StoryClosing } from '@/components/marketing/story/story-closing';
 
 export const metadata = {
-  title: 'Kisah Kami | P1NTO Coffee',
+  title: 'Kisah Kami | Pinto Coffee',
   description:
-    'P1NTO lahir dari hasrat sederhana akan kopi hebat dan koneksi yang bermakna. Temukan bagaimana kami mencari, menyangrai, dan menyajikan.',
+    'Pinto lahir dari hasrat sederhana akan kopi hebat dan koneksi yang bermakna. Temukan bagaimana kami mencari, menyangrai, dan menyajikan.',
 };
 
 export default function StoryPage() {

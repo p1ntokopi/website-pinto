@@ -11,7 +11,7 @@ import { MenuRoastery } from '@/components/marketing/menu/menu-roastery';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'Menu | P1NTO Coffee',
+  title: 'Menu | Pinto Coffee',
   description:
     'Jelajahi menu kopi, minuman, dan pastry kami — diracik dengan cermat dan disajikan satu cangkir demi satu cangkir.',
 };

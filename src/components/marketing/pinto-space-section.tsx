@@ -31,7 +31,7 @@ export function PintoSpaceSection() {
                   'h-14 rounded-full bg-warm px-8 text-base text-ink hover:bg-cream',
               })}
             >
-              Kunjungi P1NTO
+              Kunjungi Pinto
               <ArrowUpRight className="ml-2 h-4 w-4" />
             </Link>
           </RevealFade>
@@ -43,7 +43,7 @@ export function PintoSpaceSection() {
             <div className="relative aspect-[4/3] w-full overflow-hidden rounded-sm bg-paper/5 md:aspect-[4/3] md:h-[560px]">
               <Image
                 src={images.cafe.interior}
-                alt="Interior Kafe P1NTO"
+                alt="Interior Kafe Pinto"
                 fill
                 sizes="(min-width: 768px) 58vw, 100vw"
                 className="object-cover"
@@ -56,7 +56,7 @@ export function PintoSpaceSection() {
               <div className="relative aspect-[4/3] w-full overflow-hidden rounded-sm bg-paper/5 md:h-[270px] md:aspect-auto">
                 <Image
                   src={images.cafe.table}
-                  alt="Detail meja kopi P1NTO"
+                  alt="Detail meja kopi Pinto"
                   fill
                   sizes="(min-width: 768px) 40vw, 100vw"
                   className="object-cover"
@@ -67,7 +67,7 @@ export function PintoSpaceSection() {
               <div className="relative -mt-16 ml-auto aspect-[4/3] w-3/4 overflow-hidden rounded-sm bg-paper/5 md:-mt-24 md:h-[300px] md:aspect-auto">
                 <Image
                   src={images.cafe.pour}
-                  alt="Penyeduhan manual di P1NTO"
+                  alt="Penyeduhan manual di Pinto"
                   fill
                   sizes="(min-width: 768px) 40vw, 75vw"
                   className="object-cover"

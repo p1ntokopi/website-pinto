@@ -71,7 +71,7 @@ export function MenuPageClient({
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 md:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <span className="font-display text-lg font-bold uppercase tracking-[0.22em] text-ink">
-              P1NTO
+              Pinto
             </span>
             <span className="hidden text-[10px] uppercase tracking-[0.3em] text-muted-foreground sm:inline">
               Kopi
@@ -212,7 +212,7 @@ export function MenuPageClient({
 
           <footer className="mt-20 border-t border-ink/10 py-8 text-center">
             <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
-              P1NTO Coffee
+              Pinto Coffee
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
               Dipanggang & diseduh dengan penuh perhatian.

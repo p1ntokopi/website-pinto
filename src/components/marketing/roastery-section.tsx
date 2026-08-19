@@ -56,7 +56,7 @@ export async function RoasterySection() {
           <SectionHeader
             dark
             eyebrow="Dari Roastery Kami"
-            lines={['Bawa P1NTO', { text: 'ke Rumah.', italic: true }]}
+            lines={['Bawa Pinto', { text: 'ke Rumah.', italic: true }]}
             description="Perhatian yang sama untuk setiap cangkir di bar, dikemas dalam kopi yang bisa Anda seduh di rumah."
           />
           <Link
@@ -76,7 +76,7 @@ export async function RoasterySection() {
             <div className="relative aspect-[4/5] overflow-hidden rounded-sm bg-paper/5">
               <Image
                 src={beanImage(featured.slug)}
-                alt={`${featured.name} — kopi sangrai P1NTO`}
+                alt={`${featured.name} — kopi sangrai Pinto`}
                 fill
                 priority
                 sizes="(min-width: 1024px) 58vw, 100vw"

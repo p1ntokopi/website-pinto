@@ -7,7 +7,7 @@ export function PromotionalSection() {
         <div className="flex flex-col md:flex-row items-center gap-16 lg:gap-32">
           <div className="w-full md:w-[45%] flex flex-col items-start z-10">
             <p className="text-xs font-semibold tracking-[0.2em] uppercase text-cream/70 mb-6">
-              Morning at P1NTO
+              Morning at Pinto
             </p>
             <h2 className="font-display text-5xl md:text-6xl lg:text-[5rem] leading-[1.05] mb-8">
               Start slow.<br />

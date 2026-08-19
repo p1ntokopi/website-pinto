@@ -1,4 +1,4 @@
-# P1NTO Coffee — Audit & Rekomendasi
+# Pinto Coffee — Audit & Rekomendasi
 ### Addendum terhadap PRD v1.0 & Master Blueprint v1.0
 Versi: 1.1 (Audit) · Tanggal: 14 Agustus 2026 · Status: Rekomendasi, belum diimplementasikan
 

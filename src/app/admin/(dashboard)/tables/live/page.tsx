@@ -4,7 +4,7 @@ import { LiveTablesClient } from '@/components/admin/tables/live-tables-client'
 import { Users, Receipt } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Meja Langsung - P1NTO Admin',
+  title: 'Meja Langsung - Pinto Admin',
 }
 
 export default async function LiveTablesPage() {

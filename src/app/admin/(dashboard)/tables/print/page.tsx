@@ -4,7 +4,7 @@ import { QRPreview } from '@/components/admin/qr-preview'
 import { PrintButton } from '@/components/admin/print-button'
 
 export const metadata: Metadata = {
-  title: 'Cetak Kode QR - P1NTO',
+  title: 'Cetak Kode QR - Pinto',
 }
 
 export default async function PrintQRsPage() {

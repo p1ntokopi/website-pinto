@@ -81,8 +81,8 @@ begin
   end if;
 
   -- 3. Generate Order Number
-  -- Format: P1NTO-YYMMDD-XXXX
-  v_order_number := 'P1NTO-' || to_char(now(), 'YYMMDD') || '-' || lpad(cast(floor(random() * 10000) as text), 4, '0');
+  -- Format: Pinto-YYMMDD-XXXX
+  v_order_number := 'Pinto-' || to_char(now(), 'YYMMDD') || '-' || lpad(cast(floor(random() * 10000) as text), 4, '0');
 
   -- 4. Create Order Record (Initial)
   -- customer_name is auto-filled with the table number so no name is needed

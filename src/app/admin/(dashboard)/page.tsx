@@ -10,7 +10,7 @@ import { TableStrip } from '@/components/admin/dashboard/table-strip'
 import { cn } from '@/lib/utils'
 
 export const metadata: Metadata = {
-  title: 'Ringkasan - P1NTO Admin',
+  title: 'Ringkasan - Pinto Admin',
 }
 
 const formatIDR = (price: number) =>

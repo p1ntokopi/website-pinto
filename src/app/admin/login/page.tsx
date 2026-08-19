@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import { LoginForm } from './login-form'
 
 export const metadata: Metadata = {
-  title: 'Masuk Admin - P1NTO Coffee',
+  title: 'Masuk Admin - Pinto Coffee',
 }
 
 export default async function AdminLoginPage() {
@@ -30,7 +30,7 @@ export default async function AdminLoginPage() {
             <span className="font-display text-2xl font-bold text-primary">P</span>
           </div>
           <div className="space-y-1">
-            <CardTitle className="font-display text-2xl">P1NTO Admin</CardTitle>
+            <CardTitle className="font-display text-2xl">Pinto Admin</CardTitle>
             <CardDescription>Masukkan kredensial Anda untuk mengakses operasional.</CardDescription>
           </div>
         </CardHeader>

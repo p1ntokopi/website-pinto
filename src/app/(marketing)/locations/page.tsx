@@ -3,7 +3,7 @@ import { Clock, MapPin, Phone } from 'lucide-react';
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Lokasi | P1NTO Coffee',
+  title: 'Lokasi | Pinto Coffee',
   description:
     'Temukan PINTO Kupi di Jl. Flamboyan No. 8, Perumahan Bumi Insani, Tajur Halang, Kabupaten Bogor. Buka setiap hari.',
 };
@@ -18,7 +18,7 @@ export default function LocationsPage() {
         <div className="container mx-auto px-4 md:px-8 max-w-5xl">
           <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-coffee mb-6">Kunjungi Kami</p>
           <h1 className="font-display text-5xl md:text-6xl lg:text-7xl text-ink leading-[1.05] mb-6">
-            Temukan P1NTO Terdekat
+            Temukan Pinto Terdekat
           </h1>
           <p className="text-muted-foreground text-lg max-w-xl">
             Datang untuk kopi, bertahan untuk momen. Kami menantikan kehadiran Anda.
@@ -85,7 +85,7 @@ export default function LocationsPage() {
               <div className="relative w-full h-[420px] md:h-[520px] rounded-sm overflow-hidden border border-ink/10">
                 <iframe
                   src={MAP_EMBED}
-                  title="Lokasi P1NTO Coffee di Google Maps"
+                  title="Lokasi Pinto Coffee di Google Maps"
                   className="absolute inset-0 w-full h-full border-0"
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"

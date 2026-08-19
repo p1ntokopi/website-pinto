@@ -90,7 +90,7 @@ export function CartClient({
         </p>
         <h2 className="font-display text-3xl text-ink">Belum ada yang dipesan</h2>
         <p className="mx-auto mt-3 max-w-xs leading-relaxed text-muted-foreground">
-          Jelajahi menu P1NTO dan temukan cangkir favorit Anda berikutnya.
+          Jelajahi menu Pinto dan temukan cangkir favorit Anda berikutnya.
         </p>
         <Button
           render={<Link href={`/t/${tableSlug}/menu`} />}
@@ -158,7 +158,7 @@ export function CartClient({
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center text-[9px] font-semibold uppercase tracking-[0.2em] text-coffee/70">
-                        P1NTO
+                        Pinto
                       </div>
                     )}
                   </div>

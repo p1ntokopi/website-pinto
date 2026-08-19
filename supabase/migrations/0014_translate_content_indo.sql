@@ -26,7 +26,7 @@ where id = '44444444-4444-4444-4444-444444444444';
 
 -- ============ Deskripsi produk ============
 update products
-set description = 'Kopi susu signature P1NTO dengan gula aren'
+set description = 'Kopi susu signature Pinto dengan gula aren'
 where id = '55555555-5555-5555-5555-000000000001';
 
 update products
@@ -96,7 +96,7 @@ set brewing_notes = 'Cocok untuk minuman berbasis susu.'
 where id = '99999999-9999-9999-9999-000000000003';
 
 update coffee_products
-set brewing_notes = 'Dirancang untuk minuman signature P1NTO.'
+set brewing_notes = 'Dirancang untuk minuman signature Pinto.'
 where id = '99999999-9999-9999-9999-000000000004';
 
 -- ============ Opsi produk ============

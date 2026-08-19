@@ -31,7 +31,7 @@ export function MenuSignatures({ signatures }: { signatures: SignatureDrink[] })
       <div className="container mx-auto px-4 py-20 md:px-8 md:py-28">
         <div className="mb-14 flex flex-col justify-between gap-8 md:mb-16 md:flex-row md:items-end">
           <SectionHeader
-            eyebrow="P1NTO Signatures"
+            eyebrow="Pinto Signatures"
             lines={['Paling dicari', 'dari bar kami.']}
             titleClassName="text-4xl md:text-5xl lg:text-6xl"
           />

@@ -15,13 +15,13 @@ export function CoffeeHero() {
           <RevealFade>
             <p className="mb-6 flex items-center gap-3 text-[10px] font-semibold uppercase tracking-[0.3em] text-coffee">
               <span className="h-px w-8 bg-coffee/40" aria-hidden="true" />
-              P1NTO Roastery
+              Pinto Roastery
             </p>
           </RevealFade>
 
           <RevealHeading
             as="h1"
-            lines={['Bawa P1NTO', { text: 'ke Rumah.', italic: true }]}
+            lines={['Bawa Pinto', { text: 'ke Rumah.', italic: true }]}
             className="font-display text-[clamp(2.9rem,7vw,5.25rem)] leading-[1.02] tracking-tight text-ink"
           />
 
@@ -64,7 +64,7 @@ export function CoffeeHero() {
           <figure className="relative aspect-[4/3] w-full overflow-hidden rounded-sm bg-cream/40 sm:aspect-[16/10] lg:aspect-[7/5]">
             <Image
               src={images.beans.roasted}
-              alt="Biji kopi sangrai segar dari roastery P1NTO"
+              alt="Biji kopi sangrai segar dari roastery Pinto"
               fill
               priority
               sizes="(min-width: 1024px) 58vw, 100vw"

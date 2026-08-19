@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { signOutAction } from '@/app/auth/signout/actions'
 
 export const metadata: Metadata = {
-  title: 'P1NTO KDS',
+  title: 'Pinto KDS',
   description: 'Sistem Display Dapur',
 }
 

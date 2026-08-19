@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Meja - P1NTO Admin',
+  title: 'Meja - Pinto Admin',
 }
 
 export default async function AdminTablesPage() {

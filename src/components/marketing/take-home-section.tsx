@@ -14,7 +14,7 @@ export async function TakeHomeSection() {
       <div className="container mx-auto px-4 md:px-8">
         <div className="mb-14 md:mb-20">
           <SectionHeader
-            eyebrow="Bring P1NTO Home"
+            eyebrow="Bring Pinto Home"
             lines={[
               'Kopi untuk',
               { text: 'rak dapur Anda.', italic: true },

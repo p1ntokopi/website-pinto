@@ -3,7 +3,7 @@ import { Metadata } from "next"
 import { ReactNode } from "react"
 
 export const metadata: Metadata = {
-  title: "P1NTO Ordering",
+  title: "Pinto Ordering",
   description: "Pesan langsung dari meja Anda.",
   viewport: {
     width: "device-width",

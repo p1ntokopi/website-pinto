@@ -132,7 +132,7 @@ function FeaturedBean({
         <figure className="relative aspect-[4/3] w-full overflow-hidden rounded-sm bg-cream/40 sm:aspect-[16/10] lg:aspect-[7/5]">
           <Image
             src={beanImage(bean.slug)}
-            alt={`Kemas ${name} dari P1NTO`}
+            alt={`Kemas ${name} dari Pinto`}
             fill
             sizes="(min-width: 1024px) 55vw, 100vw"
             className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"

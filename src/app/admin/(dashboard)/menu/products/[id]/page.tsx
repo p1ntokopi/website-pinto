@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 export const metadata: Metadata = {
-  title: 'Edit Produk - P1NTO Admin',
+  title: 'Edit Produk - Pinto Admin',
 }
 
 export default async function EditProductPage({ params }: { params: { id: string } }) {

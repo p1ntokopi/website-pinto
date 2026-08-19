@@ -28,7 +28,7 @@ export function QRPreview({ slug, tableNumber }: QRPreviewProps) {
 
     const downloadLink = document.createElement('a')
     downloadLink.href = pngUrl
-    downloadLink.download = `P1NTO-Table-${tableNumber}-QR.png`
+    downloadLink.download = `Pinto-Table-${tableNumber}-QR.png`
     document.body.appendChild(downloadLink)
     downloadLink.click()
     document.body.removeChild(downloadLink)
@@ -90,7 +90,7 @@ export function QRPreview({ slug, tableNumber }: QRPreviewProps) {
         </head>
         <body>
           <div class="card">
-            <div class="brand">P1NTO</div>
+            <div class="brand">Pinto</div>
             <div>COFFEE</div>
             <img src="${pngUrl}" alt="QR Code" />
             <div class="title">MEJA ${tableNumber}</div>
@@ -114,7 +114,7 @@ export function QRPreview({ slug, tableNumber }: QRPreviewProps) {
         ref={qrRef} 
         className="bg-white p-6 rounded-xl shadow-sm border border-border/50 flex flex-col items-center"
       >
-        <div className="font-display font-bold text-xl text-primary tracking-widest mb-1">P1NTO</div>
+        <div className="font-display font-bold text-xl text-primary tracking-widest mb-1">Pinto</div>
         <div className="text-xs text-muted-foreground uppercase tracking-widest mb-4">Coffee</div>
         
         <QRCodeCanvas 

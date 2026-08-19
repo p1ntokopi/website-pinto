@@ -115,7 +115,7 @@ export function KitchenClient({ initialOrders }: { initialOrders: KitchenOrder[]
       <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-[#2C2923] bg-[#1E1B16] px-4 sm:px-6">
         <div className="flex min-w-0 items-center gap-3 sm:gap-6">
           <h1 className="truncate font-display text-xl font-black tracking-tight text-[#F7F5F0] sm:text-2xl">
-            P1NTO<span className="text-[#C89B6D]">KITCHEN</span>
+            Pinto<span className="text-[#C89B6D]"> Kitchen</span>
           </h1>
           <div className="hidden rounded-sm border border-[#2C2923] bg-[#16140F] px-4 py-1.5 font-mono text-xl font-bold text-[#C89B6D] md:block">
             {currentTime}

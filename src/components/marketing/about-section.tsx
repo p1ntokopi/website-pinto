@@ -24,7 +24,7 @@ export function AboutSection() {
             <div className="relative aspect-[4/5] w-full overflow-hidden rounded-sm bg-warm/10">
               <Image
                 src={images.cafe.interiorWarm}
-                alt="Suasana hangat di dalam Kafe P1NTO"
+                alt="Suasana hangat di dalam Kafe Pinto"
                 fill
                 sizes="(min-width: 1024px) 50vw, 100vw"
                 className="object-cover"
@@ -34,7 +34,7 @@ export function AboutSection() {
 
           <div className="lg:col-span-6">
             <SectionHeader
-              eyebrow="Tentang P1NTO"
+              eyebrow="Tentang Pinto"
               lines={[
                 'Kafe, roastery, dan',
                 { text: 'rumah bagi momen.', italic: true },
@@ -42,7 +42,7 @@ export function AboutSection() {
             />
             <RevealFade delay={0.2}>
               <p className="mb-8 mt-6 max-w-md text-lg leading-relaxed text-muted-foreground">
-                P1NTO adalah ruang kecil di Bogor tempat kopi Nusantara
+                Pinto adalah ruang kecil di Bogor tempat kopi Nusantara
                 disangrai, diseduh, dan dinikmati. Di bar kami, semuanya
                 sederhana: kopi yang jujur, makanan yang mengenyangkan, dan
                 waktu yang dibiarkan berjalan pelan.
