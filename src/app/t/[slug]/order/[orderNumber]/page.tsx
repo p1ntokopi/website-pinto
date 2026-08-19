@@ -2,10 +2,12 @@ import { createClient } from '@/lib/supabase/server'
 import { getSessionToken } from '@/lib/ordering/session'
 import { redirect, notFound } from 'next/navigation'
 import Link from 'next/link'
-import { CheckCircle2 } from 'lucide-react'
+import { Suspense } from 'react'
+import { CheckCircle2, Clock } from 'lucide-react'
 import { Metadata } from 'next'
 
 import { OrderStatusTimeline } from '@/components/ordering/order-status-timeline'
+import { PaymentSection, PaymentInfo } from '@/components/ordering/payment-section'
 import { Button } from '@/components/ui/button'
 import { OrderingHeader } from '@/components/ordering/ordering-header'
 
@@ -45,8 +47,9 @@ export default async function OrderTrackingPage({
   const order = result.order as {
     id: string
     order_number: string
-    status: 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'READY' | 'COMPLETED' | 'CANCELLED'
+    status: 'PENDING_PAYMENT' | 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'READY' | 'COMPLETED' | 'CANCELLED'
     total: number
+    payment: PaymentInfo | null
     items: {
       id: string
       quantity: number
@@ -69,6 +72,8 @@ export default async function OrderTrackingPage({
       maximumFractionDigits: 0,
     }).format(price)
 
+  const isAwaitingPayment = order.status === 'PENDING_PAYMENT'
+
   return (
     <div className="min-h-screen bg-background pb-32">
       <OrderingHeader
@@ -78,11 +83,23 @@ export default async function OrderTrackingPage({
 
       <main className="mx-auto max-w-2xl space-y-6 p-4 pt-6">
         <div className="border border-border/60 bg-white p-6 text-center">
-          <CheckCircle2 className="mx-auto mb-3 h-12 w-12 text-success" />
-          <h1 className="text-xl font-bold text-ink">Pesanan Diterima</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Pesanan Anda telah dikirim ke dapur.
-          </p>
+          {isAwaitingPayment ? (
+            <>
+              <Clock className="mx-auto mb-3 h-12 w-12 text-warning" />
+              <h1 className="text-xl font-bold text-ink">Menunggu Pembayaran</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Selesaikan pembayaran di bawah ini untuk mengirim pesanan ke dapur.
+              </p>
+            </>
+          ) : (
+            <>
+              <CheckCircle2 className="mx-auto mb-3 h-12 w-12 text-success" />
+              <h1 className="text-xl font-bold text-ink">Pesanan Diterima</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Pesanan Anda telah dikirim ke dapur.
+              </p>
+            </>
+          )}
           <div className="mt-4 inline-flex rounded-full bg-muted px-4 py-1.5 text-sm font-semibold">
             Meja {table.table_number}
           </div>
@@ -123,10 +140,16 @@ export default async function OrderTrackingPage({
             </div>
           </div>
 
-          <div className="mt-6 flex items-center justify-between rounded-xl bg-muted/50 p-4 text-sm">
-            <span className="text-muted-foreground">Status Pembayaran</span>
-            <span className="font-semibold text-warning">PENDING</span>
-          </div>
+          <Suspense fallback={null}>
+            <PaymentSection
+              tableSlug={resolvedParams.slug}
+              orderId={order.id}
+              orderNumber={order.order_number}
+              orderStatus={order.status}
+              total={order.total}
+              payment={order.payment}
+            />
+          </Suspense>
         </div>
 
         <div className="pt-2">

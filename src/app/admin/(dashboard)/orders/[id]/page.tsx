@@ -4,7 +4,7 @@ import { OrderActions } from '@/components/admin/orders/order-actions'
 import { OrderStatus, UserRole } from '@/lib/orders/status-machine'
 import { STATUS_CONFIG } from '@/lib/orders/status-config'
 import { Badge } from '@/components/ui/badge'
-import { ChevronLeft, Receipt, User, FileText } from 'lucide-react'
+import { ChevronLeft, Receipt, User, FileText, CreditCard } from 'lucide-react'
 import Link from 'next/link'
 import { Metadata } from 'next'
 import { cn } from '@/lib/utils'
@@ -62,6 +62,15 @@ export default async function OrderDetailPage({ params }: { params: { id: string
 
   if (!order) notFound()
 
+  const { data: payments } = await supabase
+    .from('payments')
+    .select('id, provider, status, amount, payment_method, payment_channel, paid_at, created_at')
+    .eq('order_id', order.id)
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  const payment = payments?.[0] ?? null
+
   const config = STATUS_CONFIG[order.status as OrderStatus]
   const StatusIcon = config.icon
   const items = (order.items || []) as OrderItem[]
@@ -84,6 +93,15 @@ export default async function OrderDetailPage({ params }: { params: { id: string
       hour: '2-digit',
       minute: '2-digit',
     })
+
+  const PAYMENT_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
+    PAID: { label: 'Lunas', color: 'bg-success/10 text-success border-success/25' },
+    PENDING: { label: 'Menunggu', color: 'bg-warning/10 text-warning border-warning/25' },
+    EXPIRED: { label: 'Kedaluwarsa', color: 'bg-muted text-muted-text border-border' },
+    FAILED: { label: 'Gagal', color: 'bg-destructive/10 text-destructive border-destructive/25' },
+    CANCELED: { label: 'Dibatalkan', color: 'bg-muted text-muted-text border-border' },
+    REFUNDED: { label: 'Dikembalikan', color: 'bg-info/10 text-info border-info/25' },
+  }
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6 pb-20">
@@ -213,6 +231,61 @@ export default async function OrderDetailPage({ params }: { params: { id: string
                 <span className="text-sm font-medium text-ink">{formatTime(order.created_at)}</span>
               </div>
             </div>
+          </div>
+
+          <div className="space-y-6 border border-border-custom/70 bg-card p-5">
+            <h2 className="flex items-center gap-2 text-sm font-semibold text-ink">
+              <CreditCard className="h-4 w-4 text-muted-text" />
+              Pembayaran
+            </h2>
+
+            {payment ? (
+              <div className="space-y-5">
+                <div>
+                  <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-text">
+                    Status
+                  </span>
+                  {(() => {
+                    const pcfg = PAYMENT_STATUS_CONFIG[payment.status] ?? {
+                      label: payment.status,
+                      color: 'bg-muted text-muted-text border-border',
+                    }
+                    return (
+                      <Badge variant="outline" className={cn('gap-1 border font-semibold', pcfg.color)}>
+                        {pcfg.label}
+                      </Badge>
+                    )
+                  })()}
+                </div>
+
+                <div>
+                  <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-text">
+                    Metode
+                  </span>
+                  <span className="text-sm font-medium text-ink">
+                    {payment.payment_channel || payment.payment_method || payment.provider}
+                  </span>
+                </div>
+
+                <div>
+                  <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-text">
+                    Nominal
+                  </span>
+                  <span className="text-sm font-semibold text-ink">{formatPrice(payment.amount)}</span>
+                </div>
+
+                {payment.paid_at && (
+                  <div>
+                    <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-text">
+                      Dibayar Pada
+                    </span>
+                    <span className="text-sm font-medium text-ink">{formatTime(payment.paid_at)}</span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-text">Belum ada pembayaran tercatat.</p>
+            )}
           </div>
 
           <div className="border border-border-custom/70 bg-card p-5">

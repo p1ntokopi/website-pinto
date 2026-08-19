@@ -1,4 +1,4 @@
-export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'READY' | 'COMPLETED' | 'CANCELLED'
+export type OrderStatus = 'PENDING_PAYMENT' | 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'READY' | 'COMPLETED' | 'CANCELLED'
 export type UserRole = 'admin' | 'staff' | 'kitchen'
 
 interface TransitionRule {
@@ -8,6 +8,9 @@ interface TransitionRule {
 }
 
 const TRANSITIONS: TransitionRule[] = [
+  // PENDING_PAYMENT (order not paid yet)
+  { from: 'PENDING_PAYMENT', to: 'CANCELLED', allowedRoles: ['admin', 'staff'] },
+
   // PENDING
   { from: 'PENDING', to: 'CONFIRMED', allowedRoles: ['admin', 'staff'] },
   { from: 'PENDING', to: 'CANCELLED', allowedRoles: ['admin', 'staff'] },

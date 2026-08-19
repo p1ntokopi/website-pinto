@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
-import { CheckCircle2, Clock, Coffee, Package, Check } from 'lucide-react'
+import { CheckCircle2, Clock, Coffee, Package, Check, TriangleAlert } from 'lucide-react'
 
-type OrderStatus = 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'READY' | 'COMPLETED' | 'CANCELLED'
+type OrderStatus = 'PENDING_PAYMENT' | 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'READY' | 'COMPLETED' | 'CANCELLED'
 
 const STATUS_STEPS: { id: OrderStatus, label: string, icon: React.ElementType }[] = [
   { id: 'PENDING', label: 'Pesanan Diterima', icon: Clock },
@@ -52,6 +52,18 @@ export function OrderStatusTimeline({ initialStatus, orderId }: { initialStatus:
       <div className="bg-destructive/10 text-destructive p-4 rounded-xl text-center">
         <p className="font-semibold">Pesanan Dibatalkan</p>
         <p className="text-sm opacity-80 mt-1">Silakan hubungi staf untuk detail.</p>
+      </div>
+    )
+  }
+
+  if (status === 'PENDING_PAYMENT') {
+    return (
+      <div className="bg-warning/10 text-warning p-4 rounded-xl text-center">
+        <TriangleAlert className="mx-auto mb-2 h-8 w-8" />
+        <p className="font-semibold">Menunggu Pembayaran</p>
+        <p className="text-sm opacity-80 mt-1">
+          Pesanan belum dikirim ke dapur hingga pembayaran selesai.
+        </p>
       </div>
     )
   }

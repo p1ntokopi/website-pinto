@@ -1,4 +1,4 @@
-import { Clock, CheckCircle2, Coffee, Package, Check, XCircle } from "lucide-react"
+import { Clock, CheckCircle2, Coffee, Package, Check, XCircle, CreditCard } from "lucide-react"
 
 import type { OrderStatus } from "@/lib/orders/status-machine"
 
@@ -6,6 +6,11 @@ export const STATUS_CONFIG: Record<
   OrderStatus,
   { label: string; color: string; icon: React.ElementType }
 > = {
+  PENDING_PAYMENT: {
+    label: "Menunggu Pembayaran",
+    color: "bg-warning/10 text-warning border-warning/25",
+    icon: CreditCard,
+  },
   PENDING: {
     label: "Baru",
     color: "bg-warning/10 text-warning border-warning/25",

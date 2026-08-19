@@ -24,7 +24,7 @@ type OrderRow = {
   table: { id: string; table_number: string } | null
 }
 
-const ALL_STATUSES: OrderStatus[] = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'COMPLETED']
+const ALL_STATUSES: OrderStatus[] = ['PENDING_PAYMENT', 'PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'COMPLETED']
 
 export function OrdersClient({ initialOrders }: { initialOrders: OrderRow[] }) {
   const [orders, setOrders] = useState<OrderRow[]>(initialOrders)
@@ -93,6 +93,7 @@ export function OrdersClient({ initialOrders }: { initialOrders: OrderRow[] }) {
     new Date(isoString).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
 
   const counts: Record<OrderStatus, number> = {
+    PENDING_PAYMENT: orders.filter((o) => o.status === 'PENDING_PAYMENT').length,
     PENDING: orders.filter((o) => o.status === 'PENDING').length,
     CONFIRMED: orders.filter((o) => o.status === 'CONFIRMED').length,
     PREPARING: orders.filter((o) => o.status === 'PREPARING').length,

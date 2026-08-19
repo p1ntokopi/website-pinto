@@ -1,8 +1,10 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getSessionToken, setSessionToken } from '@/lib/ordering/session'
 import { redirect } from 'next/navigation'
+import { createPaymentSession } from '@/lib/payments/xendit'
 
 export async function startOrResumeDiningSession(tableSlug: string) {
   const supabase = await createClient()
@@ -76,5 +78,120 @@ export async function submitOrder(tableSlug: string, notes: string, cartItems: R
     console.error('Order creation RPC failed internally:', data)
     return { error: data?.error || 'Gagal membuat pesanan karena item atau harga tidak valid.' }
   }
+}
+
+export async function initiatePayment(tableSlug: string, orderNumber: string) {
+  const supabase = await createClient()
+  const admin = createAdminClient()
+  const sessionToken = await getSessionToken()
+
+  if (!sessionToken) {
+    return { error: 'Sesi Anda telah berakhir. Silakan pindai ulang kode QR meja.' }
+  }
+
+  // Validate the dining session and confirm the order belongs to it.
+  const { data: session } = await supabase.rpc('validate_dining_session', {
+    p_table_slug: tableSlug,
+    p_session_token: sessionToken,
+  })
+
+  if (!session || !session.success) {
+    return { error: 'Sesi tidak valid. Silakan pindai ulang kode QR meja.' }
+  }
+
+  const { data: result } = await supabase.rpc('get_order_tracking', {
+    p_table_slug: tableSlug,
+    p_session_token: sessionToken,
+    p_order_number: orderNumber,
+  })
+
+  if (!result || !result.success || !result.order) {
+    return { error: 'Pesanan tidak ditemukan.' }
+  }
+
+  const order = result.order as {
+    id: string
+    order_number: string
+    status: string
+    total: number
+  }
+
+  if (order.status !== 'PENDING_PAYMENT') {
+    return { error: 'Pesanan ini tidak memerlukan pembayaran.' }
+  }
+
+  if (!order.total || order.total <= 0) {
+    return { error: 'Total pesanan tidak valid.' }
+  }
+
+  const now = new Date()
+  const expiresAt = new Date(now.getTime() + 30 * 60 * 1000)
+
+  // Reuse an existing, still-valid payment session for this order.
+  const { data: existing } = await admin
+    .from('payments')
+    .select('id, payment_session_id, raw_response, expired_at')
+    .eq('order_id', order.id)
+    .eq('status', 'PENDING')
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  const pendingPayment = existing?.[0]
+  if (pendingPayment?.expired_at && new Date(pendingPayment.expired_at) > now) {
+    const link = (pendingPayment.raw_response as { payment_link_url?: string } | null)?.payment_link_url
+    if (link) {
+      return { paymentLinkUrl: link }
+    }
+  }
+
+  // Expired pending session -> mark it expired so a fresh one can be created.
+  if (pendingPayment) {
+    await admin
+      .from('payments')
+      .update({ status: 'EXPIRED', updated_at: now.toISOString() })
+      .eq('id', pendingPayment.id)
+      .eq('status', 'PENDING')
+  }
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+
+  let sessionResponse
+  try {
+    sessionResponse = await createPaymentSession({
+      referenceId: order.order_number,
+      amount: order.total,
+      description: `Pesanan ${order.order_number}`,
+      successReturnUrl: `${appUrl}/t/${tableSlug}/order/${orderNumber}?payment=success`,
+      cancelReturnUrl: `${appUrl}/t/${tableSlug}/order/${orderNumber}?payment=cancelled`,
+      expiresAt: expiresAt.toISOString(),
+      metadata: { order_id: order.id, order_number: order.order_number },
+    })
+  } catch (err) {
+    console.error('Xendit session creation failed:', err)
+    return { error: 'Tidak dapat membuat pembayaran. Silakan coba lagi atau minta bantuan staf.' }
+  }
+
+  if (!sessionResponse.payment_link_url) {
+    return { error: 'Pembayaran tidak tersedia saat ini. Silakan coba lagi.' }
+  }
+
+  const { error: insertError } = await admin.from('payments').insert({
+    order_id: order.id,
+    provider: 'XENDIT',
+    provider_transaction_id: sessionResponse.payment_session_id,
+    payment_session_id: sessionResponse.payment_session_id,
+    reference_id: sessionResponse.reference_id,
+    status: 'PENDING',
+    amount: order.total,
+    expired_at: expiresAt.toISOString(),
+    raw_response: sessionResponse as unknown as Record<string, unknown>,
+  })
+
+  if (insertError) {
+    console.error('Failed to persist payment:', insertError)
+    return { error: 'Tidak dapat menyimpan pembayaran. Silakan coba lagi.' }
+  }
+
+  return { paymentLinkUrl: sessionResponse.payment_link_url }
 }
 

@@ -19,6 +19,26 @@ export interface Database {
         }
         Returns: unknown
       }
+      record_order_payment: {
+        Args: {
+          p_order_id: string
+          p_provider: string
+          p_provider_transaction_id: string
+          p_amount: number
+          p_status: 'PENDING' | 'PAID' | 'FAILED' | 'EXPIRED' | 'CANCELED' | 'REFUNDED'
+          p_paid_at: string | null
+          p_raw: unknown
+          p_payment_session_id?: string | null
+          p_reference_id?: string | null
+          p_payment_request_id?: string | null
+          p_payment_id?: string | null
+          p_payment_method?: string | null
+          p_payment_channel?: string | null
+          p_expires_at?: string | null
+          p_canceled_at?: string | null
+        }
+        Returns: unknown
+      }
       start_or_resume_dining_session: {
         Args: {
           p_table_slug: string
@@ -195,7 +215,7 @@ export interface Database {
           shipping_fee: number
           discount: number
           total: number
-          status: 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'READY' | 'COMPLETED' | 'CANCELLED'
+          status: 'PENDING_PAYMENT' | 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'READY' | 'COMPLETED' | 'CANCELLED'
           customer_name: string | null
           customer_phone: string | null
           shipping_recipient: string | null
@@ -204,6 +224,7 @@ export interface Database {
           shipping_province: string | null
           shipping_postal_code: string | null
           notes: string | null
+          client_request_id: string | null
           created_at: string
           updated_at: string
           cancelled_at: string | null
@@ -293,6 +314,43 @@ export interface Database {
           table_id: string
           status: 'open' | 'closed'
         }
+      }
+      payments: {
+        Row: {
+          id: string
+          order_id: string
+          provider: string
+          provider_transaction_id: string | null
+          status: 'PENDING' | 'PAID' | 'FAILED' | 'EXPIRED' | 'CANCELED' | 'REFUNDED'
+          amount: number
+          paid_at: string | null
+          expired_at: string | null
+          raw_response: Json | null
+          payment_session_id: string | null
+          reference_id: string | null
+          payment_request_id: string | null
+          payment_id: string | null
+          payment_method: string | null
+          payment_channel: string | null
+          canceled_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['payments']['Row'], 'id' | 'created_at' | 'updated_at'> & { id?: string, created_at?: string, updated_at?: string }
+        Update: Partial<Database['public']['Tables']['payments']['Insert']>
+      }
+      payment_webhook_events: {
+        Row: {
+          id: string
+          event_id: string
+          event_type: string
+          payload: Json
+          received_at: string
+          processed_at: string | null
+          error: string | null
+        }
+        Insert: Omit<Database['public']['Tables']['payment_webhook_events']['Row'], 'id' | 'received_at'> & { id?: string, received_at?: string }
+        Update: Partial<Database['public']['Tables']['payment_webhook_events']['Insert']>
       }
     }
   }
