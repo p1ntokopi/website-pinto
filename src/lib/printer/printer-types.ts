@@ -14,12 +14,15 @@ export type PrinterConfig = {
   activeProviderId: string
   paperWidth: ThermalPaperWidth
   baudRate: number
+  /** Auto-print the customer receipt when a payment becomes PAID (kiosk tab). */
+  autoReceiptPrint: boolean
 }
 
 export const DEFAULT_PRINTER_CONFIG: PrinterConfig = {
   activeProviderId: 'web-print',
   paperWidth: DEFAULT_PAPER_WIDTH,
   baudRate: 9600,
+  autoReceiptPrint: false,
 }
 
 export type PrintReceiptOptions = {
@@ -41,6 +44,11 @@ export interface PrinterProvider {
    * no user gesture). Returns true when connected again. Optional.
    */
   tryReconnect?(): Promise<boolean>
+  /**
+   * Print raw monospace text (e.g. kitchen tickets) without receipt totals.
+   * Optional — providers that can't render raw text may omit it.
+   */
+  printRawText?(text: string): Promise<void>
 }
 
 export class PrinterUnavailableError extends Error {

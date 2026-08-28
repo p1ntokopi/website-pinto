@@ -3,6 +3,7 @@ import {
   RECEIPT_LINE_WIDTHS,
   ThermalPaperWidth,
   ReceiptData,
+  ReceiptBusiness,
   ReceiptLineItem,
   ReceiptOrderInput,
   ReceiptPayment,
@@ -80,7 +81,8 @@ function blank(): string {
 
 export function buildReceiptFromOrder(
   order: ReceiptOrderInput,
-  payment?: ReceiptPayment | null
+  payment?: ReceiptPayment | null,
+  business: ReceiptBusiness = defaultReceiptBusiness(),
 ): ReceiptData {
   const items: ReceiptLineItem[] = (order.items || []).map((item) => ({
     name: item.product_name_snapshot,
@@ -96,7 +98,7 @@ export function buildReceiptFromOrder(
   }))
 
   return {
-    business: defaultReceiptBusiness(),
+    business,
     orderNumber: order.order_number,
     tableLabel: order.table ? tableLabel(order.table.table_number) : null,
     createdAt: order.created_at,

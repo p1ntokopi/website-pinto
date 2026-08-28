@@ -410,6 +410,35 @@ export interface Database {
         Insert: Omit<Database['public']['Tables']['financial_adjustments']['Row'], 'id' | 'created_by' | 'created_at' | 'updated_at'> & { id?: string, created_by?: string, created_at?: string, updated_at?: string }
         Update: Partial<Database['public']['Tables']['financial_adjustments']['Insert']>
       }
+      audit_logs: {
+        Row: {
+          id: string
+          actor_id: string | null
+          action: string
+          entity_type: string
+          entity_id: string | null
+          metadata: Json | null
+          created_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['audit_logs']['Row'], 'id' | 'created_at'> & { id?: string, created_at?: string }
+        Update: Partial<Database['public']['Tables']['audit_logs']['Insert']>
+      }
+      app_settings: {
+        Row: {
+          id: number
+          business_name: string
+          tagline: string
+          address: string
+          website: string
+          wifi_name: string
+          wifi_password: string
+          footer_message: string
+          opening_hours: string
+          updated_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['app_settings']['Row'], 'updated_at'> & { updated_at?: string }
+        Update: Partial<Database['public']['Tables']['app_settings']['Insert']>
+      }
     }
   }
 }

@@ -8,6 +8,7 @@ import type { PrinterStatus } from '@/lib/printer/printer-types'
 import type { ThermalPaperWidth } from '@/lib/receipt/receipt-types'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 
 const PROVIDER_OPTIONS = [
   {
@@ -44,6 +45,7 @@ type BusyAction = 'connect' | 'disconnect' | 'test' | null
 export function PrinterSettings() {
   const [providerId, setProviderId] = useState<string>('web-print')
   const [paperWidth, setPaperWidth] = useState<ThermalPaperWidth>(58)
+  const [autoReceipt, setAutoReceipt] = useState(false)
   const [status, setStatus] = useState<PrinterStatus>('disconnected')
   const [busy, setBusy] = useState<BusyAction>(null)
   const [error, setError] = useState<string | null>(null)
@@ -70,6 +72,7 @@ export function PrinterSettings() {
       if (cancelled) return
       setProviderId(config.activeProviderId)
       setPaperWidth(config.paperWidth)
+      setAutoReceipt(config.autoReceiptPrint)
     }
     void restore()
 
@@ -162,6 +165,24 @@ export function PrinterSettings() {
           <p className="text-sm text-muted-text">
             {PROVIDER_OPTIONS.find((provider) => provider.id === providerId)?.description}
           </p>
+
+          <div className="flex items-center justify-between gap-3 rounded-sm border border-border-custom/60 p-4">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-ink">Auto-print struk saat lunas</p>
+              <p className="mt-0.5 text-xs text-muted-text">
+                Struk otomatis dikirim ke printer aktif ketika ada pembayaran berstatus PAID
+                (misalnya tab dapur/monitor terbuka).
+              </p>
+            </div>
+            <Switch
+              checked={autoReceipt}
+              onCheckedChange={(checked) => {
+                PrinterService.setAutoReceiptEnabled(checked)
+                setAutoReceipt(checked)
+              }}
+              aria-label="Auto-print struk saat lunas"
+            />
+          </div>
 
           {isEscpos && (
             <div className="space-y-3 rounded-sm border border-border-custom/60 p-4">

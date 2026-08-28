@@ -25,6 +25,13 @@ type OrderReceiptProps = {
   items: OrderReceiptItem[]
   total: number
   paymentStatus: string | null
+  /** Business profile override (from app_settings); falls back to config. */
+  business?: {
+    name?: string
+    tagline?: string
+    website?: string
+    footerMessage?: string
+  }
 }
 
 // Slightly longer than the 3.4s feed animation so the paper finishes first.
@@ -46,7 +53,9 @@ export function OrderReceipt({
   items,
   total,
   paymentStatus,
+  business: businessOverride,
 }: OrderReceiptProps) {
+  const profile = { ...BUSINESS, ...businessOverride }
   const [stage, setStage] = useState<ReceiptPrinterStage>('processing')
 
   useEffect(() => {
@@ -111,10 +120,10 @@ export function OrderReceipt({
           <ReceiptPrinter.Paper>
             <div className="text-center">
               <p className="font-display text-2xl font-bold tracking-tight text-ink">
-                {BUSINESS.name}
+                {profile.name}
               </p>
               <p className="mt-0.5 text-[10px] uppercase tracking-[0.18em] text-muted-text">
-                {BUSINESS.tagline}
+                {profile.tagline}
               </p>
             </div>
 
@@ -170,8 +179,8 @@ export function OrderReceipt({
 
             <Divider />
 
-            <p className="text-center text-[11px] text-muted-text">{BUSINESS.footerMessage}</p>
-            <p className="mt-1 text-center text-[10px] text-muted-text">{BUSINESS.website}</p>
+            <p className="text-center text-[11px] text-muted-text">{profile.footerMessage}</p>
+            <p className="mt-1 text-center text-[10px] text-muted-text">{profile.website}</p>
           </ReceiptPrinter.Paper>
         </ReceiptPrinter.Output>
       </ReceiptPrinter.Machine>

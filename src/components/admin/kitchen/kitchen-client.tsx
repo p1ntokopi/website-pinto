@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { Database } from '@/types/database.types'
 import { OrderStatus } from '@/lib/orders/status-machine'
@@ -10,12 +10,28 @@ import { Maximize, Minimize, Wifi, WifiOff } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { playNewOrderSound } from '@/lib/notifications/sound'
 import { getNotificationsEnabled, getSoundEnabled } from '@/lib/notifications/preferences'
+import { PrinterService } from '@/lib/printer/printer-service'
+import { buildReceiptFromOrder } from '@/lib/receipt/receipt-service'
+import type { ReceiptBusiness, ReceiptOrderInput } from '@/lib/receipt/receipt-types'
 
-export function KitchenClient({ initialOrders }: { initialOrders: KitchenOrder[] }) {
+type AutoPrintBusiness = Pick<
+  ReceiptBusiness,
+  'name' | 'tagline' | 'address' | 'website' | 'wifiName' | 'wifiPassword' | 'footerMessage'
+>
+
+export function KitchenClient({
+  initialOrders,
+  business,
+}: {
+  initialOrders: KitchenOrder[]
+  business: AutoPrintBusiness
+}) {
   const [orders, setOrders] = useState<KitchenOrder[]>(initialOrders)
   const [isConnected, setIsConnected] = useState(true)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [currentTime, setCurrentTime] = useState('')
+  // Payments already auto-printed in this tab session (dedupe realtime replays).
+  const printedPayments = useRef<Set<string>>(new Set())
 
   // Clock
   useEffect(() => {
@@ -92,10 +108,102 @@ export function KitchenClient({ initialOrders }: { initialOrders: KitchenOrder[]
         setIsConnected(status === 'SUBSCRIBED')
       })
 
+    // Auto-print: when a payment flips to PAID (Xendit webhook or cashier),
+    // print the customer receipt via the active printer provider.
+    const paymentsChannel = supabase
+      .channel('kitchen_auto_print')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'payments' },
+        async (payload) => {
+          const row = (payload.new ?? {}) as { id?: string; order_id?: string; status?: string }
+          if (!row.id || !row.order_id || row.status !== 'PAID') return
+          if (printedPayments.current.has(row.id)) return
+          if (!PrinterService.getConfig().autoReceiptPrint) return
+          printedPayments.current.add(row.id)
+
+          try {
+            const { data } = await supabase
+              .from('orders')
+              .select(
+                `order_number, subtotal, tax, discount, total, notes, created_at,
+                 table:tables(table_number),
+                 items:order_items(
+                   quantity, product_name_snapshot, variant_name_snapshot, unit_price, subtotal, notes,
+                   options:order_item_options(option_value_snapshot, price_adjustment)
+                 )`,
+              )
+              .eq('id', row.order_id)
+              .single()
+            // Hand-maintained database.types.ts has no Relationships metadata,
+            // so embed results are cast explicitly.
+            const orderRow = data as unknown as {
+              order_number: string
+              subtotal: number
+              tax: number | null
+              discount: number | null
+              total: number
+              notes: string | null
+              created_at: string
+              table: { table_number: string } | { table_number: string }[] | null
+              items:
+                | {
+                    quantity: number
+                    product_name_snapshot: string
+                    variant_name_snapshot: string | null
+                    unit_price: number
+                    subtotal: number
+                    notes: string | null
+                    options: { option_value_snapshot: string; price_adjustment: number }[] | null
+                  }[]
+                | null
+            } | null
+            if (!orderRow) return
+
+            const table = Array.isArray(orderRow.table)
+              ? orderRow.table[0] ?? null
+              : orderRow.table
+            const receiptData = buildReceiptFromOrder(
+              {
+                order_number: orderRow.order_number,
+                subtotal: orderRow.subtotal,
+                tax: orderRow.tax ?? 0,
+                discount: orderRow.discount ?? 0,
+                total: orderRow.total,
+                notes: orderRow.notes ?? null,
+                created_at: orderRow.created_at,
+                table: table ? { table_number: table.table_number } : null,
+                items: (orderRow.items ?? []).map((item) => ({
+                  quantity: item.quantity,
+                  product_name_snapshot: item.product_name_snapshot,
+                  variant_name_snapshot: item.variant_name_snapshot ?? null,
+                  unit_price: item.unit_price,
+                  subtotal: item.subtotal,
+                  notes: item.notes ?? null,
+                  options: (item.options ?? []).map((opt) => ({
+                    option_value_snapshot: opt.option_value_snapshot,
+                    price_adjustment: opt.price_adjustment,
+                  })),
+                })),
+              } as ReceiptOrderInput,
+              { method: null, channel: null, status: 'PAID' },
+              business,
+            )
+            await PrinterService.printReceipt(receiptData, {
+              paperWidth: PrinterService.getConfig().paperWidth,
+            })
+          } catch (err) {
+            console.error('Auto-print receipt failed:', err)
+          }
+        }
+      )
+      .subscribe()
+
     return () => {
       supabase.removeChannel(channel)
+      supabase.removeChannel(paymentsChannel)
     }
-  }, [])
+  }, [business])
 
   const handleOptimisticUpdate = (orderId: string, newStatus: OrderStatus) => {
     if (['COMPLETED', 'CANCELLED'].includes(newStatus)) {

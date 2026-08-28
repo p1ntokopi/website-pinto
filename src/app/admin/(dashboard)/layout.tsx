@@ -20,7 +20,7 @@ export default async function AdminLayout({
   // Fetch the user's profile to get their role and full name
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
-    .select('full_name, role')
+    .select('full_name, role, is_active')
     .eq('id', user.id)
     .single()
 
@@ -32,6 +32,23 @@ export default async function AdminLayout({
           <h1 className="font-display text-2xl font-bold text-foreground">Kesalahan Profil</h1>
           <p className="text-muted-foreground">
             Kami tidak dapat menemukan profil staf/admin Anda. Jika Anda baru saja membuat akun ini, pastikan profil Anda sudah dibuat di database.
+          </p>
+          <form action={signOutAction}>
+            <Button type="submit" variant="outline" size="sm">Keluar</Button>
+          </form>
+        </div>
+      </div>
+    )
+  }
+
+  // Deactivated accounts are locked out of the dashboard entirely.
+  if (!profile.is_active) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <div className="max-w-md text-center space-y-4">
+          <h1 className="font-display text-2xl font-bold text-foreground">Akun Dinonaktifkan</h1>
+          <p className="text-muted-foreground">
+            Akun Anda telah dinonaktifkan oleh owner. Hubungi owner untuk mengaktifkan kembali.
           </p>
           <form action={signOutAction}>
             <Button type="submit" variant="outline" size="sm">Keluar</Button>

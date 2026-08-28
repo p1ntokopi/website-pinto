@@ -135,3 +135,83 @@ export async function voidExpense(id: string): Promise<ExpenseActionState> {
   revalidateFinancePages()
   return { ok: true }
 }
+
+// ---------------------------------------------------------------------------
+// Expense categories — database-driven, owner-managed (no hard-coded list).
+// ---------------------------------------------------------------------------
+
+const categoryNameSchema = z
+  .string()
+  .trim()
+  .min(1, 'Nama kategori wajib diisi')
+  .max(60, 'Nama kategori maksimal 60 karakter')
+
+export async function createExpenseCategory(name: string): Promise<ExpenseActionState> {
+  const parsed = categoryNameSchema.safeParse(name)
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? 'Nama tidak valid.' }
+  }
+  const { supabase, error } = await getOwnerClient()
+  if (error) return { ok: false, error }
+
+  const { error: insertError } = await supabase
+    .from('expense_categories')
+    .insert({ name: parsed.data })
+
+  if (insertError) {
+    if (insertError.code === '23505') {
+      return { ok: false, error: `Kategori "${parsed.data}" sudah ada.` }
+    }
+    console.error('Create expense category error:', insertError)
+    return { ok: false, error: 'Gagal menambah kategori. Coba lagi.' }
+  }
+  revalidateFinancePages()
+  return { ok: true }
+}
+
+export async function updateExpenseCategory(
+  id: string,
+  name: string,
+): Promise<ExpenseActionState> {
+  const parsed = categoryNameSchema.safeParse(name)
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? 'Nama tidak valid.' }
+  }
+  const { supabase, error } = await getOwnerClient()
+  if (error) return { ok: false, error }
+
+  const { error: updateError } = await supabase
+    .from('expense_categories')
+    .update({ name: parsed.data })
+    .eq('id', id)
+
+  if (updateError) {
+    if (updateError.code === '23505') {
+      return { ok: false, error: `Kategori "${parsed.data}" sudah ada.` }
+    }
+    console.error('Update expense category error:', updateError)
+    return { ok: false, error: 'Gagal mengubah kategori. Coba lagi.' }
+  }
+  revalidateFinancePages()
+  return { ok: true }
+}
+
+export async function setExpenseCategoryActive(
+  id: string,
+  isActive: boolean,
+): Promise<ExpenseActionState> {
+  const { supabase, error } = await getOwnerClient()
+  if (error) return { ok: false, error }
+
+  const { error: updateError } = await supabase
+    .from('expense_categories')
+    .update({ is_active: isActive })
+    .eq('id', id)
+
+  if (updateError) {
+    console.error('Toggle expense category error:', updateError)
+    return { ok: false, error: 'Gagal mengubah status kategori. Coba lagi.' }
+  }
+  revalidateFinancePages()
+  return { ok: true }
+}

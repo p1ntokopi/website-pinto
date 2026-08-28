@@ -9,6 +9,7 @@ import { Metadata } from 'next'
 import { OrderStatusTimeline } from '@/components/ordering/order-status-timeline'
 import { PaymentSection, PaymentInfo } from '@/components/ordering/payment-section'
 import { OrderReceipt } from '@/components/ordering/order-receipt'
+import { getAppSettings } from '@/lib/settings'
 import { Button } from '@/components/ui/button'
 import { OrderingHeader } from '@/components/ordering/ordering-header'
 
@@ -67,6 +68,7 @@ export default async function OrderTrackingPage({
   }
 
   const isAwaitingPayment = order.status === 'PENDING_PAYMENT'
+  const settings = await getAppSettings()
 
   return (
     <div className="min-h-screen bg-background pb-32">
@@ -110,6 +112,12 @@ export default async function OrderTrackingPage({
             items={order.items}
             total={order.total}
             paymentStatus={order.payment?.status ?? null}
+            business={{
+              name: settings.businessName,
+              tagline: settings.tagline,
+              website: settings.website,
+              footerMessage: settings.footerMessage,
+            }}
           />
         </div>
 

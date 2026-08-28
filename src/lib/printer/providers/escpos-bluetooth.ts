@@ -161,6 +161,22 @@ export class EscPosBluetoothProvider implements PrinterProvider {
     await this.printReceipt(createSampleReceipt())
   }
 
+  /** Raw text (kitchen tickets): encode + write, same chunking as receipts. */
+  async printRawText(text: string): Promise<void> {
+    const port = this.port
+    if (!port?.writable) {
+      throw new PrinterUnavailableError(
+        'Printer belum tersambung. Sambungkan printer terlebih dahulu.'
+      )
+    }
+    try {
+      await this.write(port, encodeReceipt(text))
+    } catch (err) {
+      this.port = null
+      throw this.toProviderError(err, true)
+    }
+  }
+
   async getStatus(): Promise<PrinterStatus> {
     return this.port?.writable ? 'connected' : 'disconnected'
   }

@@ -28,7 +28,10 @@ const TITLE_MAP: Array<{ prefix: string; title: string }> = [
   { prefix: '/admin/owner/finance', title: 'Ikhtisar Keuangan' },
   { prefix: '/admin/owner/sales', title: 'Analitik Penjualan' },
   { prefix: '/admin/owner/expenses', title: 'Pengeluaran' },
+  { prefix: '/admin/owner/adjustments', title: 'Refund & Koreksi' },
+  { prefix: '/admin/owner/audit', title: 'Audit Log' },
   { prefix: '/admin/owner/reports', title: 'Laporan Keuangan' },
+  { prefix: '/admin/owner/accounts', title: 'Manajemen Akun' },
   { prefix: '/admin/owner', title: 'Ringkasan Owner' },
   { prefix: '/admin', title: 'Ringkasan' },
 ]

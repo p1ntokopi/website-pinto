@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import { redirect, notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { getAppSettings } from '@/lib/settings'
 import { buildReceiptFromOrder } from '@/lib/receipt/receipt-service'
 import type { ReceiptOrderInput, ReceiptPayment } from '@/lib/receipt/receipt-types'
 import { ReceiptPrintView } from '@/components/admin/orders/receipt-print-view'
@@ -30,6 +31,17 @@ export default async function OrderReceiptPage({ params }: { params: { id: strin
     .single()
 
   if (!order) notFound()
+
+  const settings = await getAppSettings()
+  const business = {
+    name: settings.businessName,
+    tagline: settings.tagline,
+    address: settings.address,
+    website: settings.website,
+    wifiName: settings.wifiName,
+    wifiPassword: settings.wifiPassword,
+    footerMessage: settings.footerMessage,
+  }
 
   const { data: paymentRow } = await supabase
     .from('payments')
@@ -74,7 +86,8 @@ export default async function OrderReceiptPage({ params }: { params: { id: strin
         })),
       })),
     } as ReceiptOrderInput,
-    payment
+    payment,
+    business
   )
 
   return <ReceiptPrintView orderId={resolvedParams.id} receiptData={receiptData} />

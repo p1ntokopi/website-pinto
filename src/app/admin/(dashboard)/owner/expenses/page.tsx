@@ -8,6 +8,8 @@ import {
   ExpensesClient,
   type ClientExpenseRow,
 } from '@/components/admin/owner/expenses-client'
+import { CategoryManager } from '@/components/admin/owner/category-manager'
+import { SectionHeader } from '@/components/admin/owner/section-header'
 
 export const metadata: Metadata = {
   title: 'Pengeluaran - Pinto Admin',
@@ -22,25 +24,36 @@ export default async function OwnerExpensesPage({
   const period = resolvePeriod(params)
   const supabase = await createClient()
 
-  const [{ data: summary, error }, { data: categories }, { data: expenses }, { data: profiles }] =
-    await Promise.all([
-      getFinancialSummary(period.range),
-      supabase
-        .from('expense_categories')
-        .select('id, name, sort_order')
-        .eq('is_active', true)
-        .order('sort_order'),
-      supabase
-        .from('expenses')
-        .select(
-          'id, title, description, amount, category_id, expense_date, payment_method, notes, status, created_by, created_at',
-        )
-        .gte('expense_date', period.range.start)
-        .lte('expense_date', period.range.end)
-        .order('expense_date', { ascending: false })
-        .limit(500),
-      supabase.from('profiles').select('id, full_name'),
-    ])
+  const [
+    { data: summary, error },
+    { data: categories },
+    { data: expenses },
+    { data: profiles },
+    { data: categoryUsage },
+  ] = await Promise.all([
+    getFinancialSummary(period.range),
+    supabase
+      .from('expense_categories')
+      .select('id, name, is_active, sort_order')
+      .order('sort_order'),
+    supabase
+      .from('expenses')
+      .select(
+        'id, title, description, amount, category_id, expense_date, payment_method, notes, status, created_by, created_at',
+      )
+      .gte('expense_date', period.range.start)
+      .lte('expense_date', period.range.end)
+      .order('expense_date', { ascending: false })
+      .limit(500),
+    supabase.from('profiles').select('id, full_name'),
+    // All-time usage counts so the manager can show how used each category is.
+    supabase.from('expenses').select('category_id').limit(10000),
+  ])
+
+  const usageCounts = new Map<string, number>()
+  for (const row of categoryUsage ?? []) {
+    usageCounts.set(row.category_id, (usageCounts.get(row.category_id) ?? 0) + 1)
+  }
 
   const categoryMap = new Map((categories ?? []).map((c) => [c.id, c.name]))
   const profileMap = new Map((profiles ?? []).map((p) => [p.id, p.full_name]))
@@ -77,19 +90,35 @@ export default async function OwnerExpensesPage({
           {error}
         </div>
       ) : summary ? (
-        <ExpensesClient
-          rows={rows}
-          categories={(categories ?? []).map((category) => ({
-            id: category.id,
-            name: category.name,
-          }))}
-          strip={{
-            total: summary.expense.total,
-            count: summary.expense.count,
-            avgDaily: summary.expense.avg_daily,
-            topCategory: summary.expense_by_category[0]?.category ?? null,
-          }}
-        />
+        <>
+          <ExpensesClient
+            rows={rows}
+            categories={(categories ?? [])
+              .filter((category) => category.is_active)
+              .map((category) => ({
+                id: category.id,
+                name: category.name,
+              }))}
+            strip={{
+              total: summary.expense.total,
+              count: summary.expense.count,
+              avgDaily: summary.expense.avg_daily,
+              topCategory: summary.expense_by_category[0]?.category ?? null,
+            }}
+          />
+
+          <section className="space-y-4">
+            <SectionHeader title="Kategori Pengeluaran" />
+            <CategoryManager
+              categories={(categories ?? []).map((category) => ({
+                id: category.id,
+                name: category.name,
+                is_active: category.is_active,
+                usage_count: usageCounts.get(category.id) ?? 0,
+              }))}
+            />
+          </section>
+        </>
       ) : null}
     </div>
   )

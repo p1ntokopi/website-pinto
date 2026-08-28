@@ -17,7 +17,10 @@ import {
   Wallet,
   TrendingUp,
   Receipt,
+  Undo2,
+  History,
   FileText,
+  Users,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { signOutAction } from '@/app/auth/signout/actions'
@@ -62,17 +65,20 @@ export function AdminSidebar({ role, user, mobile = false }: SidebarProps) {
         { title: 'Ikhtisar Keuangan', href: '/admin/owner/finance', icon: Wallet, roles: ['owner'] },
         { title: 'Analitik Penjualan', href: '/admin/owner/sales', icon: TrendingUp, roles: ['owner'] },
         { title: 'Pengeluaran', href: '/admin/owner/expenses', icon: Receipt, roles: ['owner'] },
+        { title: 'Refund & Koreksi', href: '/admin/owner/adjustments', icon: Undo2, roles: ['owner'] },
       ],
     },
     {
       title: 'Laporan',
       items: [
         { title: 'Laporan Keuangan', href: '/admin/owner/reports', icon: FileText, roles: ['owner'] },
+        { title: 'Audit Log', href: '/admin/owner/audit', icon: History, roles: ['owner'] },
       ],
     },
     {
       title: 'Sistem',
       items: [
+        { title: 'Manajemen Akun', href: '/admin/owner/accounts', icon: Users, roles: ['owner'] },
         { title: 'Pengaturan', href: '/admin/settings', icon: Settings, roles: ['admin', 'staff', 'owner'] },
       ],
     },

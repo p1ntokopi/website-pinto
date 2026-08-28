@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react'
 import { OrderStatus } from '@/lib/orders/status-machine'
 import { KitchenOrder } from '@/lib/orders/kitchen-types'
 import { updateOrderStatus } from '@/app/admin/(dashboard)/orders/actions'
+import { PrinterService } from '@/lib/printer/printer-service'
+import { formatKitchenTicket } from '@/lib/printer/kitchen-ticket'
 import { useToast } from '@/hooks/use-toast'
-import { Loader2, Clock, AlertCircle } from 'lucide-react'
+import { Loader2, Clock, AlertCircle, Printer } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface KitchenCardProps {
@@ -13,9 +15,34 @@ interface KitchenCardProps {
 
 export function KitchenCard({ order, onStatusChangeOptimistic }: KitchenCardProps) {
   const [isUpdating, setIsUpdating] = useState(false)
+  const [isPrinting, setIsPrinting] = useState(false)
   const [elapsed, setElapsed] = useState('')
   const [isLate, setIsLate] = useState(false)
   const { toast } = useToast()
+
+  const handlePrintTicket = async () => {
+    setIsPrinting(true)
+    try {
+      await PrinterService.printRawText(
+        formatKitchenTicket({
+          order_number: order.order_number,
+          created_at: order.created_at,
+          table_number: order.table?.table_number ?? null,
+          notes: order.notes ?? null,
+          items: order.items ?? [],
+        })
+      )
+      toast({ title: 'Tiket Dikirim', description: `Tiket ${order.order_number} dikirim ke printer.` })
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'Gagal mencetak tiket',
+        description: err instanceof Error ? err.message : 'Terjadi kesalahan.',
+      })
+    } finally {
+      setIsPrinting(false)
+    }
+  }
 
   useEffect(() => {
     const updateTime = () => {
@@ -143,6 +170,17 @@ export function KitchenCard({ order, onStatusChangeOptimistic }: KitchenCardProp
           </div>
         ))}
       </div>
+
+      <button
+        type="button"
+        onClick={handlePrintTicket}
+        disabled={isPrinting}
+        aria-label={`Cetak tiket dapur ${order.order_number}`}
+        className="mt-4 flex w-full min-h-11 items-center justify-center gap-2 rounded-sm border border-[#2C2923] bg-[#16140F] py-2.5 text-base font-bold text-[#A19B8F] transition-colors hover:text-[#F7F5F0] disabled:opacity-60 focus-visible:ring-3 focus-visible:ring-[#C58B2A]/50 outline-none"
+      >
+        {isPrinting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Printer className="h-4 w-4" />}
+        CETAK TIKET
+      </button>
 
       {actionButton}
     </div>

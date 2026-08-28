@@ -1,9 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { KitchenClient } from '@/components/admin/kitchen/kitchen-client'
 import { KitchenOrder } from '@/lib/orders/kitchen-types'
+import { getAppSettings } from '@/lib/settings'
 
 export default async function KitchenPage() {
   const supabase = await createClient()
+  const settings = await getAppSettings()
 
   // Fetch active orders for the KDS (only those that are operational)
   const { data: initialOrders } = await supabase
@@ -31,7 +33,18 @@ export default async function KitchenPage() {
 
   return (
     <main className="h-screen flex flex-col overflow-hidden">
-      <KitchenClient initialOrders={orders} />
+      <KitchenClient
+        initialOrders={orders}
+        business={{
+          name: settings.businessName,
+          tagline: settings.tagline,
+          address: settings.address,
+          website: settings.website,
+          wifiName: settings.wifiName,
+          wifiPassword: settings.wifiPassword,
+          footerMessage: settings.footerMessage,
+        }}
+      />
     </main>
   )
 }

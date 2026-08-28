@@ -1,6 +1,7 @@
 import { buttonVariants } from '@/components/ui/button';
 import { Clock, MapPin, Phone } from 'lucide-react';
 import Link from 'next/link';
+import { getAppSettings } from '@/lib/settings';
 
 export const metadata = {
   title: 'Lokasi | Pinto Coffee',
@@ -11,7 +12,9 @@ export const metadata = {
 const MAP_EMBED = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3964.2932843233516!2d106.75314430941077!3d-6.48449349348037!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69c365b46d2d93%3A0x46dac8252d2c88ed!2sPINTO%20Kupi!5e0!3m2!1sid!2sid!4v1786768303490!5m2!1sid!2sid';
 const DIRECTIONS_URL = 'https://maps.app.goo.gl/p7UhDrsRF1SbVEVh9';
 
-export default function LocationsPage() {
+export default async function LocationsPage() {
+  const settings = await getAppSettings();
+
   return (
     <>
       <section className="w-full bg-paper py-24 md:py-32 border-b border-ink/5">
@@ -52,7 +55,7 @@ export default function LocationsPage() {
                     <Clock className="h-5 w-5 text-coffee" />
                     <p className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground">Jam Buka</p>
                   </div>
-                  <p className="text-ink text-xl">08:00 — 22:00 (Everyday)</p>
+                  <p className="text-ink text-xl">{settings.openingHours}</p>
                 </div>
 
                 <div>

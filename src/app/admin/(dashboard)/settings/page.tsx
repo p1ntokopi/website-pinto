@@ -1,11 +1,25 @@
 import type { Metadata } from 'next'
+import { createClient } from '@/lib/supabase/server'
+import { getAppSettings } from '@/lib/settings'
 import { PrinterSettings } from '@/components/admin/settings/printer-settings'
+import { BusinessSettingsForm } from '@/components/admin/settings/business-settings-form'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 export const metadata: Metadata = {
   title: 'Pengaturan - Pinto Admin',
 }
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const [settings, { data: profile }] = await Promise.all([
+    getAppSettings(),
+    user
+      ? supabase.from('profiles').select('role').eq('id', user.id).single()
+      : Promise.resolve({ data: null }),
+  ])
+  const isOwner = profile?.role === 'owner'
+
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-6">
       <div>
@@ -21,6 +35,31 @@ export default function SettingsPage() {
       </div>
 
       <PrinterSettings />
+
+      {isOwner ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Profil Bisnis</CardTitle>
+            <CardDescription>
+              Informasi yang tampil di struk, halaman pelanggan, dan situs marketing.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <BusinessSettingsForm
+              initialSettings={{
+                businessName: settings.businessName,
+                tagline: settings.tagline,
+                address: settings.address,
+                website: settings.website,
+                wifiName: settings.wifiName,
+                wifiPassword: settings.wifiPassword,
+                footerMessage: settings.footerMessage,
+                openingHours: settings.openingHours,
+              }}
+            />
+          </CardContent>
+        </Card>
+      ) : null}
     </div>
   )
 }

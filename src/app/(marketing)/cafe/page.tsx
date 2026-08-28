@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/button';
 import { Coffee, Croissant, Wifi, Users } from 'lucide-react';
+import { getAppSettings } from '@/lib/settings';
 
 export const metadata = {
   title: 'Kafe Kami | Pinto Coffee',
@@ -39,7 +40,8 @@ const gallery = [
   { src: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=800&auto=format&fit=crop', alt: 'Eksterior kafe' },
 ];
 
-export default function CafePage() {
+export default async function CafePage() {
+  const settings = await getAppSettings();
   return (
     <>
       <section className="w-full bg-ink text-paper py-28 md:py-40 border-b border-white/5">
@@ -140,9 +142,9 @@ export default function CafePage() {
         <div className="container mx-auto px-4 md:px-8 max-w-3xl text-center">
           <h2 className="font-display text-4xl md:text-5xl text-ink mb-6">Buka Setiap Hari</h2>
           <p className="text-muted-foreground text-xl mb-10">
-            13.00 — 24.00
+            {settings.openingHours}
             <br />
-            Perumahan Bumi Insani, Jl. Flamboyan No. 8, Tajur Halang, Kabupaten Bogor
+            {settings.address}
           </p>
           <Link
             href="/locations"

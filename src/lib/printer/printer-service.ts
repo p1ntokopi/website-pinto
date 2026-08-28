@@ -45,7 +45,6 @@ function isPrinterConfig(value: unknown): value is PrinterConfig {
     typeof v.baudRate === 'number'
   )
 }
-
 function readConfig(): PrinterConfig {
   const storage = getStorage()
   if (!storage) return { ...DEFAULT_PRINTER_CONFIG }
@@ -103,6 +102,10 @@ export const PrinterService = {
     writeConfig({ ...readConfig(), paperWidth })
   },
 
+  setAutoReceiptEnabled(enabled: boolean): void {
+    writeConfig({ ...readConfig(), autoReceiptPrint: enabled })
+  },
+
   async connect(): Promise<void> {
     return getActive().connect()
   },
@@ -116,6 +119,24 @@ export const PrinterService = {
     const provider = getActive()
     if (!provider.tryReconnect) return false
     return provider.tryReconnect()
+  },
+
+  /** Raw monospace text (kitchen tickets) via the active provider. */
+  async printRawText(text: string): Promise<void> {
+    const provider = getActive()
+    if (!provider.printRawText) {
+      throw new PrinterUnavailableError(
+        'Provider printer aktif tidak mendukung cetak teks mentah.'
+      )
+    }
+    try {
+      await provider.printRawText(text)
+    } catch (err) {
+      if (err instanceof PrinterUnavailableError) throw err
+      throw new PrinterUnavailableError(
+        err instanceof Error ? err.message : 'Gagal mencetak tiket. Periksa printer Anda.'
+      )
+    }
   },
 
   async printReceipt(data: ReceiptData, options?: PrintReceiptOptions): Promise<void> {
