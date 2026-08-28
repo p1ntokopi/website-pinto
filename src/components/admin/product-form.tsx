@@ -364,7 +364,7 @@ toast({
                 <div className="w-full aspect-square bg-muted rounded-md border-2 border-dashed flex flex-col items-center justify-center p-6 text-center text-muted-foreground">
                   <Upload className="w-8 h-8 mb-2 opacity-50" />
                   <p className="text-sm">Unggah gambar produk</p>
-                  <p className="text-xs opacity-70 mt-1">PNG, JPG maksimal 2MB</p>
+                  <p className="text-xs opacity-70 mt-1">PNG, JPG, WebP maksimal 10MB</p>
                 </div>
               )}
 

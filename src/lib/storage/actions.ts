@@ -25,7 +25,7 @@ const ALLOWED_MIME: Record<string, string> = {
   'image/gif': 'gif',
 }
 
-const MAX_FILE_SIZE = 2 * 1024 * 1024 // 2MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 
 async function requireAdmin() {
   const supabase = await createClient()
@@ -45,7 +45,7 @@ async function requireAdmin() {
     .eq('id', user.id)
     .single()
 
-  if (!profile || (profile.role !== 'admin' && profile.role !== 'staff')) {
+  if (!profile || (profile.role !== 'admin' && profile.role !== 'owner')) {
     throw new Error('Anda tidak memiliki izin untuk mengunggah.')
   }
 }
@@ -67,7 +67,7 @@ export async function getImageUploadUrl(
   }
 
   if (!fileSize || fileSize > MAX_FILE_SIZE) {
-    throw new Error('Ukuran file maksimal 2MB.')
+    throw new Error('Ukuran file maksimal 10MB.')
   }
 
   const objectKey = buildObjectKey(folder, ext)
