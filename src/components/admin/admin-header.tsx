@@ -17,6 +17,7 @@ interface HeaderProps {
 }
 
 const TITLE_MAP: Array<{ prefix: string; title: string }> = [
+  { prefix: '/admin/orders/new', title: 'Order Kasir' },
   { prefix: '/admin/orders/', title: 'Detail Pesanan' },
   { prefix: '/admin/menu/products/', title: 'Detail Produk' },
   { prefix: '/admin/menu/categories', title: 'Kategori' },
@@ -24,6 +25,11 @@ const TITLE_MAP: Array<{ prefix: string; title: string }> = [
   { prefix: '/admin/tables/live', title: 'Meja Langsung' },
   { prefix: '/admin/tables', title: 'Meja & QR' },
   { prefix: '/admin/orders', title: 'Pesanan' },
+  { prefix: '/admin/owner/finance', title: 'Ikhtisar Keuangan' },
+  { prefix: '/admin/owner/sales', title: 'Analitik Penjualan' },
+  { prefix: '/admin/owner/expenses', title: 'Pengeluaran' },
+  { prefix: '/admin/owner/reports', title: 'Laporan Keuangan' },
+  { prefix: '/admin/owner', title: 'Ringkasan Owner' },
   { prefix: '/admin', title: 'Ringkasan' },
 ]
 

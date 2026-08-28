@@ -9,15 +9,21 @@ import {
   Armchair,
   LogOut,
   ShoppingBag,
+  ShoppingCart,
   QrCode,
   CookingPot,
   Settings,
+  Crown,
+  Wallet,
+  TrendingUp,
+  Receipt,
+  FileText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { signOutAction } from '@/app/auth/signout/actions'
 
 interface SidebarProps {
-  role: 'admin' | 'staff'
+  role: 'admin' | 'staff' | 'owner'
   user?: { full_name: string; role: string }
   mobile?: boolean
 }
@@ -27,29 +33,47 @@ export function AdminSidebar({ role, user, mobile = false }: SidebarProps) {
 
   const navGroups = [
     {
-      title: 'Overview',
-      items: [{ title: 'Ringkasan', href: '/admin', icon: LayoutDashboard, roles: ['admin', 'staff'] }],
+      title: 'Dasbor',
+      items: [
+        { title: 'Ringkasan', href: '/admin', icon: LayoutDashboard, roles: ['admin', 'staff'] },
+        { title: 'Ringkasan Owner', href: '/admin/owner', icon: Crown, roles: ['owner'] },
+      ],
     },
     {
       title: 'Operasional',
       items: [
-        { title: 'Pesanan', href: '/admin/orders', icon: ShoppingBag, roles: ['admin', 'staff'] },
-        { title: 'Meja Langsung', href: '/admin/tables/live', icon: Armchair, roles: ['admin', 'staff'] },
-        { title: 'Meja & QR', href: '/admin/tables', icon: QrCode, roles: ['admin'] },
-        { title: 'Display Dapur', href: '/admin/kitchen', icon: CookingPot, roles: ['admin', 'staff'] },
+        { title: 'Pesanan', href: '/admin/orders', icon: ShoppingBag, roles: ['admin', 'staff', 'owner'] },
+        { title: 'Order Kasir', href: '/admin/orders/new', icon: ShoppingCart, roles: ['admin', 'owner'] },
+        { title: 'Meja Langsung', href: '/admin/tables/live', icon: Armchair, roles: ['admin', 'staff', 'owner'] },
+        { title: 'Meja & QR', href: '/admin/tables', icon: QrCode, roles: ['admin', 'owner'] },
+        { title: 'Display Dapur', href: '/admin/kitchen', icon: CookingPot, roles: ['admin', 'staff', 'owner'] },
       ],
     },
     {
       title: 'Katalog',
       items: [
-        { title: 'Produk', href: '/admin/menu/products', icon: Coffee, roles: ['admin', 'staff'] },
-        { title: 'Kategori', href: '/admin/menu/categories', icon: Tags, roles: ['admin'] },
+        { title: 'Produk', href: '/admin/menu/products', icon: Coffee, roles: ['admin', 'staff', 'owner'] },
+        { title: 'Kategori', href: '/admin/menu/categories', icon: Tags, roles: ['admin', 'owner'] },
+      ],
+    },
+    {
+      title: 'Keuangan',
+      items: [
+        { title: 'Ikhtisar Keuangan', href: '/admin/owner/finance', icon: Wallet, roles: ['owner'] },
+        { title: 'Analitik Penjualan', href: '/admin/owner/sales', icon: TrendingUp, roles: ['owner'] },
+        { title: 'Pengeluaran', href: '/admin/owner/expenses', icon: Receipt, roles: ['owner'] },
+      ],
+    },
+    {
+      title: 'Laporan',
+      items: [
+        { title: 'Laporan Keuangan', href: '/admin/owner/reports', icon: FileText, roles: ['owner'] },
       ],
     },
     {
       title: 'Sistem',
       items: [
-        { title: 'Pengaturan', href: '/admin/settings', icon: Settings, roles: ['admin', 'staff'] },
+        { title: 'Pengaturan', href: '/admin/settings', icon: Settings, roles: ['admin', 'staff', 'owner'] },
       ],
     },
   ]
@@ -124,7 +148,7 @@ export function AdminSidebar({ role, user, mobile = false }: SidebarProps) {
             <div className="min-w-0 leading-tight">
               <div className="truncate text-sm font-semibold text-ink">{user.full_name}</div>
               <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-text">
-                {user.role === 'admin' ? 'Admin' : 'Staf'}
+                {user.role === 'owner' ? 'Owner' : user.role === 'admin' ? 'Admin' : 'Staf'}
               </div>
             </div>
           </div>

@@ -60,6 +60,13 @@ export interface Database {
         }
         Returns: unknown
       }
+      get_financial_summary: {
+        Args: {
+          p_start: string
+          p_end: string
+        }
+        Returns: unknown
+      }
     }
     Views: {
       [_ in never]: never
@@ -70,7 +77,7 @@ export interface Database {
           id: string
           full_name: string
           avatar_url: string | null
-          role: 'staff' | 'kitchen' | 'admin'
+          role: 'staff' | 'kitchen' | 'admin' | 'owner'
           phone: string | null
           is_active: boolean
           created_at: string
@@ -351,6 +358,57 @@ export interface Database {
         }
         Insert: Omit<Database['public']['Tables']['payment_webhook_events']['Row'], 'id' | 'received_at'> & { id?: string, received_at?: string }
         Update: Partial<Database['public']['Tables']['payment_webhook_events']['Insert']>
+      }
+      expense_categories: {
+        Row: {
+          id: string
+          name: string
+          is_active: boolean
+          sort_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['expense_categories']['Row'], 'id' | 'created_at' | 'updated_at'> & { id?: string, created_at?: string, updated_at?: string }
+        Update: Partial<Database['public']['Tables']['expense_categories']['Insert']>
+      }
+      expenses: {
+        Row: {
+          id: string
+          title: string
+          description: string | null
+          amount: number
+          category_id: string
+          expense_date: string
+          payment_method: string
+          attachment_url: string | null
+          notes: string | null
+          status: string
+          created_by: string
+          voided_at: string | null
+          voided_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['expenses']['Row'], 'id' | 'created_by' | 'created_at' | 'updated_at'> & { id?: string, created_by?: string, created_at?: string, updated_at?: string }
+        Update: Partial<Database['public']['Tables']['expenses']['Insert']>
+      }
+      financial_adjustments: {
+        Row: {
+          id: string
+          adjustment_type: string
+          amount: number
+          order_id: string | null
+          effective_date: string
+          reason: string
+          status: string
+          created_by: string
+          voided_at: string | null
+          voided_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['financial_adjustments']['Row'], 'id' | 'created_by' | 'created_at' | 'updated_at'> & { id?: string, created_by?: string, created_at?: string, updated_at?: string }
+        Update: Partial<Database['public']['Tables']['financial_adjustments']['Insert']>
       }
     }
   }

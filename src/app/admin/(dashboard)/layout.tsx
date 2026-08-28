@@ -41,8 +41,13 @@ export default async function AdminLayout({
     )
   }
 
-  // Strictly enforce that only 'admin' or 'staff' can access the dashboard
-  if (profile.role !== 'admin' && profile.role !== 'staff') {
+  // Strictly enforce dashboard access: staff/admin for operations, owner for
+  // everything (financial pages additionally gated by the owner layout + RLS).
+  if (
+    profile.role !== 'admin' &&
+    profile.role !== 'staff' &&
+    profile.role !== 'owner'
+  ) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <div className="max-w-md text-center space-y-4">

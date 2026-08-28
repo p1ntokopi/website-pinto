@@ -1,5 +1,10 @@
 export type OrderStatus = 'PENDING_PAYMENT' | 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'READY' | 'COMPLETED' | 'CANCELLED'
-export type UserRole = 'admin' | 'staff' | 'kitchen'
+export type UserRole = 'admin' | 'staff' | 'kitchen' | 'owner'
+
+// Owner is a superset of admin for every operational transition.
+function effectiveRole(role: UserRole): 'admin' | 'staff' | 'kitchen' {
+  return role === 'owner' ? 'admin' : role
+}
 
 interface TransitionRule {
   from: OrderStatus
@@ -35,11 +40,11 @@ export function canTransition(currentStatus: OrderStatus, targetStatus: OrderSta
 
   if (!transition) return false
 
-  return transition.allowedRoles.includes(role)
+  return transition.allowedRoles.includes(effectiveRole(role))
 }
 
 export function getAvailableTransitions(currentStatus: OrderStatus, role: UserRole): OrderStatus[] {
   return TRANSITIONS
-    .filter((t) => t.from === currentStatus && t.allowedRoles.includes(role))
+    .filter((t) => t.from === currentStatus && t.allowedRoles.includes(effectiveRole(role)))
     .map((t) => t.to)
 }

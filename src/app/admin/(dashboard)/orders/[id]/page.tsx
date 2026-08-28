@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
 import { OrderActions } from '@/components/admin/orders/order-actions'
+import { MarkPaidDialog } from '@/components/admin/orders/mark-paid-dialog'
 import { OrderStatus, UserRole } from '@/lib/orders/status-machine'
 import { STATUS_CONFIG } from '@/lib/orders/status-config'
 import { Badge } from '@/components/ui/badge'
@@ -104,8 +105,12 @@ export default async function OrderDetailPage({ params }: { params: { id: string
   }
 
   const METHOD_LABELS: Record<string, string> = {
-    BANK_TRANSFER: 'Transfer Bank',
+    CASH: 'Cash',
+    TRANSFER: 'Transfer',
     EWALLET: 'E-Wallet',
+    OTHER: 'Lainnya',
+    MANUAL: 'Manual (Kasir)',
+    BANK_TRANSFER: 'Transfer Bank',
     QR_CODE: 'QRIS',
     DIRECT_DEBIT: 'Debit Langsung',
     CARD: 'Kartu',
@@ -153,12 +158,17 @@ export default async function OrderDetailPage({ params }: { params: { id: string
 
       <div className="flex flex-col justify-between gap-4 border border-border-custom/70 bg-card p-5 md:flex-row md:items-center">
         <div>
-          <h3 className="text-sm font-semibold text-ink">Perbarui Status</h3>
+          <h3 className="text-sm font-semibold text-ink">Perbarui Status &amp; Pembayaran</h3>
           <p className="mt-0.5 text-sm text-muted-text">
             Geser pesanan ini melalui alur kerja operasional.
           </p>
         </div>
-        <OrderActions orderId={order.id} currentStatus={order.status as OrderStatus} userRole={userRole} />
+        <div className="flex flex-wrap items-center gap-2">
+          {order.status !== 'CANCELLED' && payment?.status !== 'PAID' && (
+            <MarkPaidDialog orderId={order.id} />
+          )}
+          <OrderActions orderId={order.id} currentStatus={order.status as OrderStatus} userRole={userRole} />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">

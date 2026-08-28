@@ -1,1 +1,2 @@
 - Prefers to communicate in Bahasa Indonesia. Confidence: 0.85
+- Project-facing text — UI copy, empty/error states, validation messages, and code comments — is written in Bahasa Indonesia (e.g., 'Belum ada pengeluaran pada periode ini.', 'Gagal menyimpan pengeluaran. Coba lagi.'). Confidence: 0.85

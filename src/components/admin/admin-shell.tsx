@@ -11,7 +11,7 @@ import { useOrderNotifications } from '@/hooks/use-order-notifications'
 
 interface AdminShellProps {
   user: { full_name: string; role: string }
-  role: 'admin' | 'staff'
+  role: 'admin' | 'staff' | 'owner'
   children: React.ReactNode
 }
 
