@@ -195,13 +195,15 @@ export default async function OrderDetailPage({ params }: { params: { id: string
           <StatusIcon className="h-3.5 w-3.5" />
           {config.label}
         </Badge>
-        <Link
-          href={`/admin/orders/${order.id}/receipt`}
-          className="ml-auto inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border border-coffee/30 bg-coffee/5 px-4 text-sm font-semibold text-coffee transition-colors hover:bg-coffee/10 focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
-        >
-          <Printer className="h-4 w-4" />
-          Cetak Struk
-        </Link>
+        {order.status === 'COMPLETED' && (
+          <Link
+            href={`/admin/orders/${order.id}/receipt`}
+            className="ml-auto inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border border-coffee/30 bg-coffee/5 px-4 text-sm font-semibold text-coffee transition-colors hover:bg-coffee/10 focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
+          >
+            <Printer className="h-4 w-4" />
+            Cetak Struk
+          </Link>
+        )}
       </div>
 
       <div className="flex flex-col justify-between gap-4 border border-border-custom/70 bg-card p-5 md:flex-row md:items-center">

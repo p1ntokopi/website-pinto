@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import Link from 'next/link'
 import { redirect, notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getAppSettings } from '@/lib/settings'
@@ -20,7 +21,7 @@ export default async function OrderReceiptPage({ params }: { params: { id: strin
   const { data: order } = await supabase
     .from('orders')
     .select(`
-      order_number, order_type, subtotal, tax, discount, total, notes, created_at,
+      order_number, order_type, status, subtotal, tax, discount, total, notes, created_at,
       table:tables(table_number),
       items:order_items(
         quantity, product_name_snapshot, variant_name_snapshot, unit_price, subtotal, notes,
@@ -31,6 +32,25 @@ export default async function OrderReceiptPage({ params }: { params: { id: strin
     .single()
 
   if (!order) notFound()
+
+  // Receipts may only be printed once the order is completed.
+  if (order.status !== 'COMPLETED') {
+    return (
+      <div className="mx-auto w-full max-w-4xl space-y-4 pt-10">
+        <h1 className="font-display text-2xl font-bold text-ink">Struk belum bisa dicetak</h1>
+        <p className="text-sm text-muted-text">
+          Struk hanya dapat dicetak setelah pesanan berstatus <strong>Selesai</strong>. Tandai
+          pesanan selesai terlebih dahulu, lalu kembali ke halaman ini.
+        </p>
+        <Link
+          href={`/admin/orders/${resolvedParams.id}`}
+          className="inline-flex items-center gap-2 text-sm font-semibold text-coffee hover:text-ink"
+        >
+          ← Kembali ke Detail Pesanan
+        </Link>
+      </div>
+    )
+  }
 
   const settings = await getAppSettings()
   const business = {
