@@ -34,6 +34,9 @@ export function OrderActions({ orderId, currentStatus, userRole }: { orderId: st
 
     if (result.error) {
       toast({ variant: 'destructive', title: 'Pembaruan Gagal', description: result.error })
+      // The order likely changed elsewhere (kitchen/other tab) — reload so the
+      // available action buttons match the current status.
+      router.refresh()
     } else {
       toast({ title: 'Pesanan Diperbarui', description: `Status diubah menjadi ${targetStatus}` })
       setCancelDialogOpen(false)

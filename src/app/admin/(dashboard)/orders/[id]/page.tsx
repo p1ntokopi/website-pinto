@@ -29,7 +29,7 @@ type HistoryEvent = {
   new_status: OrderStatus
   created_at: string
   metadata: { reason?: string } | null
-  changer: { full_name: string } | null
+  changer: { full_name: string | null } | null
 }
 
 export default async function OrderDetailPage({ params }: { params: { id: string } }) {
@@ -44,7 +44,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
 
   const userRole = profile.role as UserRole
 
-  const { data: order } = await supabase
+  const { data: order, error: orderError } = await supabase
     .from('orders')
     .select(`
       *,
@@ -54,14 +54,65 @@ export default async function OrderDetailPage({ params }: { params: { id: string
         options:order_item_options(*)
       ),
       history:order_status_history(
-        id, old_status, new_status, created_at, metadata,
-        changer:profiles!order_status_history_changed_by_fkey(full_name)
+        id, old_status, new_status, created_at, metadata, changed_by
       )
     `)
     .eq('id', resolvedParams.id)
     .single()
 
+  if (orderError) {
+    // PGRST116 = zero/multiple rows -> genuinely not found. Anything else is
+    // a query failure (RLS, embed) that a plain 404 would hide.
+    if (orderError.code === 'PGRST116') notFound()
+    console.error('[order detail]', orderError.code, orderError.message)
+    return (
+      <div className="mx-auto w-full max-w-4xl space-y-4 pt-10">
+        <h1 className="font-display text-2xl font-bold text-ink">Gagal memuat pesanan</h1>
+        <p className="text-sm text-muted-text">
+          Pesanan ditemukan tetapi datanya tidak bisa ditampilkan. Detail error tercatat di
+          console browser — coba muat ulang halaman.
+        </p>
+        <Link
+          href="/admin/orders"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-coffee hover:text-ink"
+        >
+          ← Kembali ke Pesanan
+        </Link>
+      </div>
+    )
+  }
+
   if (!order) notFound()
+
+  // changed_by points to auth.users, so changer names are resolved manually
+  // through profiles (PostgREST cannot embed across that FK).
+  const historyRows = ((order.history || []) as {
+    id: string
+    new_status: OrderStatus
+    created_at: string
+    metadata: { reason?: string } | null
+    changed_by: string | null
+  }[]).sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+
+  const changerIds = [...new Set(historyRows.map((h) => h.changed_by).filter(Boolean))] as string[]
+  const changerNames = new Map<string, string>()
+  if (changerIds.length > 0) {
+    const { data: changers } = await supabase
+      .from('profiles')
+      .select('id, full_name')
+      .in('id', changerIds)
+    for (const changer of changers ?? []) {
+      changerNames.set(changer.id, changer.full_name)
+    }
+  }
+
+  const history: HistoryEvent[] = historyRows.map((row) => ({
+    id: row.id,
+    new_status: row.new_status,
+    created_at: row.created_at,
+    metadata: row.metadata,
+    changer: { full_name: row.changed_by ? changerNames.get(row.changed_by) ?? null : null },
+  }))
 
   const { data: payments } = await supabase
     .from('payments')
@@ -75,9 +126,6 @@ export default async function OrderDetailPage({ params }: { params: { id: string
   const config = STATUS_CONFIG[order.status as OrderStatus]
   const StatusIcon = config.icon
   const items = (order.items || []) as OrderItem[]
-  const history = ((order.history || []) as HistoryEvent[]).sort(
-    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-  )
 
   const formatPrice = (price: number) =>
     new Intl.NumberFormat('id-ID', {

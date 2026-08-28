@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { canTransition, OrderStatus, UserRole } from '@/lib/orders/status-machine'
+import { STATUS_CONFIG } from '@/lib/orders/status-config'
 
 export async function updateOrderStatus(orderId: string, targetStatus: OrderStatus, reason?: string) {
   const supabase = await createClient()
@@ -38,9 +39,12 @@ export async function updateOrderStatus(orderId: string, targetStatus: OrderStat
 
   const currentStatus = order.status as OrderStatus
 
-  // 3. Validate transition
+  // 3. Validate transition. A stale open page (order changed in another tab,
+  // e.g. the kitchen display) can attempt an outdated transition — return a
+  // friendly message; the client refreshes the page on failure.
   if (!canTransition(currentStatus, targetStatus, role)) {
-    return { error: `Invalid transition from ${currentStatus} to ${targetStatus} for role ${role}` }
+    const label = STATUS_CONFIG[currentStatus]?.label ?? currentStatus
+    return { error: `Status pesanan sudah berubah menjadi "${label}". Halaman akan dimuat ulang — cek status terbaru lalu coba lagi.` }
   }
 
   // 4. Perform Update (Simulate transaction with two separate RPCs or rely on RLS if no RPC)

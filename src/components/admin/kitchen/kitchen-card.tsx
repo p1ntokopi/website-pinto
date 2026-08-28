@@ -72,6 +72,8 @@ export function KitchenCard({ order, onStatusChangeOptimistic }: KitchenCardProp
         title: 'Gagal memperbarui status',
         description: res.error,
       })
+      // Status changed elsewhere — reload this card's real state.
+      onStatusChangeOptimistic(order.id, order.status)
     }
 
     setIsUpdating(false)
