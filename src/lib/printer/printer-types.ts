@@ -1,12 +1,25 @@
-import { ReceiptData, ThermalPaperWidth } from '@/lib/receipt/receipt-types'
+import { ReceiptData, ThermalPaperWidth, DEFAULT_PAPER_WIDTH } from '@/lib/receipt/receipt-types'
 
 export type PrinterStatus = 'disconnected' | 'connecting' | 'connected' | 'error'
 
 export type PrinterCapabilities = {
   supportsBluetooth: boolean
   supportsWebPrint: boolean
+  supportsWebSerial: boolean
   requiresDriver: boolean
   supportedPaperWidths: ThermalPaperWidth[]
+}
+
+export type PrinterConfig = {
+  activeProviderId: string
+  paperWidth: ThermalPaperWidth
+  baudRate: number
+}
+
+export const DEFAULT_PRINTER_CONFIG: PrinterConfig = {
+  activeProviderId: 'web-print',
+  paperWidth: DEFAULT_PAPER_WIDTH,
+  baudRate: 9600,
 }
 
 export type PrintReceiptOptions = {
@@ -23,6 +36,11 @@ export interface PrinterProvider {
   printReceipt(data: ReceiptData, options?: PrintReceiptOptions): Promise<void>
   testPrint(): Promise<void>
   getStatus(): Promise<PrinterStatus>
+  /**
+   * Best-effort silent reconnect to a previously granted device (no picker,
+   * no user gesture). Returns true when connected again. Optional.
+   */
+  tryReconnect?(): Promise<boolean>
 }
 
 export class PrinterUnavailableError extends Error {

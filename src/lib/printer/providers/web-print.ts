@@ -4,6 +4,7 @@ import {
   ThermalPaperWidth,
 } from '@/lib/receipt/receipt-types'
 import { renderReceiptHtml } from '@/lib/receipt/receipt-html'
+import { createSampleReceipt } from '@/lib/receipt/sample-receipt'
 import {
   PrintReceiptOptions,
   PrinterProvider,
@@ -24,6 +25,7 @@ export class WebPrintProvider implements PrinterProvider {
   readonly capabilities: PrinterCapabilities = {
     supportsBluetooth: false,
     supportsWebPrint: true,
+    supportsWebSerial: false,
     requiresDriver: true,
     supportedPaperWidths: [58, 80],
   }
@@ -63,38 +65,6 @@ export class WebPrintProvider implements PrinterProvider {
   }
 
   async testPrint(): Promise<void> {
-    const sample: ReceiptData = {
-      business: {
-        name: 'Pinto Coffee',
-        tagline: 'Kopi • Makanan • Biji Kopi',
-        address: 'Jl. Flamboyan No. 8, Tajur Halang, Bogor',
-        website: 'www.pintokopi.web.id',
-        wifiName: 'P1NTO',
-        wifiPassword: 'terimakasih',
-        footerMessage: 'Terima kasih telah berkunjung.',
-      },
-      orderNumber: 'PNT-00000',
-      tableLabel: 'MEJA 01',
-      createdAt: new Date().toISOString(),
-      items: [
-        {
-          name: 'Sanger Latte',
-          variant: null,
-          quantity: 1,
-          unitPrice: 15000,
-          subtotal: 15000,
-          notes: null,
-          options: [],
-        },
-      ],
-      subtotal: 15000,
-      discount: 0,
-      tax: 0,
-      total: 15000,
-      payment: { method: 'ONLINE', channel: null, status: 'PAID' },
-      notes: null,
-    }
-
     const win = window.open('', '_blank', 'width=340,height=520')
     if (!win) {
       throw new PrinterUnavailableError(
@@ -102,7 +72,7 @@ export class WebPrintProvider implements PrinterProvider {
       )
     }
     win.document.open()
-    win.document.write(renderReceiptHtml(sample, DEFAULT_PAPER_WIDTH))
+    win.document.write(renderReceiptHtml(createSampleReceipt(), DEFAULT_PAPER_WIDTH))
     win.document.close()
     win.focus()
     setTimeout(() => win.print(), 350)

@@ -8,6 +8,7 @@ import { Metadata } from 'next'
 
 import { OrderStatusTimeline } from '@/components/ordering/order-status-timeline'
 import { PaymentSection, PaymentInfo } from '@/components/ordering/payment-section'
+import { OrderReceipt } from '@/components/ordering/order-receipt'
 import { Button } from '@/components/ui/button'
 import { OrderingHeader } from '@/components/ordering/ordering-header'
 
@@ -65,13 +66,6 @@ export default async function OrderTrackingPage({
     }[]
   }
 
-  const formatPrice = (price: number) =>
-    new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      maximumFractionDigits: 0,
-    }).format(price)
-
   const isAwaitingPayment = order.status === 'PENDING_PAYMENT'
 
   return (
@@ -109,36 +103,18 @@ export default async function OrderTrackingPage({
           </div>
         </div>
 
+        <div className="flex justify-center">
+          <OrderReceipt
+            orderNumber={order.order_number}
+            tableNumber={table.table_number}
+            items={order.items}
+            total={order.total}
+            paymentStatus={order.payment?.status ?? null}
+          />
+        </div>
+
         <div className="border border-border/60 bg-white p-6">
-          <h2 className="mb-4 border-b border-border/60 pb-4 text-lg font-bold">Ringkasan Pesanan</h2>
-
-          <div className="space-y-4">
-            {order.items?.map((item) => (
-              <div key={item.id} className="flex gap-4">
-                <div className="font-medium text-muted-foreground">{item.quantity}x</div>
-                <div className="flex-grow">
-                  <div className="flex justify-between font-medium">
-                    <span>{item.product_name_snapshot}</span>
-                    <span>{formatPrice(item.subtotal)}</span>
-                  </div>
-                  <div className="mt-0.5 text-sm text-muted-foreground">
-                    {item.variant_name_snapshot && <p>• {item.variant_name_snapshot}</p>}
-                    {item.options?.map((opt, i) => (
-                      <p key={i}>• {opt.option_value_snapshot}</p>
-                    ))}
-                    {item.notes && <p className="mt-1 italic">&quot;{item.notes}&quot;</p>}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-6 space-y-2 border-t border-dashed border-border/80 pt-4">
-            <div className="flex justify-between text-lg font-bold">
-              <span>Total</span>
-              <span>{formatPrice(order.total)}</span>
-            </div>
-          </div>
+          <h2 className="mb-4 text-lg font-bold">Pembayaran</h2>
 
           <Suspense fallback={null}>
             <PaymentSection

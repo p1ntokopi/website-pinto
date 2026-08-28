@@ -1,0 +1,1 @@
+- Values automated unit tests — runs `npm run test` and expects unit tests for new pure-function modules. Confidence: 0.6

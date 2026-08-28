@@ -23,6 +23,7 @@ export class AndroidPrintBridgeProvider implements PrinterProvider {
   readonly capabilities: PrinterCapabilities = {
     supportsBluetooth: true,
     supportsWebPrint: false,
+    supportsWebSerial: false,
     requiresDriver: false,
     supportedPaperWidths: [58, 80],
   }

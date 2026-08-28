@@ -23,6 +23,7 @@ export class DesktopPrintAgentProvider implements PrinterProvider {
   readonly capabilities: PrinterCapabilities = {
     supportsBluetooth: false,
     supportsWebPrint: false,
+    supportsWebSerial: false,
     requiresDriver: true,
     supportedPaperWidths: [58, 80],
   }

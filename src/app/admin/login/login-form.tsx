@@ -21,7 +21,7 @@ export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
-  
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -32,7 +32,7 @@ export function LoginForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true)
-    
+
     // Quick validation client-side, the real auth happens here
     const supabase = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -64,12 +64,12 @@ export function LoginForm() {
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
-        <Input 
-          id="email" 
-          type="email" 
-          placeholder="staff@pinto.id" 
-          {...form.register("email")} 
-          disabled={isLoading} 
+        <Input
+          id="email"
+          type="email"
+          placeholder="staff@pinto.id"
+          {...form.register("email")}
+          disabled={isLoading}
         />
         {form.formState.errors.email && (
           <p className="text-sm font-medium text-destructive">
@@ -80,11 +80,11 @@ export function LoginForm() {
 
       <div className="space-y-2">
         <Label htmlFor="password">Kata Sandi</Label>
-        <Input 
-          id="password" 
-          type="password" 
-          {...form.register("password")} 
-          disabled={isLoading} 
+        <Input
+          id="password"
+          type="password"
+          {...form.register("password")}
+          disabled={isLoading}
         />
         {form.formState.errors.password && (
           <p className="text-sm font-medium text-destructive">

@@ -11,6 +11,7 @@ import {
   ShoppingBag,
   QrCode,
   CookingPot,
+  Settings,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { signOutAction } from '@/app/auth/signout/actions'
@@ -43,6 +44,12 @@ export function AdminSidebar({ role, user, mobile = false }: SidebarProps) {
       items: [
         { title: 'Produk', href: '/admin/menu/products', icon: Coffee, roles: ['admin', 'staff'] },
         { title: 'Kategori', href: '/admin/menu/categories', icon: Tags, roles: ['admin'] },
+      ],
+    },
+    {
+      title: 'Sistem',
+      items: [
+        { title: 'Pengaturan', href: '/admin/settings', icon: Settings, roles: ['admin', 'staff'] },
       ],
     },
   ]
