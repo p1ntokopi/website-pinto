@@ -15,7 +15,8 @@ export type ToastProps = {
 export type ToastActionElement = React.ReactElement
 
 const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+// Toasts auto-dismiss after 5 seconds; the X button removes them instantly.
+const TOAST_REMOVE_DELAY = 5000
 
 type ToasterToast = ToastProps & {
   id: string
@@ -80,6 +81,14 @@ const addToRemoveQueue = (toastId: string) => {
   toastTimeouts.set(toastId, timeout)
 }
 
+const removeFromQueue = (toastId: string) => {
+  const timeout = toastTimeouts.get(toastId)
+  if (timeout) {
+    clearTimeout(timeout)
+    toastTimeouts.delete(toastId)
+  }
+}
+
 export const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case "ADD_TOAST":
@@ -99,24 +108,22 @@ export const reducer = (state: State, action: Action): State => {
     case "DISMISS_TOAST": {
       const { toastId } = action
 
+      // The plain toaster renders everything in state, so dismissing removes
+      // the toast immediately instead of waiting for the remove queue.
       if (toastId) {
-        addToRemoveQueue(toastId)
-      } else {
-        state.toasts.forEach((toast) => {
-          addToRemoveQueue(toast.id)
-        })
+        removeFromQueue(toastId)
+        return {
+          ...state,
+          toasts: state.toasts.filter((t) => t.id !== toastId),
+        }
       }
 
+      state.toasts.forEach((toast) => {
+        removeFromQueue(toast.id)
+      })
       return {
         ...state,
-        toasts: state.toasts.map((t) =>
-          t.id === toastId || toastId === undefined
-            ? {
-                ...t,
-                open: false,
-              }
-            : t
-        ),
+        toasts: [],
       }
     }
     case "REMOVE_TOAST":
@@ -167,6 +174,9 @@ export function toast({ ...props }: Toast) {
       },
     },
   })
+
+  // Auto-dismiss shortly after appearing.
+  addToRemoveQueue(id)
 
   return {
     id: id,

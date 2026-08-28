@@ -28,6 +28,16 @@ import { Card, CardContent } from '@/components/ui/card'
 type ProductRow = Database['public']['Tables']['products']['Row']
 type CategoryRow = Database['public']['Tables']['categories']['Row']
 
+// Value -> label maps so the closed Select shows names, not raw ids/enums.
+const PRODUCT_TYPE_ITEMS = [
+  { value: 'CAFE_DRINK', label: 'Minuman Kafe' },
+  { value: 'FOOD', label: 'Makanan' },
+  { value: 'PASTRY', label: 'Pastry' },
+  { value: 'COFFEE_BEAN', label: 'Biji Kopi' },
+  { value: 'DESSERT', label: 'Dessert & Es Krim' },
+  { value: 'SERVICE', label: 'Jasa / Layanan' },
+]
+
 const formSchema = z.object({
   category_id: z.string().min(1, 'Kategori wajib diisi'),
   name: z.string().min(1, 'Nama wajib diisi'),
@@ -191,7 +201,11 @@ toast({
                   render={({ field }) => (
                     <FormItem>
 <FormLabel>Kategori *</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        items={categories.map((c) => ({ value: c.id, label: c.name }))}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Pilih kategori" />
@@ -214,19 +228,20 @@ toast({
                   render={({ field }) => (
                     <FormItem>
 <FormLabel>Tipe Produk *</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        items={PRODUCT_TYPE_ITEMS}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Pilih tipe" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="CAFE_DRINK">Minuman Kafe</SelectItem>
-                          <SelectItem value="FOOD">Makanan</SelectItem>
-                          <SelectItem value="PASTRY">Pastry</SelectItem>
-                          <SelectItem value="COFFEE_BEAN">Biji Kopi</SelectItem>
-                          <SelectItem value="DESSERT">Dessert & Es Krim</SelectItem>
-                          <SelectItem value="SERVICE">Jasa / Layanan</SelectItem>
+                          {PRODUCT_TYPE_ITEMS.map((type) => (
+                            <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
