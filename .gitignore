@@ -36,6 +36,11 @@ yarn-error.log*
 # vercel
 .vercel
 
+# AI tooling artifacts (Command Code & skill outputs)
+.commandcode/
+skill_frontend_design.txt
+skill_output.txt
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

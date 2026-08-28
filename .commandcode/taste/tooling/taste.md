@@ -1,2 +1,0 @@
-- Values automated unit tests — runs `npm run test` and expects unit tests for new pure-function modules. Confidence: 0.6
-- Full verification gate before declaring work done: `npx tsc --noEmit`, `npm run lint`, `npm run test`, and `npm run build` must all be green (explicitly required in specs; run after every milestone). Confidence: 0.8
