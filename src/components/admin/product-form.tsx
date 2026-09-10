@@ -269,10 +269,10 @@ toast({
                   name="category_id"
                   render={({ field }) => (
                     <FormItem>
-<FormLabel>Kategori *</FormLabel>
+                      <FormLabel>Kategori *</FormLabel>
                       <Select
+                        value={field.value || undefined}
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
                         items={categories.map((c) => ({ value: c.id, label: c.name }))}
                       >
                         <FormControl>
@@ -296,10 +296,10 @@ toast({
                   name="product_type"
                   render={({ field }) => (
                     <FormItem>
-<FormLabel>Tipe Produk *</FormLabel>
+                      <FormLabel>Tipe Produk *</FormLabel>
                       <Select
+                        value={field.value}
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
                         items={PRODUCT_TYPE_ITEMS}
                       >
                         <FormControl>

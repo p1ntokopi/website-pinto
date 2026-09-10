@@ -7,7 +7,7 @@ import { deleteObject } from '@/lib/storage/r2'
 import { objectKeyFromUrl } from '@/lib/storage/r2'
 
 const productSchema = z.object({
-  category_id: z.string().uuid('Category is required'),
+  category_id: z.string().min(1, 'Category is required'),
   name: z.string().min(1, 'Name is required'),
   description: z.string().nullish(),
   product_type: z.enum(['CAFE_DRINK', 'FOOD', 'PASTRY', 'COFFEE_BEAN', 'DESSERT', 'SERVICE']),
