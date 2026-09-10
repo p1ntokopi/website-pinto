@@ -1,146 +1,9 @@
--- 0027_p1nto_manual_cashier_rpcs.sql
--- Atomic, role-checked write API for customer and cashier operations.
+-- 0030_fix_fingerprint_digest.sql
+-- Fix: function digest(text, unknown) does not exist error.
+-- PostgreSQL standard built-in sha256(convert_to(text, 'UTF8')) in pg_catalog
+-- is used instead of pgcrypto digest(), which required extensions schema and bytea input.
 
-create or replace function public.require_cashier()
-returns uuid
-language plpgsql
-security definer
-set search_path = public, pg_temp
-as $$
-declare
-  v_actor uuid := auth.uid();
-begin
-  if v_actor is null or not exists (
-    select 1 from public.profiles
-    where id = v_actor and is_active = true and role in ('staff', 'admin', 'owner')
-  ) then
-    raise exception using errcode = '42501', message = 'Cashier access required';
-  end if;
-  return v_actor;
-end;
-$$;
-
-create or replace function public.next_order_number()
-returns text
-language sql
-security definer
-set search_path = public, pg_temp
-as $$
-  select 'Pinto-' || to_char(clock_timestamp() at time zone 'Asia/Jakarta', 'YYMMDD')
-    || '-' || lpad(nextval('public.order_number_seq')::text, 4, '0')
-$$;
-
-create or replace function public.build_receipt_snapshot(
-  p_payment_id uuid,
-  p_order_id uuid default null,
-  p_dining_session_id uuid default null
-) returns jsonb
-language plpgsql
-security definer
-set search_path = public, pg_temp
-as $$
-declare
-  v_payment public.payments%rowtype;
-  v_orders jsonb;
-  v_target jsonb;
-begin
-  if num_nonnulls(p_order_id, p_dining_session_id) <> 1 then
-    raise exception using errcode = '22023', message = 'Receipt requires exactly one target';
-  end if;
-
-  select * into strict v_payment from public.payments where id = p_payment_id;
-  if v_payment.order_id is distinct from p_order_id
-     or v_payment.dining_session_id is distinct from p_dining_session_id then
-    raise exception using errcode = '23514', message = 'Receipt target does not match payment target';
-  end if;
-
-  select coalesce(jsonb_agg(order_payload order by created_at, order_number), '[]'::jsonb)
-  into v_orders
-  from (
-    select o.created_at, o.order_number, jsonb_build_object(
-      'id', o.id,
-      'order_number', o.order_number,
-      'status', o.status,
-      'fulfillment_type', o.fulfillment_type,
-      'customer_name', o.customer_name,
-      'notes', o.notes,
-      'created_at', o.created_at,
-      'subtotal', o.subtotal,
-      'discount', o.discount,
-      'tax', o.tax,
-      'service_fee', o.service_fee,
-      'shipping_fee', o.shipping_fee,
-      'total', o.total,
-      'table_number', t.table_number,
-      'items', (
-        select coalesce(jsonb_agg(jsonb_build_object(
-          'id', oi.id,
-          'product_name', oi.product_name_snapshot,
-          'variant_name', oi.variant_name_snapshot,
-          'quantity', oi.quantity,
-          'unit_price', oi.unit_price,
-          'subtotal', oi.subtotal,
-          'notes', oi.notes,
-          'options', (
-            select coalesce(jsonb_agg(jsonb_build_object(
-              'option_name', oio.option_name_snapshot,
-              'option_value', oio.option_value_snapshot,
-              'price_adjustment', oio.price_adjustment
-            ) order by oio.id), '[]'::jsonb)
-            from public.order_item_options oio where oio.order_item_id = oi.id
-          )
-        ) order by oi.created_at, oi.id), '[]'::jsonb)
-        from public.order_items oi where oi.order_id = o.id
-      )
-    ) as order_payload
-    from public.orders o
-    left join public.tables t on t.id = o.table_id
-    where (p_order_id is not null and o.id = p_order_id)
-       or (p_dining_session_id is not null and o.dining_session_id = p_dining_session_id
-           and o.status <> 'CANCELLED')
-  ) receipt_orders;
-
-  if jsonb_array_length(v_orders) = 0 then
-    raise exception using errcode = 'P0002', message = 'Receipt target has no billable orders';
-  end if;
-
-  if p_order_id is not null then
-    v_target := jsonb_build_object('type', 'ORDER', 'id', p_order_id);
-  else
-    v_target := jsonb_build_object('type', 'DINING_SESSION', 'id', p_dining_session_id);
-  end if;
-
-  return jsonb_build_object(
-    'schema_version', 1,
-    'issued_at', clock_timestamp(),
-    'target', v_target,
-    -- Persist the display settings with the receipt. Reprints never depend on
-    -- later mutable app_settings values.
-    'settings', coalesce((
-      select to_jsonb(s) - 'id' - 'updated_at'
-      from public.app_settings s
-      where s.id = 1
-    ), '{}'::jsonb),
-    'payment', jsonb_build_object(
-      'id', v_payment.id,
-      'provider', v_payment.provider,
-      'method', v_payment.payment_method,
-      'channel', v_payment.payment_channel,
-      'status', v_payment.status,
-      'amount', v_payment.amount,
-      'paid_at', v_payment.paid_at,
-      'confirmed_by', v_payment.confirmed_by,
-      'confirmed_at', v_payment.confirmed_at,
-      'cash_received', v_payment.cash_received,
-      'change_amount', v_payment.change_amount,
-      'cashier_id', v_payment.cashier_id,
-      'cashier_metadata', v_payment.cashier_metadata
-    ),
-    'orders', v_orders
-  );
-end;
-$$;
-
+-- 1. Cashier order creation
 create or replace function public.create_cashier_order(
   p_idempotency_key text,
   p_items jsonb,
@@ -438,113 +301,7 @@ exception
 end;
 $$;
 
-create or replace function public.transition_order_status(
-  p_order_id uuid,
-  p_expected_status public.order_status,
-  p_new_status public.order_status,
-  p_reason text default null,
-  p_metadata jsonb default '{}'::jsonb
-) returns jsonb
-language plpgsql
-security definer
-set search_path = public, pg_temp
-as $$
-declare
-  v_actor uuid := auth.uid();
-  v_role public.user_role;
-  v_order public.orders%rowtype;
-  v_allowed boolean := false;
-begin
-  select role into v_role from public.profiles
-  where id = v_actor and is_active = true;
-  if v_role is null then
-    raise exception using errcode = '42501', message = 'Active staff access required';
-  end if;
-
-  select * into v_order from public.orders where id = p_order_id for update;
-  if not found then
-    raise exception using errcode = 'P0002', message = 'Order not found';
-  end if;
-  if v_order.status <> p_expected_status then
-    raise exception using errcode = '40001',
-      message = format('Order status changed from expected %s to %s', p_expected_status, v_order.status);
-  end if;
-  if p_expected_status = p_new_status then
-    raise exception using errcode = '22023', message = 'Order status must change';
-  end if;
-
-  -- Canonical lifecycle is NEW -> PREPARING -> READY -> SERVED. Historical
-  -- pre-migration queue states normalize to NEW and may only enter PREPARING
-  -- (or be cancelled); no canonical state transitions back to a legacy label.
-  v_allowed := case
-    when p_expected_status in ('NEW', 'PENDING_PAYMENT', 'PENDING', 'CONFIRMED')
-      and p_new_status = 'PREPARING'
-      then v_role in ('staff', 'kitchen', 'admin', 'owner')
-    when p_expected_status in ('NEW', 'PENDING_PAYMENT', 'PENDING', 'CONFIRMED')
-      and p_new_status = 'CANCELLED'
-      then v_role in ('staff', 'admin', 'owner')
-    when p_expected_status = 'PREPARING' and p_new_status = 'READY'
-      then v_role in ('kitchen', 'admin', 'owner')
-    when p_expected_status = 'PREPARING' and p_new_status = 'CANCELLED'
-      then v_role in ('staff', 'admin', 'owner')
-    when p_expected_status = 'READY' and p_new_status = 'SERVED'
-      then v_role in ('staff', 'admin', 'owner')
-    when p_expected_status = 'READY' and p_new_status = 'CANCELLED'
-      then v_role in ('staff', 'admin', 'owner')
-    else false
-  end;
-  if not v_allowed then
-    raise exception using errcode = '42501', message = 'Order status transition is not allowed';
-  end if;
-  if p_new_status = 'CANCELLED' and nullif(btrim(p_reason), '') is null then
-    raise exception using errcode = '22023', message = 'Cancellation reason is required';
-  end if;
-  -- Checkout and cancellation use the same target lock. A paid bill has an
-  -- immutable receipt snapshot, so it cannot be changed by cancelling an order;
-  -- a future refund/adjustment workflow must handle that case explicitly.
-  if v_order.dining_session_id is null then
-    perform pg_advisory_xact_lock(
-      hashtextextended('payment-order:' || p_order_id::text, 0)
-    );
-  else
-    perform pg_advisory_xact_lock(
-      hashtextextended('payment-session:' || v_order.dining_session_id::text, 0)
-    );
-  end if;
-  if p_new_status = 'CANCELLED' and (
-    (v_order.dining_session_id is null and exists (
-      select 1 from public.payments
-      where order_id = p_order_id and status = 'PAID'
-    ))
-    or
-    (v_order.dining_session_id is not null and exists (
-      select 1 from public.payments
-      where dining_session_id = v_order.dining_session_id and status = 'PAID'
-    ))
-  ) then
-    raise exception using errcode = '23514',
-      message = 'Paid orders cannot be cancelled; record a financial adjustment instead';
-  end if;
-
-  update public.orders
-  set status = p_new_status,
-      cancelled_at = case when p_new_status = 'CANCELLED' then clock_timestamp() else cancelled_at end,
-      cancelled_by = case when p_new_status = 'CANCELLED' then v_actor else cancelled_by end,
-      cancellation_reason = case when p_new_status = 'CANCELLED' then btrim(p_reason) else cancellation_reason end,
-      updated_at = clock_timestamp()
-  where id = p_order_id;
-
-  insert into public.order_status_history(order_id, old_status, new_status, changed_by, metadata)
-  values (p_order_id, p_expected_status, p_new_status, v_actor,
-    coalesce(p_metadata, '{}'::jsonb) || jsonb_build_object('reason', nullif(btrim(p_reason), ''), 'source', 'transition_order_status'));
-  insert into public.audit_logs(actor_id, action, entity_type, entity_id, metadata)
-  values (v_actor, 'order.status_changed', 'orders', p_order_id,
-    jsonb_build_object('old_status', p_expected_status, 'new_status', p_new_status, 'reason', nullif(btrim(p_reason), '')));
-
-  return jsonb_build_object('success', true, 'order_id', p_order_id, 'old_status', p_expected_status, 'new_status', p_new_status);
-end;
-$$;
-
+-- 2. Cashier payment confirmation
 create or replace function public.confirm_cashier_payment(
   p_idempotency_key text,
   p_method text,
@@ -752,320 +509,7 @@ begin
 end;
 $$;
 
-create or replace function public.complete_dining_session(
-  p_dining_session_id uuid,
-  p_idempotency_key text
-) returns jsonb
-language plpgsql
-security definer
-set search_path = public, pg_temp
-as $$
-declare
-  v_actor uuid;
-  v_session public.dining_sessions%rowtype;
-  v_total numeric(12,2);
-  v_payment_id uuid;
-  v_receipt_snapshot jsonb;
-  v_invalid_orders int;
-begin
-  v_actor := public.require_cashier();
-  if nullif(btrim(p_idempotency_key), '') is null then
-    raise exception using errcode = '22023', message = 'Idempotency key is required';
-  end if;
-
-  select * into v_session from public.dining_sessions
-  where id = p_dining_session_id for update;
-  if not found then raise exception using errcode = 'P0002', message = 'Dining session not found'; end if;
-
-  if v_session.status = 'closed' then
-    if v_session.completion_idempotency_key = btrim(p_idempotency_key) then
-      return jsonb_build_object('success', true, 'duplicate', true,
-        'dining_session_id', v_session.id, 'status', v_session.status,
-        'closed_at', v_session.closed_at, 'total', v_session.total_snapshot);
-    end if;
-    raise exception using errcode = '23514', message = 'Dining session is already closed';
-  end if;
-
-  perform pg_advisory_xact_lock(hashtextextended('payment-session:' || p_dining_session_id::text, 0));
-  -- The session may have changed while this transaction waited for checkout.
-  select * into v_session from public.dining_sessions
-  where id = p_dining_session_id for update;
-  if v_session.status = 'closed' then
-    if v_session.completion_idempotency_key = btrim(p_idempotency_key) then
-      return jsonb_build_object('success', true, 'duplicate', true,
-        'dining_session_id', v_session.id, 'status', v_session.status,
-        'closed_at', v_session.closed_at, 'total', v_session.total_snapshot);
-    end if;
-    raise exception using errcode = '23514', message = 'Dining session is already closed';
-  end if;
-
-  select count(*) filter (where status not in ('SERVED', 'COMPLETED', 'CANCELLED')),
-         coalesce(sum(total) filter (where status <> 'CANCELLED'), 0)
-  into v_invalid_orders, v_total
-  from public.orders where dining_session_id = p_dining_session_id;
-  if v_invalid_orders > 0 then
-    raise exception using errcode = '23514', message = 'All session orders must be served or cancelled';
-  end if;
-
-  -- Completion is a separate audited step, but it is only valid after one paid
-  -- session-level payment. Legacy per-order payments do not close a table bill.
-  select id into v_payment_id from public.payments
-  where dining_session_id = p_dining_session_id and status = 'PAID'
-  order by paid_at desc nulls last, created_at desc limit 1;
-  if v_payment_id is null then
-    raise exception using errcode = '23514', message = 'A paid session-level payment is required before completion';
-  end if;
-
-  select snapshot into v_receipt_snapshot from public.receipts
-  where payment_id = v_payment_id;
-  if v_receipt_snapshot is null then
-    raise exception using errcode = '23514', message = 'The paid session receipt snapshot is missing';
-  end if;
-
-  update public.dining_sessions
-  set status = 'closed', closed_at = clock_timestamp(), completed_at = clock_timestamp(),
-      completed_by = v_actor, completion_idempotency_key = btrim(p_idempotency_key),
-      total_snapshot = v_total, receipt_snapshot = v_receipt_snapshot,
-      updated_at = clock_timestamp()
-  where id = p_dining_session_id;
-
-  insert into public.audit_logs(actor_id, action, entity_type, entity_id, metadata)
-  values (v_actor, 'dining_session.completed', 'dining_sessions', p_dining_session_id,
-    jsonb_build_object('total', v_total, 'payment_id', v_payment_id));
-
-  return jsonb_build_object('success', true, 'duplicate', false,
-    'dining_session_id', p_dining_session_id, 'status', 'closed', 'total', v_total);
-end;
-$$;
-
--- Trusted provider callbacks use the same order lock as cashier checkout. Existing
--- provider rows remain intact; successful legacy callbacks enter canonical NEW.
-drop function if exists public.record_order_payment(
-  uuid, text, text, numeric, public.payment_status, timestamptz, jsonb,
-  text, text, text, text, text, text, timestamptz, timestamptz
-);
-create function public.record_order_payment(
-  p_order_id uuid,
-  p_provider text,
-  p_provider_transaction_id text,
-  p_amount numeric,
-  p_status public.payment_status,
-  p_paid_at timestamptz,
-  p_raw jsonb,
-  p_payment_session_id text default null,
-  p_reference_id text default null,
-  p_payment_request_id text default null,
-  p_payment_id text default null,
-  p_payment_method text default null,
-  p_payment_channel text default null,
-  p_expires_at timestamptz default null,
-  p_canceled_at timestamptz default null
-) returns uuid
-language plpgsql
-security definer
-set search_path = public, pg_temp
-as $$
-declare
-  v_existing public.payments%rowtype;
-  v_order public.orders%rowtype;
-  v_payment_id uuid;
-  v_has_existing boolean;
-  v_effective_paid_at timestamptz;
-begin
-  if p_order_id is null then
-    raise exception using errcode = '22023', message = 'Provider payment requires an order';
-  end if;
-  if nullif(btrim(p_provider), '') is null
-     or nullif(btrim(p_provider_transaction_id), '') is null then
-    raise exception using errcode = '22023', message = 'Provider payment identity is required';
-  end if;
-  if p_status is null or p_amount is null or p_amount <= 0
-     or p_amount in ('Infinity'::numeric, '-Infinity'::numeric, 'NaN'::numeric)
-     or scale(p_amount) > 2 then
-    raise exception using errcode = '22023',
-      message = 'Provider amount must be a positive finite currency value';
-  end if;
-  if p_status = 'PAID' and p_paid_at is null then
-    raise exception using errcode = '22023',
-      message = 'Provider paid timestamp is required';
-  end if;
-  perform pg_advisory_xact_lock(
-    hashtextextended(
-      'provider-payment:' || btrim(p_provider) || ':' || btrim(p_provider_transaction_id),
-      0
-    )
-  );
-  select * into v_existing
-  from public.payments
-  where provider_transaction_id = btrim(p_provider_transaction_id)
-  for update;
-  v_has_existing := found;
-  if v_has_existing and (
-    v_existing.order_id is distinct from p_order_id
-    or v_existing.dining_session_id is not null
-    or v_existing.provider is distinct from btrim(p_provider)
-    or v_existing.amount is distinct from p_amount
-  ) then
-    raise exception using errcode = '23505',
-      message = 'Provider transaction was already used with different payment data';
-  end if;
-
-  select * into v_order from public.orders where id = p_order_id for update;
-  if not found then
-    raise exception using errcode = 'P0002', message = 'Order not found';
-  end if;
-  perform pg_advisory_xact_lock(
-    hashtextextended('payment-order:' || p_order_id::text, 0)
-  );
-  if v_order.dining_session_id is not null then
-    raise exception using errcode = '23514',
-      message = 'Dining-session orders must be paid through the dining session';
-  end if;
-  if v_order.status = 'CANCELLED' and p_status = 'PAID' then
-    raise exception using errcode = '23514', message = 'Cancelled order cannot be paid';
-  end if;
-  if p_status = 'PAID' and exists (
-    select 1 from public.payments p
-    where p.order_id = p_order_id and p.status = 'PAID'
-      and (not v_has_existing or p.id <> v_existing.id)
-  ) then
-    raise exception using errcode = '23505', message = 'Order is already paid';
-  end if;
-  v_effective_paid_at := case
-    when p_status = 'PAID' then coalesce(p_paid_at, v_existing.paid_at)
-    else p_paid_at
-  end;
-  if not v_has_existing then
-    insert into public.payments(
-      order_id, dining_session_id, provider, provider_transaction_id,
-      status, amount, paid_at, raw_response, payment_session_id,
-      reference_id, payment_request_id, payment_id, payment_method,
-      payment_channel, expired_at, canceled_at, payment_origin
-    ) values (
-      p_order_id, null, btrim(p_provider), btrim(p_provider_transaction_id),
-      p_status, p_amount, v_effective_paid_at, p_raw, p_payment_session_id,
-      p_reference_id, p_payment_request_id, p_payment_id, p_payment_method,
-      p_payment_channel, p_expires_at, p_canceled_at,
-      case when upper(btrim(p_provider)) = 'XENDIT' then 'XENDIT' else 'PROVIDER' end
-    ) returning id into v_payment_id;
-  else
-    update public.payments
-    set status = case when status = 'PAID' then status else p_status end,
-        paid_at = case
-          when status = 'PAID' then paid_at
-          when p_status = 'PAID' then v_effective_paid_at
-          else coalesce(p_paid_at, paid_at)
-        end,
-        raw_response = coalesce(p_raw, raw_response),
-        payment_session_id = coalesce(p_payment_session_id, payment_session_id),
-        reference_id = coalesce(p_reference_id, reference_id),
-        payment_request_id = coalesce(p_payment_request_id, payment_request_id),
-        payment_id = coalesce(p_payment_id, payment_id),
-        payment_method = coalesce(p_payment_method, payment_method),
-        payment_channel = coalesce(p_payment_channel, payment_channel),
-        expired_at = coalesce(p_expires_at, expired_at),
-        canceled_at = coalesce(p_canceled_at, canceled_at),
-        updated_at = clock_timestamp()
-    where id = v_existing.id
-    returning id into v_payment_id;
-  end if;
-  if p_status = 'PAID' and v_order.status = 'PENDING_PAYMENT' then
-    update public.orders
-    set status = 'NEW', updated_at = clock_timestamp()
-    where id = p_order_id;
-    insert into public.order_status_history(
-      order_id, old_status, new_status, changed_by, metadata
-    ) values (
-      p_order_id, 'PENDING_PAYMENT', 'NEW', null,
-      jsonb_build_object(
-        'source', 'provider_webhook',
-        'provider', btrim(p_provider),
-        'payment_id', v_payment_id
-      )
-    );
-  end if;
-
-  return v_payment_id;
-end;
-$$;
-
-create or replace function public.record_receipt_print_attempt(
-  p_receipt_id uuid,
-  p_status text,
-  p_printer_metadata jsonb default null,
-  p_error_message text default null
-) returns uuid
-language plpgsql
-security definer
-set search_path = public, pg_temp
-as $$
-declare
-  v_actor uuid;
-  v_attempt_id uuid;
-begin
-  v_actor := public.require_cashier();
-  if p_status not in ('REQUESTED', 'SUCCEEDED', 'FAILED') then
-    raise exception using errcode = '22023', message = 'Invalid print attempt status';
-  end if;
-  if not exists (select 1 from public.receipts where id = p_receipt_id) then
-    raise exception using errcode = 'P0002', message = 'Receipt not found';
-  end if;
-  insert into public.receipt_print_attempts(receipt_id, requested_by, status,
-    printer_metadata, error_message)
-  values (p_receipt_id, v_actor, p_status, p_printer_metadata,
-    case when p_status = 'FAILED' then nullif(p_error_message, '') else null end)
-  returning id into v_attempt_id;
-  return v_attempt_id;
-end;
-$$;
-
--- Anonymous session creation is serialized per table and uses an unpredictable
--- token. A partial unique index remains the final one-open-session invariant.
-drop function if exists public.start_or_resume_dining_session(text);
-create function public.start_or_resume_dining_session(
-  p_table_slug text
-) returns jsonb
-language plpgsql
-security definer
-set search_path = public, pg_temp
-as $$
-declare
-  v_table_id uuid;
-  v_session public.dining_sessions%rowtype;
-begin
-  select id into v_table_id from public.tables
-  where (
-    slug = p_table_slug
-    or (p_table_slug ~ '^table-[0-9]$' and slug = 'table-0' || substr(p_table_slug, 7))
-    or (p_table_slug ~ '^table-0[0-9]$' and slug = 'table-' || substr(p_table_slug, 8))
-  )
-  and is_active = true
-  limit 1;
-
-  if v_table_id is null then
-    return jsonb_build_object('success', false, 'error', 'Meja tidak ditemukan');
-  end if;
-
-  perform pg_advisory_xact_lock(hashtextextended('dining-table:' || v_table_id::text, 0));
-  select * into v_session from public.dining_sessions
-  where table_id = v_table_id and status = 'open'
-  order by started_at desc limit 1 for update;
-  if not found then
-    insert into public.dining_sessions(table_id, session_token, status)
-    values (v_table_id, replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', ''), 'open')
-    returning * into v_session;
-  end if;
-
-  return jsonb_build_object('success', true,
-    'session_token', v_session.session_token,
-    'session_id', v_session.id,
-    'status', v_session.status);
-end;
-$$;
-
--- Customer order creation keeps all pricing authority in PostgreSQL, starts at
--- NEW, scopes idempotency to the dining session, and uses sequence order numbers.
-drop function if exists public.create_customer_order(text, text, text, text, jsonb);
+-- 3. Customer table order creation
 create or replace function public.create_customer_order(
   p_table_slug text,
   p_session_token text,
@@ -1121,7 +565,14 @@ begin
   end if;
 
   select id, table_number into v_table_id, v_table_number
-  from public.tables where slug = p_table_slug and is_active = true;
+  from public.tables
+  where (
+    slug = p_table_slug
+    or (p_table_slug ~ '^table-[0-9]$' and slug = 'table-0' || substr(p_table_slug, 7))
+    or (p_table_slug ~ '^table-0[0-9]$' and slug = 'table-' || substr(p_table_slug, 8))
+  )
+  and is_active = true
+  limit 1;
   if v_table_id is null then
     return jsonb_build_object('success', false, 'error', 'Meja tidak ditemukan atau tidak aktif');
   end if;
@@ -1312,8 +763,52 @@ exception
 end;
 $$;
 
--- Customer session/order tracking stays token-scoped. Closed sessions remain
--- readable only for the browser cookie lifetime (12 hours).
+-- 4. Start or resume dining session
+-- Fix: function gen_random_bytes(integer) does not exist error by using standard replace(gen_random_uuid() || gen_random_uuid(), '-', '')
+-- Also supports resilient table slug matching (e.g. table-1 and table-01).
+drop function if exists public.start_or_resume_dining_session(text);
+create function public.start_or_resume_dining_session(
+  p_table_slug text
+) returns jsonb
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_table_id uuid;
+  v_session public.dining_sessions%rowtype;
+begin
+  select id into v_table_id from public.tables
+  where (
+    slug = p_table_slug
+    or (p_table_slug ~ '^table-[0-9]$' and slug = 'table-0' || substr(p_table_slug, 7))
+    or (p_table_slug ~ '^table-0[0-9]$' and slug = 'table-' || substr(p_table_slug, 8))
+  )
+  and is_active = true
+  limit 1;
+
+  if v_table_id is null then
+    return jsonb_build_object('success', false, 'error', 'Meja tidak ditemukan');
+  end if;
+
+  perform pg_advisory_xact_lock(hashtextextended('dining-table:' || v_table_id::text, 0));
+  select * into v_session from public.dining_sessions
+  where table_id = v_table_id and status = 'open'
+  order by started_at desc limit 1 for update;
+  if not found then
+    insert into public.dining_sessions(table_id, session_token, status)
+    values (v_table_id, replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', ''), 'open')
+    returning * into v_session;
+  end if;
+
+  return jsonb_build_object('success', true,
+    'session_token', v_session.session_token,
+    'session_id', v_session.id,
+    'status', v_session.status);
+end;
+$$;
+
+-- 5. Validate dining session (with resilient slug matching)
 drop function if exists public.validate_dining_session(text, text);
 create function public.validate_dining_session(
   p_table_slug text,
@@ -1328,7 +823,11 @@ declare
 begin
   select ds.* into v_session
   from public.dining_sessions ds join public.tables t on t.id = ds.table_id
-  where t.slug = p_table_slug
+  where (
+    t.slug = p_table_slug
+    or (p_table_slug ~ '^table-[0-9]$' and t.slug = 'table-0' || substr(p_table_slug, 7))
+    or (p_table_slug ~ '^table-0[0-9]$' and t.slug = 'table-' || substr(p_table_slug, 8))
+  )
     and ds.session_token = p_session_token
     and (
       ds.status = 'open'
@@ -1342,9 +841,7 @@ begin
 end;
 $$;
 
--- Token-scoped session summary for the customer's current browser. Closed
--- sessions remain readable only for the cookie lifetime (12 hours), preventing
--- an old token from becoming a permanent public lookup key.
+-- 6. Dining session summary (with resilient slug matching)
 drop function if exists public.get_dining_session_summary(text, text);
 create function public.get_dining_session_summary(
   p_table_slug text,
@@ -1364,7 +861,11 @@ begin
   select ds.* into v_session
   from public.dining_sessions ds
   join public.tables t on t.id = ds.table_id
-  where t.slug = p_table_slug
+  where (
+    t.slug = p_table_slug
+    or (p_table_slug ~ '^table-[0-9]$' and t.slug = 'table-0' || substr(p_table_slug, 7))
+    or (p_table_slug ~ '^table-0[0-9]$' and t.slug = 'table-' || substr(p_table_slug, 8))
+  )
     and ds.session_token = p_session_token
     and (
       ds.status = 'open'
@@ -1446,6 +947,7 @@ begin
 end;
 $$;
 
+-- 7. Order tracking (with resilient slug matching)
 drop function if exists public.get_order_tracking(text, text, text);
 create function public.get_order_tracking(
   p_table_slug text,
@@ -1463,7 +965,11 @@ declare
 begin
   select ds.id, ds.status into v_session_id, v_session_status
   from public.dining_sessions ds join public.tables t on t.id = ds.table_id
-  where t.slug = p_table_slug
+  where (
+    t.slug = p_table_slug
+    or (p_table_slug ~ '^table-[0-9]$' and t.slug = 'table-0' || substr(p_table_slug, 7))
+    or (p_table_slug ~ '^table-0[0-9]$' and t.slug = 'table-' || substr(p_table_slug, 8))
+  )
     and ds.session_token = p_session_token
     and (
       ds.status = 'open'
@@ -1478,59 +984,39 @@ begin
     'payment', coalesce((
       select jsonb_build_object('status', p.status, 'provider', p.provider,
         'payment_method', p.payment_method, 'payment_channel', p.payment_channel,
-        'amount', p.amount, 'paid_at', p.paid_at, 'expired_at', p.expired_at)
+        'amount', p.amount, 'qr_url', p.qr_url, 'expires_at', p.expires_at)
       from public.payments p
-      where p.order_id = o.id or p.dining_session_id = v_session_id
+      where p.order_id = o.id or (p.dining_session_id = v_session_id and p.status = 'PAID')
       order by (p.status = 'PAID') desc, p.created_at desc limit 1
     ), 'null'::jsonb),
-    'items', (
-      select coalesce(jsonb_agg(jsonb_build_object(
-        'id', oi.id, 'quantity', oi.quantity,
-        'product_name_snapshot', oi.product_name_snapshot,
-        'variant_name_snapshot', oi.variant_name_snapshot,
-        'unit_price', oi.unit_price, 'subtotal', oi.subtotal, 'notes', oi.notes,
-        'options', (select coalesce(jsonb_agg(jsonb_build_object(
-          'option_value_snapshot', oio.option_value_snapshot,
-          'price_adjustment', oio.price_adjustment
-        ) order by oio.id), '[]'::jsonb) from public.order_item_options oio where oio.order_item_id = oi.id)
-      ) order by oi.created_at, oi.id), '[]'::jsonb)
-      from public.order_items oi where oi.order_id = o.id
-    )
+    'items', coalesce(jsonb_agg(jsonb_build_object(
+      'product_name', oi.product_name_snapshot,
+      'variant_name', oi.variant_name_snapshot,
+      'quantity', oi.quantity,
+      'unit_price', oi.unit_price,
+      'subtotal', oi.subtotal,
+      'options', coalesce((
+        select jsonb_agg(jsonb_build_object('name', oio.option_name_snapshot,
+          'value', oio.option_value_snapshot, 'price_adjustment', oio.price_adjustment))
+        from public.order_item_options oio where oio.order_item_id = oi.id
+      ), '[]'::jsonb)
+    )), '[]'::jsonb)
   ) into v_order
   from public.orders o
-  where o.order_number = p_order_number and o.dining_session_id = v_session_id;
+  left join public.order_items oi on oi.order_id = o.id
+  where o.order_number = p_order_number and o.dining_session_id = v_session_id
+  group by o.id, o.order_number, o.status, o.total;
+
   if v_order is null then return jsonb_build_object('success', false, 'error', 'Pesanan tidak ditemukan'); end if;
   return jsonb_build_object('success', true, 'order', v_order);
 end;
 $$;
 
--- Explicit function surface: PUBLIC receives no implicit EXECUTE.
-revoke all on function public.require_cashier() from public, anon, authenticated;
-revoke all on function public.next_order_number() from public, anon, authenticated;
-revoke all on function public.build_receipt_snapshot(uuid, uuid, uuid) from public, anon, authenticated;
-revoke all on function public.start_or_resume_dining_session(text) from public, anon, authenticated;
-revoke all on function public.transition_order_status(uuid, public.order_status, public.order_status, text, jsonb) from public, anon, authenticated;
-revoke all on function public.create_cashier_order(text, jsonb, uuid, text, text, public.fulfillment_type, uuid) from public, anon, authenticated;
-revoke all on function public.confirm_cashier_payment(text, text, uuid, uuid, numeric, jsonb) from public, anon, authenticated;
-revoke all on function public.complete_dining_session(uuid, text) from public, anon, authenticated;
-revoke all on function public.record_receipt_print_attempt(uuid, text, jsonb, text) from public, anon, authenticated;
-revoke all on function public.create_customer_order(text, text, text, text, jsonb) from public, anon, authenticated;
-revoke all on function public.validate_dining_session(text, text) from public, anon, authenticated;
-revoke all on function public.get_dining_session_summary(text, text) from public, anon, authenticated;
-revoke all on function public.get_order_tracking(text, text, text) from public, anon, authenticated;
-revoke all on function public.record_order_payment(uuid, text, text, numeric, public.payment_status, timestamptz, jsonb, text, text, text, text, text, text, timestamptz, timestamptz)
-  from public, anon, authenticated;
-
--- The provider webhook is the sole trusted caller of this legacy write RPC.
-grant execute on function public.record_order_payment(uuid, text, text, numeric, public.payment_status, timestamptz, jsonb, text, text, text, text, text, text, timestamptz, timestamptz)
-  to service_role;
-grant execute on function public.start_or_resume_dining_session(text) to anon, authenticated;
-grant execute on function public.transition_order_status(uuid, public.order_status, public.order_status, text, jsonb) to authenticated;
+-- Permissions
 grant execute on function public.create_cashier_order(text, jsonb, uuid, text, text, public.fulfillment_type, uuid) to authenticated;
 grant execute on function public.confirm_cashier_payment(text, text, uuid, uuid, numeric, jsonb) to authenticated;
-grant execute on function public.complete_dining_session(uuid, text) to authenticated;
-grant execute on function public.record_receipt_print_attempt(uuid, text, jsonb, text) to authenticated;
 grant execute on function public.create_customer_order(text, text, text, text, jsonb) to anon, authenticated;
+grant execute on function public.start_or_resume_dining_session(text) to anon, authenticated;
 grant execute on function public.validate_dining_session(text, text) to anon, authenticated;
 grant execute on function public.get_dining_session_summary(text, text) to anon, authenticated;
 grant execute on function public.get_order_tracking(text, text, text) to anon, authenticated;

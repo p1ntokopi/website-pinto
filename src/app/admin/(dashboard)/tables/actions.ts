@@ -31,8 +31,10 @@ export async function createTable(prevState: unknown, formData: FormData) {
       }
     }
 
-    // Auto-generate slug
-    const slug = `table-${validatedData.data.table_number.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
+    // Auto-generate slug with leading zero padding for single digit numbers (e.g. 1 -> table-01)
+    const rawNumber = validatedData.data.table_number.trim()
+    const paddedNumber = /^\d$/.test(rawNumber) ? `0${rawNumber}` : rawNumber
+    const slug = `table-${paddedNumber.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
 
     const { data, error } = await supabase
       .from('tables')
@@ -78,8 +80,10 @@ export async function updateTable(id: string, prevState: unknown, formData: Form
       }
     }
 
-    // Auto-generate slug based on new number
-    const slug = `table-${validatedData.data.table_number.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
+    // Auto-generate slug with leading zero padding for single digit numbers (e.g. 1 -> table-01)
+    const rawNumber = validatedData.data.table_number.trim()
+    const paddedNumber = /^\d$/.test(rawNumber) ? `0${rawNumber}` : rawNumber
+    const slug = `table-${paddedNumber.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
 
     const { data, error } = await supabase
       .from('tables')

@@ -14,11 +14,30 @@ export default async function MenuPage({ params }: { params: { slug: string } })
   const sessionToken = await getSessionToken()
 
   // Verify Table & Session
-  const { data: table } = await supabase
+  let { data: table } = await supabase
     .from("tables")
     .select("id, table_number, is_active")
     .eq("slug", resolvedParams.slug)
     .single()
+
+  if (!table) {
+    const alternateSlug = resolvedParams.slug.match(/^table-(\d)$/)
+      ? `table-0${resolvedParams.slug.split("-")[1]}`
+      : resolvedParams.slug.match(/^table-0(\d)$/)
+        ? `table-${resolvedParams.slug.replace(/^table-0/, "")}`
+        : null
+
+    if (alternateSlug) {
+      const fallback = await supabase
+        .from("tables")
+        .select("id, table_number, is_active")
+        .eq("slug", alternateSlug)
+        .single()
+      if (fallback.data) {
+        table = fallback.data
+      }
+    }
+  }
 
   if (!table || !table.is_active || !sessionToken) {
     redirect(`/t/${resolvedParams.slug}`)
@@ -29,7 +48,7 @@ export default async function MenuPage({ params }: { params: { slug: string } })
     p_session_token: sessionToken,
   })
 
-  if (!session || !session.success) {
+  if (!session || !session.success || !session.can_order) {
     redirect(`/t/${resolvedParams.slug}`)
   }
 

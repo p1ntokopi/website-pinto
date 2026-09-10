@@ -21,7 +21,13 @@ const PROVIDER_OPTIONS = [
     id: 'escpos-bluetooth',
     label: 'ESC/POS Bluetooth',
     description:
-      'Struk dikirim langsung ke printer thermal via Bluetooth Classic (SPP) menggunakan Web Serial API — tanpa dialog print browser.',
+      'Struk dikirim langsung ke printer thermal via Bluetooth Classic (SPP) menggunakan Web Serial API (Desktop PC / Laptop) — tanpa dialog print browser.',
+  },
+  {
+    id: 'android-print-bridge',
+    label: 'RawBT (Android)',
+    description:
+      'Struk dikirim langsung ke aplikasi RawBT di HP Android via ESC/POS — otomatis pas 58mm/80mm tanpa dialog print browser.',
   },
 ] as const
 

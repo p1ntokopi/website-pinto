@@ -13,11 +13,31 @@ export default async function TableLandingPage({
   const resolvedParams = await params
   const supabase = await createClient()
 
-  const { data: table, error } = await supabase
+  let { data: table, error } = await supabase
     .from("tables")
     .select("*")
     .eq("slug", resolvedParams.slug)
     .single()
+
+  if (!table) {
+    const alternateSlug = resolvedParams.slug.match(/^table-(\d)$/)
+      ? `table-0${resolvedParams.slug.split("-")[1]}`
+      : resolvedParams.slug.match(/^table-0(\d)$/)
+        ? `table-${resolvedParams.slug.replace(/^table-0/, "")}`
+        : null
+
+    if (alternateSlug) {
+      const fallback = await supabase
+        .from("tables")
+        .select("*")
+        .eq("slug", alternateSlug)
+        .single()
+      if (fallback.data) {
+        table = fallback.data
+        error = null
+      }
+    }
+  }
 
   if (error || !table) {
     return (

@@ -38,6 +38,7 @@ yarn-error.log*
 
 # AI tooling artifacts (Command Code & skill outputs)
 .commandcode/
+.claude/
 skill_frontend_design.txt
 skill_output.txt
 AGENTS.md

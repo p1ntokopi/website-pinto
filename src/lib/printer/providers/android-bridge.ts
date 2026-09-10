@@ -1,25 +1,34 @@
-import { ReceiptData } from '@/lib/receipt/receipt-types'
+import { DEFAULT_PAPER_WIDTH, ReceiptData, ThermalPaperWidth } from '@/lib/receipt/receipt-types'
+import { formatReceiptText } from '@/lib/receipt/receipt-service'
+import { encodeReceipt } from '@/lib/printer/escpos-encoder'
+import { createSampleReceipt } from '@/lib/receipt/sample-receipt'
 import {
   PrintReceiptOptions,
   PrinterProvider,
   PrinterStatus,
   PrinterUnavailableError,
   PrinterCapabilities,
-  PRINTER_COMPATIBILITY_DOC,
 } from '@/lib/printer/printer-types'
 
-const NOT_IMPLEMENTED = (id: string) =>
-  new PrinterUnavailableError(
-    `${id} belum diimplementasikan. Konfirmasikan dulu model printer (lihat ${PRINTER_COMPATIBILITY_DOC}).`
-  )
+function uint8ArrayToBase64(bytes: Uint8Array): string {
+  let binary = ''
+  const len = bytes.byteLength
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i])
+  }
+  return btoa(binary)
+}
 
 /**
- * Prepared, NOT implemented. Bridge that hands raw ESC/POS bytes to a native
- * Android app (e.g. a print helper) for reliable Bluetooth Classic printing.
+ * AndroidPrintBridgeProvider - hands raw ESC/POS bytes directly to the RawBT app
+ * on Android devices via its native rawbt: URL scheme.
+ *
+ * This completely bypasses the Android system print dialog and prints with exact
+ * 58mm/80mm thermal paper dimensions and zero margin.
  */
 export class AndroidPrintBridgeProvider implements PrinterProvider {
   readonly id = 'android-print-bridge'
-  readonly label = 'Android Print Bridge'
+  readonly label = 'RawBT (Android)'
   readonly capabilities: PrinterCapabilities = {
     supportsBluetooth: true,
     supportsWebPrint: false,
@@ -29,18 +38,41 @@ export class AndroidPrintBridgeProvider implements PrinterProvider {
   }
 
   async connect(): Promise<void> {
-    throw NOT_IMPLEMENTED(this.id)
+    if (typeof window === 'undefined') {
+      throw new PrinterUnavailableError('Provider ini hanya dapat dijalankan di browser HP Android.')
+    }
   }
+
   async disconnect(): Promise<void> {
-    throw NOT_IMPLEMENTED(this.id)
+    // Nothing to release.
   }
-  async printReceipt(_data: ReceiptData, _options?: PrintReceiptOptions): Promise<void> {
-    throw NOT_IMPLEMENTED(this.id)
+
+  async printReceipt(data: ReceiptData, options?: PrintReceiptOptions): Promise<void> {
+    if (typeof window === 'undefined') return
+
+    const paperWidth: ThermalPaperWidth = options?.paperWidth ?? DEFAULT_PAPER_WIDTH
+    const payload = encodeReceipt(formatReceiptText(data, paperWidth))
+    const base64 = uint8ArrayToBase64(payload)
+
+    // Trigger RawBT app with binary ESC/POS payload
+    const rawBtUrl = `rawbt:base64,${base64}`
+
+    // Use a temporary hidden anchor click for cleanest Android intent dispatching
+    const a = document.createElement('a')
+    a.href = rawBtUrl
+    a.style.display = 'none'
+    document.body.appendChild(a)
+    a.click()
+    setTimeout(() => {
+      document.body.removeChild(a)
+    }, 500)
   }
+
   async testPrint(): Promise<void> {
-    throw NOT_IMPLEMENTED(this.id)
+    await this.printReceipt(createSampleReceipt())
   }
+
   async getStatus(): Promise<PrinterStatus> {
-    return 'disconnected'
+    return typeof window !== 'undefined' ? 'connected' : 'disconnected'
   }
 }

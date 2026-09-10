@@ -21,11 +21,20 @@ export function renderReceiptHtml(
 <title>Struk ${data.orderNumber}</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { background: #fff; }
-  body { display: flex; justify-content: center; padding: 8px 4px; }
+  html, body {
+    background: #fff;
+    width: ${bodyWidth};
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    display: flex;
+    justify-content: center;
+    padding: 4px 2px;
+  }
   pre {
     width: ${bodyWidth};
-    max-width: 100%;
+    max-width: ${bodyWidth};
     font-family: 'Courier New', Courier, monospace;
     font-size: ${fontSize};
     line-height: 1.35;
@@ -34,8 +43,24 @@ export function renderReceiptHtml(
     word-break: break-word;
   }
   @media print {
-    body { padding: 0; }
-    @page { margin: 0; }
+    @page {
+      size: ${bodyWidth} auto;
+      margin: 0mm;
+    }
+    html, body {
+      width: ${bodyWidth};
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    body {
+      display: block;
+    }
+    pre {
+      width: ${bodyWidth};
+      max-width: ${bodyWidth};
+      margin: 0 !important;
+      padding: 0 !important;
+    }
   }
 </style>
 </head>

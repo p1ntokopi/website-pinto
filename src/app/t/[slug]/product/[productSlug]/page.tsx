@@ -12,11 +12,30 @@ export default async function ProductDetailPage({ params }: { params: { slug: st
   const sessionToken = await getSessionToken()
 
   // Verify Table & Session
-  const { data: table } = await supabase
+  let { data: table } = await supabase
     .from('tables')
     .select('id, is_active')
     .eq('slug', resolvedParams.slug)
     .single()
+
+  if (!table) {
+    const alternateSlug = resolvedParams.slug.match(/^table-(\d)$/)
+      ? `table-0${resolvedParams.slug.split("-")[1]}`
+      : resolvedParams.slug.match(/^table-0(\d)$/)
+        ? `table-${resolvedParams.slug.replace(/^table-0/, "")}`
+        : null
+
+    if (alternateSlug) {
+      const fallback = await supabase
+        .from("tables")
+        .select("id, is_active")
+        .eq("slug", alternateSlug)
+        .single()
+      if (fallback.data) {
+        table = fallback.data
+      }
+    }
+  }
 
   if (!table || !table.is_active || !sessionToken) {
     redirect(`/t/${resolvedParams.slug}`)
