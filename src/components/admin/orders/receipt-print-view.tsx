@@ -94,7 +94,8 @@ export function ReceiptPrintView({
     window.print()
   }, [recordAttempt])
 
-  const isEscpos = providerId === 'escpos-bluetooth'
+  const isBluetooth = providerId === 'escpos-bluetooth' || providerId === 'web-bluetooth'
+  const isDirectPrint = providerId !== 'web-print'
 
   const receiptText = formatReceiptText(receiptData, paperWidth)
 
@@ -114,7 +115,7 @@ export function ReceiptPrintView({
 
     async function init() {
       const config = PrinterService.getConfig()
-      if (config.activeProviderId === 'escpos-bluetooth') {
+      if (config.activeProviderId === 'escpos-bluetooth' || config.activeProviderId === 'web-bluetooth') {
         await PrinterService.tryReconnect()
       }
       await refreshStatus()
@@ -151,7 +152,7 @@ export function ReceiptPrintView({
 
   async function handlePrint() {
     setError(null)
-    if (!isEscpos) {
+    if (!isDirectPrint) {
       await requestBrowserPrint()
       return
     }
@@ -159,8 +160,8 @@ export function ReceiptPrintView({
     setBusy(true)
     let requestedRecorded = false
     try {
-      requestedRecorded = await recordAttempt('REQUESTED', 'escpos-bluetooth')
-      if (status !== 'connected') {
+      requestedRecorded = await recordAttempt('REQUESTED', providerId)
+      if (isBluetooth && status !== 'connected') {
         setStage('processing')
         setConnecting(true)
         await PrinterService.connect()
@@ -187,13 +188,13 @@ export function ReceiptPrintView({
       setStage('complete')
       if (!printResult.ok) throw printResult.printError
       setHasPrinted(true)
-      await recordAttempt('SUCCEEDED', 'escpos-bluetooth')
+      await recordAttempt('SUCCEEDED', providerId)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Gagal mencetak struk.'
       setError(message)
       setStage('complete')
       if (requestedRecorded) {
-        await recordAttempt('FAILED', 'escpos-bluetooth', message)
+        await recordAttempt('FAILED', providerId, message)
       }
       await refreshStatus()
     } finally {
@@ -232,7 +233,7 @@ export function ReceiptPrintView({
               <RotateCcw className="h-4 w-4" />
               Kembali
             </Link>
-            {isEscpos && (
+            {isBluetooth && (
               <span
                 className={cn(
                   'inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium',
@@ -245,7 +246,7 @@ export function ReceiptPrintView({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            {isEscpos && status !== 'connected' && (
+            {isBluetooth && status !== 'connected' && (
               <button
                 type="button"
                 onClick={handleQuickConnect}
@@ -276,7 +277,7 @@ export function ReceiptPrintView({
                 </button>
               ))}
             </div>
-            {isEscpos && status !== 'connected' && (
+            {isBluetooth && status !== 'connected' && (
               <button
                 type="button"
                 onClick={() => void requestBrowserPrint()}
@@ -336,7 +337,7 @@ export function ReceiptPrintView({
                   aria-hidden="true"
                   className={cn(
                     'mr-1 inline-block size-2 rounded-full shadow-[0_0_6px_rgba(46,139,87,0.9)] transition-colors',
-                    !isEscpos || status === 'connected' ? 'bg-success/80' : 'bg-danger/70'
+                    !isBluetooth || status === 'connected' ? 'bg-success/80' : 'bg-danger/70'
                   )}
                 />
               </ReceiptPrinter.Header>
