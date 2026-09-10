@@ -21,13 +21,19 @@ const PROVIDER_OPTIONS = [
     id: 'escpos-bluetooth',
     label: 'ESC/POS Bluetooth',
     description:
-      'Struk dikirim langsung ke printer thermal via Bluetooth Classic (SPP) menggunakan Web Serial API (Desktop PC / Laptop) — tanpa dialog print browser.',
+      'Struk dikirim langsung via Bluetooth Classic (SPP) menggunakan Web Serial API (Desktop PC / Laptop) — tanpa watermark.',
+  },
+  {
+    id: 'web-bluetooth',
+    label: 'Web Bluetooth (BLE)',
+    description:
+      'Koneksi langsung dari Chrome HP Android via Bluetooth Low Energy (BLE) — instan, tanpa aplikasi tambahan, dan tanpa watermark.',
   },
   {
     id: 'android-print-bridge',
     label: 'RawBT (Android)',
     description:
-      'Struk dikirim langsung ke aplikasi RawBT di HP Android via ESC/POS — otomatis pas 58mm/80mm tanpa dialog print browser.',
+      'Struk dikirim langsung ke aplikasi RawBT di HP Android via ESC/POS — otomatis pas 58mm/80mm.',
   },
 ] as const
 
@@ -139,7 +145,7 @@ export function PrinterSettings() {
     setPaperWidth(width)
   }
 
-  const isEscpos = providerId === 'escpos-bluetooth'
+  const isDirectBluetooth = providerId === 'escpos-bluetooth' || providerId === 'web-bluetooth'
 
   return (
     <div className="space-y-6">
@@ -190,7 +196,7 @@ export function PrinterSettings() {
             />
           </div>
 
-          {isEscpos && (
+          {isDirectBluetooth && (
             <div className="space-y-3 rounded-sm border border-border-custom/60 p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
@@ -228,7 +234,7 @@ export function PrinterSettings() {
                   <Button
                     variant="outline"
                     onClick={handleTestPrint}
-                    disabled={busy !== null || (isEscpos && status !== 'connected')}
+                    disabled={busy !== null || (isDirectBluetooth && status !== 'connected')}
                   >
                     {busy === 'test' ? (
                       <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -241,15 +247,14 @@ export function PrinterSettings() {
               </div>
 
               <p className="text-xs leading-relaxed text-muted-text">
-                Pair printer di pengaturan Bluetooth perangkat terlebih dahulu (pairing code:{' '}
-                <span className="font-semibold text-ink">0000</span>), lalu klik Sambungkan.
-                Didukung Chrome/Edge desktop 117+ dan Android Chrome 138+. Safari &amp; Firefox
-                tidak mendukung Web Serial — gunakan &quot;Print Browser&quot; sebagai fallback.
+                {providerId === 'web-bluetooth'
+                  ? 'Buka di Google Chrome HP Android dengan Bluetooth aktif. Nyalakan printer thermal Anda, lalu klik "Sambungkan" untuk memilih printer dari daftar pop-up Bluetooth.'
+                  : 'Pair printer di pengaturan Bluetooth Windows/Laptop terlebih dahulu (PIN: 0000), lalu klik Sambungkan (didukung Chrome/Edge desktop 117+).'}
               </p>
             </div>
           )}
 
-          {!isEscpos && (
+          {!isDirectBluetooth && (
             <div>
               <Button variant="outline" onClick={handleTestPrint} disabled={busy !== null}>
                 {busy === 'test' ? (
@@ -260,7 +265,9 @@ export function PrinterSettings() {
                 Test Print
               </Button>
               <p className="mt-2 text-xs text-muted-text">
-                Membuka dialog print browser dengan struk contoh.
+                {providerId === 'android-print-bridge'
+                  ? 'Mengirim struk langsung ke aplikasi RawBT di HP via ESC/POS.'
+                  : 'Membuka dialog cetak browser Android / Windows (bebas watermark).'}
               </p>
             </div>
           )}
