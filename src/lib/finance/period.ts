@@ -77,6 +77,17 @@ export function jakartaToday(now: Date = new Date()): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: FINANCE_TIMEZONE }).format(now)
 }
 
+/** UTC bounds for one Jakarta calendar day, suitable for timestamptz filters. */
+export function jakartaDayBounds(dateStr: string): { start: string; end: string } {
+  if (!isValidDateString(dateStr)) {
+    throw new Error(`Tanggal Jakarta tidak valid: ${dateStr}`)
+  }
+
+  const start = new Date(`${dateStr}T00:00:00+07:00`)
+  const end = new Date(start.getTime() + DAY_MS)
+  return { start: start.toISOString(), end: end.toISOString() }
+}
+
 function firstOfMonth(dateStr: string): string {
   return `${dateStr.slice(0, 7)}-01`
 }

@@ -1,12 +1,19 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { OrderStatus, UserRole, getAvailableTransitions } from '@/lib/orders/status-machine'
-import { updateOrderStatus } from '@/app/admin/(dashboard)/orders/actions'
-import { Button } from '@/components/ui/button'
-import { useToast } from '@/hooks/use-toast'
-import { Loader2, AlertCircle } from 'lucide-react'
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { AlertCircle, Loader2 } from "lucide-react";
+import {
+  getAvailableTransitions,
+  type CanonicalOrderStatus,
+  type OrderStatus,
+  type UserRole,
+} from "@/lib/orders/status-machine";
+import { STATUS_CONFIG } from "@/lib/orders/status-config";
+import { updateOrderStatus } from "@/app/admin/(dashboard)/orders/actions";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
   DialogContent,
@@ -15,98 +22,125 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/ui/dialog";
 
-export function OrderActions({ orderId, currentStatus, userRole }: { orderId: string, currentStatus: OrderStatus, userRole: UserRole }) {
-  const [isUpdating, setIsUpdating] = useState(false)
-  const [cancelReason, setCancelReason] = useState('')
-  const [cancelDialogOpen, setCancelDialogOpen] = useState(false)
-  
-  const router = useRouter()
-  const { toast } = useToast()
-  const availableTransitions = getAvailableTransitions(currentStatus, userRole)
+const ACTION_LABELS: Record<
+  Exclude<CanonicalOrderStatus, "NEW" | "CANCELLED">,
+  string
+> = {
+  PREPARING: "Mulai Siapkan",
+  READY: "Tandai Siap",
+  SERVED: "Tandai Disajikan",
+};
 
-  const handleStatusChange = async (targetStatus: OrderStatus, reason?: string) => {
-    setIsUpdating(true)
-    const result = await updateOrderStatus(orderId, targetStatus, reason)
-    setIsUpdating(false)
+export function OrderActions({
+  orderId,
+  currentStatus,
+  userRole,
+}: {
+  orderId: string;
+  currentStatus: OrderStatus;
+  userRole: UserRole;
+}) {
+  const [updatingTarget, setUpdatingTarget] =
+    useState<CanonicalOrderStatus | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const router = useRouter();
+  const { toast } = useToast();
+  const availableTransitions = getAvailableTransitions(currentStatus, userRole);
+
+  async function handleStatusChange(
+    targetStatus: CanonicalOrderStatus,
+    reason?: string
+  ) {
+    setUpdatingTarget(targetStatus);
+    const result = await updateOrderStatus(orderId, targetStatus, reason);
+    setUpdatingTarget(null);
 
     if (result.error) {
-      toast({ variant: 'destructive', title: 'Pembaruan Gagal', description: result.error })
-      // The order likely changed elsewhere (kitchen/other tab) — reload so the
-      // available action buttons match the current status.
-      router.refresh()
-    } else {
-      toast({ title: 'Pesanan Diperbarui', description: `Status diubah menjadi ${targetStatus}` })
-      setCancelDialogOpen(false)
-      // We don't necessarily need to router.refresh() if Realtime handles it, 
-      // but to ensure the detail page is fresh, we do a refresh.
-      router.refresh()
+      toast({
+        variant: "destructive",
+        title: "Pembaruan Gagal",
+        description: result.error,
+      });
+      router.refresh();
+      return;
     }
+
+    toast({
+      title: "Pesanan Diperbarui",
+      description: `Status diubah menjadi ${STATUS_CONFIG[targetStatus].label}.`,
+    });
+    setCancelDialogOpen(false);
+    setCancelReason("");
+    router.refresh();
   }
 
-  if (availableTransitions.length === 0) {
-    return null // No actions available for this role at this status
-  }
+  if (availableTransitions.length === 0) return null;
 
   return (
     <div className="flex flex-wrap gap-2">
-      {availableTransitions.includes('CONFIRMED') && (
-        <Button onClick={() => handleStatusChange('CONFIRMED')} disabled={isUpdating}>
-          {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Konfirmasi Pesanan'}
-        </Button>
+      {(["PREPARING", "READY", "SERVED"] as const).map((target) =>
+        availableTransitions.includes(target) ? (
+          <Button
+            key={target}
+            onClick={() => handleStatusChange(target)}
+            disabled={updatingTarget !== null}
+            variant={target === "SERVED" ? "outline" : "default"}
+          >
+            {updatingTarget === target && (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            )}
+            {ACTION_LABELS[target]}
+          </Button>
+        ) : null
       )}
 
-      {availableTransitions.includes('PREPARING') && (
-        <Button onClick={() => handleStatusChange('PREPARING')} disabled={isUpdating} className="bg-warning text-ink hover:bg-warning/90">
-          {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Mulai Siapkan'}
-        </Button>
-      )}
-
-      {availableTransitions.includes('READY') && (
-        <Button onClick={() => handleStatusChange('READY')} disabled={isUpdating} className="bg-success text-paper hover:bg-success/90">
-          {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Tandai Siap'}
-        </Button>
-      )}
-
-      {availableTransitions.includes('COMPLETED') && (
-        <Button onClick={() => handleStatusChange('COMPLETED')} disabled={isUpdating} variant="outline">
-          {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Selesaikan Pesanan'}
-        </Button>
-      )}
-
-      {availableTransitions.includes('CANCELLED') && (
+      {availableTransitions.includes("CANCELLED") && (
         <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
-          <DialogTrigger render={
-            <Button variant="destructive">
-              Batalkan Pesanan
-            </Button>
-          } />
+          <DialogTrigger
+            render={<Button variant="destructive">Batalkan Pesanan</Button>}
+          />
           <DialogContent>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-destructive" />
+                <AlertCircle className="h-5 w-5 text-destructive" />
                 Batalkan Pesanan
               </DialogTitle>
               <DialogDescription>
-                Yakin ingin membatalkan pesanan ini? Tindakan ini tidak dapat dibatalkan.
+                Pembatalan bersifat final dan wajib disertai alasan.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-2 py-4">
-              <label htmlFor="cancel-reason" className="text-sm font-medium">Alasan (Opsional)</label>
+              <label htmlFor="cancel-reason" className="text-sm font-medium">
+                Alasan pembatalan
+              </label>
               <Textarea
                 id="cancel-reason"
-                placeholder="Mengapa pesanan ini dibatalkan?"
+                required
+                placeholder="Jelaskan alasan pesanan dibatalkan"
                 value={cancelReason}
-                onChange={(e) => setCancelReason(e.target.value)}
+                onChange={(event) => setCancelReason(event.target.value)}
                 className="resize-none"
               />
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setCancelDialogOpen(false)}>Pertahankan Pesanan</Button>
-              <Button variant="destructive" onClick={() => handleStatusChange('CANCELLED', cancelReason)} disabled={isUpdating} className="rounded-sm">
-                {isUpdating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              <Button
+                variant="outline"
+                onClick={() => setCancelDialogOpen(false)}
+                disabled={updatingTarget !== null}
+              >
+                Pertahankan Pesanan
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => handleStatusChange("CANCELLED", cancelReason)}
+                disabled={updatingTarget !== null || !cancelReason.trim()}
+              >
+                {updatingTarget === "CANCELLED" && (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                )}
                 Konfirmasi Pembatalan
               </Button>
             </DialogFooter>
@@ -114,5 +148,5 @@ export function OrderActions({ orderId, currentStatus, userRole }: { orderId: st
         </Dialog>
       )}
     </div>
-  )
+  );
 }

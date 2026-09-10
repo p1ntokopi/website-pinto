@@ -121,24 +121,6 @@ export const PrinterService = {
     return provider.tryReconnect()
   },
 
-  /** Raw monospace text (kitchen tickets) via the active provider. */
-  async printRawText(text: string): Promise<void> {
-    const provider = getActive()
-    if (!provider.printRawText) {
-      throw new PrinterUnavailableError(
-        'Provider printer aktif tidak mendukung cetak teks mentah.'
-      )
-    }
-    try {
-      await provider.printRawText(text)
-    } catch (err) {
-      if (err instanceof PrinterUnavailableError) throw err
-      throw new PrinterUnavailableError(
-        err instanceof Error ? err.message : 'Gagal mencetak tiket. Periksa printer Anda.'
-      )
-    }
-  },
-
   async printReceipt(data: ReceiptData, options?: PrintReceiptOptions): Promise<void> {
     try {
       await getActive().printReceipt(data, options)

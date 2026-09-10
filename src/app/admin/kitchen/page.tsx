@@ -1,14 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 import { KitchenClient } from '@/components/admin/kitchen/kitchen-client'
 import { KitchenOrder } from '@/lib/orders/kitchen-types'
-import { getAppSettings } from '@/lib/settings'
 
 export default async function KitchenPage() {
   const supabase = await createClient()
-  const settings = await getAppSettings()
 
   // Fetch active orders for the KDS (only those that are operational)
-  const { data: initialOrders } = await supabase
+  const { data: initialOrders, error: ordersError } = await supabase
     .from('orders')
     .select(`
       id, order_number, status, created_at, notes,
@@ -18,7 +16,7 @@ export default async function KitchenPage() {
         options:order_item_options(option_value_snapshot)
       )
     `)
-    .in('status', ['PENDING', 'CONFIRMED', 'PREPARING', 'READY'])
+    .in('status', ['NEW', 'PENDING_PAYMENT', 'PENDING', 'CONFIRMED', 'PREPARING', 'READY'])
     .order('created_at', { ascending: true })
 
   const orders: KitchenOrder[] = (initialOrders || []).map((order) => ({
@@ -35,15 +33,7 @@ export default async function KitchenPage() {
     <main className="h-screen flex flex-col overflow-hidden">
       <KitchenClient
         initialOrders={orders}
-        business={{
-          name: settings.businessName,
-          tagline: settings.tagline,
-          address: settings.address,
-          website: settings.website,
-          wifiName: settings.wifiName,
-          wifiPassword: settings.wifiPassword,
-          footerMessage: settings.footerMessage,
-        }}
+        initialError={ordersError ? 'Gagal memuat antrean dapur. Coba muat ulang.' : null}
       />
     </main>
   )

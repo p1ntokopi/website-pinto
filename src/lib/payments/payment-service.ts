@@ -23,20 +23,31 @@ export type CreatePaymentResult = {
 export interface PaymentProvider {
   readonly method: PaymentMethod
   /**
-   * Create a payment for an order. Online providers return a redirect URL;
-   * offline providers (cash/manual) are prepared but dormant until the owner
-   * enables them - they throw PaymentProviderUnavailableError.
+   * Create a payment for an order. Retired or dormant providers reject with a
+   * PaymentProviderUnavailableError and must not contact an external service.
    */
   createPayment(params: CreatePaymentParams): Promise<CreatePaymentResult>
 }
 
 export class PaymentProviderUnavailableError extends Error {
-  constructor(method: PaymentMethod) {
-    super(`Payment method ${method} is not available yet`)
+  constructor(
+    method: PaymentMethod,
+    message = `Payment method ${method} is not available yet`
+  ) {
+    super(message)
     this.name = 'PaymentProviderUnavailableError'
   }
 }
 
+export class PaymentProviderRetiredError extends PaymentProviderUnavailableError {
+  constructor(method: PaymentMethod) {
+    super(method, `Payment method ${method} is retired`)
+    this.name = 'PaymentProviderRetiredError'
+  }
+}
+
+// Method keys and provider instances remain available for historical callers,
+// but every currently registered provider is intentionally unavailable.
 const REGISTRY: Record<PaymentMethod, PaymentProvider> = {
   XENDIT: new XenditPaymentProvider(),
   CASH: new CashPaymentProvider(),
@@ -44,13 +55,8 @@ const REGISTRY: Record<PaymentMethod, PaymentProvider> = {
 }
 
 /**
- * PaymentService - the only entry point the order system talks to.
- *
- * Future providers plug in here without touching order logic:
- *   PaymentService
- *   ├── XenditPaymentProvider   (active - wraps lib/payments/xendit)
- *   ├── CashPaymentProvider     (dormant - owner does not use cash today)
- *   └── ManualPaymentProvider   (dormant - owner does not use manual today)
+ * PaymentService remains the compatibility entry point for existing callers.
+ * XENDIT is retired; CASH and MANUAL remain dormant.
  */
 export const PaymentService = {
   getProvider(method: PaymentMethod): PaymentProvider {

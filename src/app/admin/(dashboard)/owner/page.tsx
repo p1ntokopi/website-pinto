@@ -10,7 +10,10 @@ import {
   computeNetSales,
 } from '@/lib/finance/types'
 import { PeriodFilter } from '@/components/admin/owner/period-filter'
-import { PrimaryMetric, SecondaryMetric } from '@/components/admin/owner/metric-card'
+import {
+  PrimaryMetric,
+  SecondaryMetric,
+} from '@/components/admin/owner/metric-card'
 import { TrendChart } from '@/components/admin/owner/charts'
 import { EmptyState } from '@/components/admin/owner/empty-state'
 import { SectionHeader } from '@/components/admin/owner/section-header'
@@ -63,14 +66,40 @@ export default async function OwnerDashboardPage({
   const { data: recentOrders } = await supabase
     .from('orders')
     .select(
-      `id, order_number, total, status, created_at,
+      `id, order_number, total, status, created_at, dining_session_id,
        table:tables(table_number),
-       payments(status, payment_method, payment_channel, provider, paid_at, created_at)`,
+       payments(id, status, payment_method, payment_channel, provider, paid_at, created_at)`,
     )
     .gte('created_at', `${period.range.start}T00:00:00+07:00`)
     .lte('created_at', `${period.range.end}T23:59:59+07:00`)
     .order('created_at', { ascending: false })
     .limit(5)
+
+  const sessionIds = [
+    ...new Set(
+      (recentOrders ?? [])
+        .map((order) => order.dining_session_id)
+        .filter((id): id is string => typeof id === 'string'),
+    ),
+  ]
+  const paidSessionIds = new Set<string>()
+  let sessionPaymentError: string | null = null
+  if (sessionIds.length > 0) {
+    const { data: sessionPayments, error: paymentError } = await supabase
+      .from('payments')
+      .select('dining_session_id')
+      .in('dining_session_id', sessionIds)
+      .eq('status', 'PAID')
+    if (paymentError) {
+      sessionPaymentError =
+        'Status pembayaran tagihan sesi terbaru tidak dapat dimuat.'
+    }
+    for (const payment of sessionPayments ?? []) {
+      if (payment.dining_session_id) {
+        paidSessionIds.add(payment.dining_session_id)
+      }
+    }
+  }
 
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-8">
@@ -90,7 +119,10 @@ export default async function OwnerDashboardPage({
 
       {error ? (
         <div className="flex items-start gap-2 rounded-sm border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
-          <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <TriangleAlert
+            className="mt-0.5 h-4 w-4 shrink-0"
+            aria-hidden="true"
+          />
           {error}
         </div>
       ) : summary ? (
@@ -137,7 +169,7 @@ export default async function OwnerDashboardPage({
                 }))}
                 kind="currency"
                 emptyTitle="Belum ada transaksi"
-                emptyDescription="Data penjualan akan muncul setelah pesanan selesai dan pembayaran tercatat."
+                emptyDescription="Data penjualan akan muncul setelah pembayaran lunas tercatat."
               />
             </div>
           </section>
@@ -146,7 +178,10 @@ export default async function OwnerDashboardPage({
             <section className="space-y-4">
               <SectionHeader
                 title="Produk Terlaris"
-                action={{ href: '/admin/owner/sales', label: 'Detail Penjualan' }}
+                action={{
+                  href: '/admin/owner/sales',
+                  label: 'Detail Penjualan',
+                }}
               />
               {summary.top_products.length === 0 ? (
                 <EmptyState
@@ -157,12 +192,20 @@ export default async function OwnerDashboardPage({
               ) : (
                 <ol className="divide-y divide-border-custom/70 rounded-sm border border-border-custom bg-card">
                   {summary.top_products.slice(0, 5).map((product, index) => (
-                    <li key={product.name} className="flex items-center gap-3 px-4 py-3">
-                      <span className="w-5 text-xs font-bold text-coffee">{index + 1}</span>
+                    <li
+                      key={product.name}
+                      className="flex items-center gap-3 px-4 py-3"
+                    >
+                      <span className="w-5 text-xs font-bold text-coffee">
+                        {index + 1}
+                      </span>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-ink">{product.name}</p>
+                        <p className="truncate text-sm font-semibold text-ink">
+                          {product.name}
+                        </p>
                         <p className="text-xs text-muted-text">
-                          {formatNumberID(product.units)} terjual · {product.category}
+                          {formatNumberID(product.units)} terjual ·{' '}
+                          {product.category}
                         </p>
                       </div>
                       <span className="text-sm font-semibold text-ink">
@@ -177,7 +220,10 @@ export default async function OwnerDashboardPage({
             <section className="space-y-4">
               <SectionHeader
                 title="Pengeluaran"
-                action={{ href: '/admin/owner/expenses', label: 'Kelola Pengeluaran' }}
+                action={{
+                  href: '/admin/owner/expenses',
+                  label: 'Kelola Pengeluaran',
+                }}
               />
               {summary.expense_by_category.length === 0 ? (
                 <EmptyState
@@ -201,13 +247,19 @@ export default async function OwnerDashboardPage({
                       return (
                         <li key={item.category}>
                           <div className="flex justify-between text-xs">
-                            <span className="font-medium text-ink">{item.category}</span>
-                            <span className="text-muted-text">{formatIDR(item.total)}</span>
+                            <span className="font-medium text-ink">
+                              {item.category}
+                            </span>
+                            <span className="text-muted-text">
+                              {formatIDR(item.total)}
+                            </span>
                           </div>
                           <div className="mt-1 h-1.5 rounded-full bg-muted">
                             <div
                               className="h-full rounded-full bg-coffee/70"
-                              style={{ width: `${Math.max((item.total / max) * 100, 4)}%` }}
+                              style={{
+                                width: `${Math.max((item.total / max) * 100, 4)}%`,
+                              }}
                             />
                           </div>
                         </li>
@@ -224,6 +276,14 @@ export default async function OwnerDashboardPage({
               title="Transaksi Terbaru"
               action={{ href: '/admin/owner/reports', label: 'Lihat Laporan' }}
             />
+            {sessionPaymentError && (
+              <p
+                role="alert"
+                className="rounded-sm border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning"
+              >
+                {sessionPaymentError}
+              </p>
+            )}
             {(recentOrders ?? []).length === 0 ? (
               <EmptyState
                 icon={Banknote}
@@ -235,10 +295,19 @@ export default async function OwnerDashboardPage({
                 {(recentOrders ?? []).map((order) => {
                   const table = order.table
                   const tableRecord = Array.isArray(table) ? table[0] : table
-                  const payments = Array.isArray(order.payments) ? order.payments : []
-                  const paid = payments.some((p) => p.status === 'PAID')
+                  const payments = Array.isArray(order.payments)
+                    ? order.payments
+                    : []
+                  const paid =
+                    payments.some((payment) => payment.status === 'PAID') ||
+                    (order.dining_session_id
+                      ? paidSessionIds.has(order.dining_session_id)
+                      : false)
                   return (
-                    <li key={order.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                    <li
+                      key={order.id}
+                      className="flex items-center justify-between gap-3 px-4 py-3"
+                    >
                       <div className="min-w-0">
                         <p className="truncate text-sm font-semibold text-ink">
                           {order.order_number}
@@ -269,10 +338,12 @@ export default async function OwnerDashboardPage({
           </section>
 
           <p className="text-xs leading-relaxed text-muted-text">
-            <span className="font-semibold text-ink">Definisi:</span> Pendapatan = pembayaran
-            berstatus PAID pada periode ini (setelah diskon, refund, dan penyesuaian) · Pesanan =
-            order dibuat pada periode ini · Estimasi Laba = Net Sales − Pengeluaran tercatat
-            (belum termasuk HPP).
+            <span className="font-semibold text-ink">Definisi:</span> Pendapatan
+            = setiap pembayaran berstatus PAID pada periode ini, termasuk
+            pembayaran per order lama dan satu tagihan sesi kasir yang
+            masing-masing dihitung sekali (setelah diskon, refund, dan
+            penyesuaian) · Pesanan = order dibuat pada periode ini · Estimasi
+            Laba = Net Sales − Pengeluaran tercatat (belum termasuk HPP).
           </p>
         </>
       ) : null}

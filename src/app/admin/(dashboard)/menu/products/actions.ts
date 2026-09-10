@@ -9,7 +9,7 @@ import { objectKeyFromUrl } from '@/lib/storage/r2'
 const productSchema = z.object({
   category_id: z.string().uuid('Category is required'),
   name: z.string().min(1, 'Name is required'),
-  description: z.string().optional(),
+  description: z.string().nullish(),
   product_type: z.enum(['CAFE_DRINK', 'FOOD', 'PASTRY', 'COFFEE_BEAN', 'DESSERT', 'SERVICE']),
   base_price: z.coerce.number().min(0, 'Price must be 0 or greater'),
   is_available: z.boolean().default(true),
@@ -37,9 +37,13 @@ export async function createProduct(prevState: unknown, formData: FormData) {
     const validatedData = productSchema.safeParse(rawData)
 
     if (!validatedData.success) {
+      const fieldErrors = validatedData.error.flatten().fieldErrors
+      const summary = Object.entries(fieldErrors)
+        .map(([field, msgs]) => `${field}: ${msgs?.join(', ')}`)
+        .join('; ')
       return {
-        error: 'Validation failed',
-        fieldErrors: validatedData.error.flatten().fieldErrors,
+        error: `Validation failed — ${summary}`,
+        fieldErrors,
       }
     }
 
@@ -87,9 +91,13 @@ export async function updateProduct(id: string, prevState: unknown, formData: Fo
     const validatedData = productSchema.safeParse(rawData)
 
     if (!validatedData.success) {
+      const fieldErrors = validatedData.error.flatten().fieldErrors
+      const summary = Object.entries(fieldErrors)
+        .map(([field, msgs]) => `${field}: ${msgs?.join(', ')}`)
+        .join('; ')
       return {
-        error: 'Validation failed',
-        fieldErrors: validatedData.error.flatten().fieldErrors,
+        error: `Validation failed — ${summary}`,
+        fieldErrors,
       }
     }
 

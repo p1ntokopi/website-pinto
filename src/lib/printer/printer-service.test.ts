@@ -48,6 +48,10 @@ describe('PrinterService dynamic provider selection', () => {
     expect(PrinterService.getActiveProviderId()).toBe('web-print')
   })
 
+  it('does not expose the obsolete raw-text service method', () => {
+    expect('printRawText' in PrinterService).toBe(false)
+  })
+
   it('persists paper width in the config', () => {
     PrinterService.setPaperWidth(80)
     expect(PrinterService.getConfig().paperWidth).toBe(80)

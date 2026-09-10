@@ -1,54 +1,75 @@
-import { Metadata } from 'next'
-import { createClient } from '@/lib/supabase/server'
-import { LiveTablesClient } from '@/components/admin/tables/live-tables-client'
-import { Users, Receipt } from 'lucide-react'
+import { Metadata } from "next";
+import { createClient } from "@/lib/supabase/server";
+import { LiveTablesClient } from "@/components/admin/tables/live-tables-client";
+import { Users, Receipt } from "lucide-react";
+import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: 'Meja Langsung - Pinto Admin',
-}
+  title: "Meja Langsung - Pinto Admin",
+};
 
 export default async function LiveTablesPage() {
-  const supabase = await createClient()
+  const supabase = await createClient();
 
   // Fetch all tables
   const { data: tables } = await supabase
-    .from('tables')
-    .select('id, table_number, capacity, is_active')
-    .order('table_number', { ascending: true })
+    .from("tables")
+    .select("id, table_number, capacity, is_active")
+    .order("table_number", { ascending: true });
 
   // Fetch active sessions
   const { data: sessions } = await supabase
-    .from('dining_sessions')
-    .select('id, table_id, created_at')
-    .eq('status', 'open')
+    .from("dining_sessions")
+    .select("id, table_id, created_at")
+    .eq("status", "open");
 
   // Fetch open orders for those sessions
-  const sessionIds = sessions?.map(s => s.id) || []
-  let orders: { id: string; order_number: string; dining_session_id: string | null; total: number; status: string }[] = []
+  const sessionIds = sessions?.map((s) => s.id) || [];
+  let orders: {
+    id: string;
+    order_number: string;
+    dining_session_id: string | null;
+    total: number;
+    status: string;
+  }[] = [];
   if (sessionIds.length > 0) {
     const { data: activeOrders } = await supabase
-      .from('orders')
-      .select('id, order_number, dining_session_id, total, status')
-      .in('dining_session_id', sessionIds)
-      .in('status', ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'COMPLETED']) // Even completed orders stay on table until session closes
+      .from("orders")
+      .select("id, order_number, dining_session_id, total, status")
+      .in("dining_session_id", sessionIds)
+      .in("status", [
+        "NEW",
+        "PREPARING",
+        "READY",
+        "SERVED",
+        "PENDING_PAYMENT",
+        "PENDING",
+        "CONFIRMED",
+        "COMPLETED",
+      ]); // Served orders stay on the table until the session closes
 
-    if (activeOrders) orders = activeOrders as typeof orders
+    if (activeOrders) orders = activeOrders as typeof orders;
   }
 
   // Combine data
-  const tablesData = tables?.map(table => {
-    const session = sessions?.find(s => s.table_id === table.id)
-    const tableOrders = session ? orders.filter(o => o.dining_session_id === session.id) : []
-    
-    return {
-      ...table,
-      session: session ? {
-        id: session.id,
-        created_at: session.created_at,
-        orders: tableOrders
-      } : null
-    }
-  }) || []
+  const tablesData =
+    tables?.map((table) => {
+      const session = sessions?.find((s) => s.table_id === table.id);
+      const tableOrders = session
+        ? orders.filter((o) => o.dining_session_id === session.id)
+        : [];
+
+      return {
+        ...table,
+        session: session
+          ? {
+              id: session.id,
+              created_at: session.created_at,
+              orders: tableOrders,
+            }
+          : null,
+      };
+    }) || [];
 
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-6">
@@ -67,16 +88,47 @@ export default async function LiveTablesPage() {
         <div className="flex gap-3">
           <div className="flex items-center gap-2 rounded-sm border border-border-custom bg-card px-4 py-2">
             <Users className="h-4 w-4 text-success" />
-            <span className="text-sm font-semibold text-ink">{sessions?.length || 0} Meja Aktif</span>
+            <span className="text-sm font-semibold text-ink">
+              {sessions?.length || 0} Meja Aktif
+            </span>
           </div>
           <div className="flex items-center gap-2 rounded-sm border border-border-custom bg-card px-4 py-2">
             <Receipt className="h-4 w-4 text-warning" />
-            <span className="text-sm font-semibold text-ink">{orders.length || 0} Pesanan Terbuka</span>
+            <span className="text-sm font-semibold text-ink">
+              {orders.length || 0} Pesanan Terbuka
+            </span>
           </div>
         </div>
       </div>
 
       <LiveTablesClient initialTables={tablesData} />
+
+      {(sessions?.length ?? 0) > 0 && (
+        <section className="space-y-3 border-t border-border-custom/70 pt-5">
+          <div>
+            <h2 className="font-display text-xl font-bold text-ink">
+              Checkout Sesi Aktif
+            </h2>
+            <p className="mt-1 text-sm text-muted-text">
+              Buka tagihan gabungan, konfirmasi pembayaran, lalu tutup meja.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {tablesData
+              .filter((table) => table.session)
+              .map((table) => (
+                <Link
+                  key={table.id}
+                  href={`/admin/sessions/${table.session!.id}`}
+                  className="inline-flex min-h-11 items-center rounded-sm border border-border-custom bg-card px-4 text-sm font-semibold text-ink transition-colors outline-none hover:border-coffee/40 hover:text-coffee focus-visible:ring-3 focus-visible:ring-ring/40"
+                >
+                  Meja {table.table_number} · {table.session!.orders.length}{" "}
+                  pesanan
+                </Link>
+              ))}
+          </div>
+        </section>
+      )}
     </div>
-  )
+  );
 }

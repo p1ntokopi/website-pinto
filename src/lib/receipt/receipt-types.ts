@@ -20,10 +20,106 @@ export type ReceiptBusiness = {
   footerMessage: string
 }
 
+export type ReceiptPaymentMethod = 'CASH' | 'QRIS'
+
+/** Canonical payment details printed on a customer receipt. */
+export type ReceiptPaymentDetails = {
+  method: ReceiptPaymentMethod | null
+  displayLabel: string | null
+  status: string | null
+  cashier: string | null
+  paidAt: string | null
+  cashReceived: number | null
+  change: number | null
+}
+
+/**
+ * Legacy order-payment input accepted by buildReceiptFromOrder.
+ * Kept while existing order and kitchen callers migrate to bill receipts.
+ */
 export type ReceiptPayment = {
   method: string | null
   channel: string | null
   status: string | null
+  cashier?: string | null
+  paidAt?: string | null
+  cashReceived?: number | null
+  change?: number | null
+}
+
+export type ReceiptSourceOrder = {
+  label: string
+  items: ReceiptLineItem[]
+}
+
+export type ReceiptBill = {
+  reference: string
+  sessionReference: string | null
+  issuedAt: string
+}
+
+export type ReceiptSnapshotSettings = {
+  business_name?: string | null
+  tagline?: string | null
+  address?: string | null
+  website?: string | null
+  wifi_name?: string | null
+  wifi_password?: string | null
+  footer_message?: string | null
+}
+
+export type ReceiptSnapshotItem = {
+  product_name: string
+  variant_name?: string | null
+  quantity: number
+  unit_price: number
+  subtotal: number
+  notes?: string | null
+  options?: {
+    option_name?: string | null
+    option_value: string
+    price_adjustment: number
+  }[] | null
+}
+
+export type ReceiptSnapshotOrder = {
+  id: string
+  order_number: string
+  created_at: string
+  subtotal: number
+  discount?: number | null
+  tax?: number | null
+  service_fee?: number | null
+  shipping_fee?: number | null
+  total: number
+  table_number?: string | null
+  notes?: string | null
+  items: ReceiptSnapshotItem[]
+}
+
+export type ReceiptSnapshot = {
+  schema_version: 1
+  issued_at: string
+  target: { type: 'ORDER' | 'DINING_SESSION'; id: string }
+  settings?: ReceiptSnapshotSettings | null
+  payment: {
+    method: string | null
+    channel: string | null
+    status: string | null
+    paid_at: string | null
+    cash_received: number | null
+    change_amount: number | null
+    cashier_id?: string | null
+    cashier_metadata?: Record<string, unknown> | null
+  }
+  orders: ReceiptSnapshotOrder[]
+}
+
+export type ReceiptSnapshotRecord = {
+  receipt_number: string
+  issued_at?: string | null
+  snapshot: ReceiptSnapshot
+  cashierName?: string | null
 }
 
 export type ReceiptOrderItemInput = {
@@ -38,6 +134,9 @@ export type ReceiptOrderItemInput = {
 
 export type ReceiptOrderInput = {
   order_number: string
+  bill_reference?: string | null
+  session_reference?: string | null
+  source_order_label?: string | null
   subtotal: number
   tax: number
   discount: number
@@ -48,18 +147,27 @@ export type ReceiptOrderInput = {
   items: ReceiptOrderItemInput[]
 }
 
-export type ReceiptData = {
-  business: ReceiptBusiness
-  orderNumber: string
+export type ReceiptInput = {
+  business?: ReceiptBusiness
+  bill: ReceiptBill
+  sourceOrders: ReceiptSourceOrder[]
   tableLabel: string | null
-  createdAt: string
-  items: ReceiptLineItem[]
   subtotal: number
   discount: number
   tax: number
   total: number
-  payment: ReceiptPayment
+  payment: ReceiptPaymentDetails
   notes: string | null
+}
+
+export type ReceiptData = ReceiptInput & {
+  business: ReceiptBusiness
+  /** @deprecated Use bill.reference or sourceOrders[].label. */
+  orderNumber: string
+  /** @deprecated Use bill.issuedAt or payment.paidAt. */
+  createdAt: string
+  /** @deprecated Use sourceOrders[].items. */
+  items: ReceiptLineItem[]
 }
 
 export type ThermalPaperWidth = 58 | 80

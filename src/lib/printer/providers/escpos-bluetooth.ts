@@ -64,11 +64,9 @@ function unsupportedError(): PrinterUnavailableError {
 /**
  * ESC/POS over Bluetooth Classic (SPP) through the Web Serial API.
  *
- * Works with paired SPP printers on desktop Chrome/Edge 117+ and Android
- * Chrome 138+ (RFCOMM serial emulation). The printer must be paired at the
- * OS level first (PandaPrinter PRJ-58D pairing code: 0000); after that,
- * `requestPort()` lists it without any filters and `getPorts()` allows a
- * silent reconnect for previously granted devices.
+ * Works with paired SPP printers on supported Chromium/Web Serial platforms.
+ * Pairing, reconnect, encoding, feed, and cut behavior must still be verified
+ * against each physical printer model before compatibility is claimed.
  */
 export class EscPosBluetoothProvider implements PrinterProvider {
   readonly id = 'escpos-bluetooth'
@@ -159,22 +157,6 @@ export class EscPosBluetoothProvider implements PrinterProvider {
 
   async testPrint(): Promise<void> {
     await this.printReceipt(createSampleReceipt())
-  }
-
-  /** Raw text (kitchen tickets): encode + write, same chunking as receipts. */
-  async printRawText(text: string): Promise<void> {
-    const port = this.port
-    if (!port?.writable) {
-      throw new PrinterUnavailableError(
-        'Printer belum tersambung. Sambungkan printer terlebih dahulu.'
-      )
-    }
-    try {
-      await this.write(port, encodeReceipt(text))
-    } catch (err) {
-      this.port = null
-      throw this.toProviderError(err, true)
-    }
   }
 
   async getStatus(): Promise<PrinterStatus> {

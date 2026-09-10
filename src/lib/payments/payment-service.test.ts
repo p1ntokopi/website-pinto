@@ -1,16 +1,16 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/lib/payments/xendit', () => ({
-  createPaymentSession: vi.fn(),
-}))
-
-import { createPaymentSession } from '@/lib/payments/xendit'
-import type { PaymentSessionResponse } from '@/lib/payments/xendit'
 import {
   PaymentService,
+  PaymentProviderRetiredError,
   PaymentProviderUnavailableError,
 } from '@/lib/payments/payment-service'
 import { XenditPaymentProvider } from '@/lib/payments/providers/xendit'
+import {
+  createPaymentSession,
+  verifyWebhookToken,
+  XenditGatewayRetiredError,
+} from '@/lib/payments/xendit'
 
 const params = {
   referenceId: 'PNT-00001',
@@ -22,59 +22,61 @@ const params = {
   metadata: { order_id: 'order-1', order_number: 'PNT-00001' },
 }
 
-describe('PaymentService dispatch', () => {
-  beforeEach(() => {
-    vi.mocked(createPaymentSession).mockReset()
+afterEach(() => {
+  vi.restoreAllMocks()
+  vi.unstubAllEnvs()
+})
+
+describe('PaymentService retired gateway behavior', () => {
+  it('retains XENDIT registration but rejects it as retired without network access', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch')
+    const provider = PaymentService.getProvider('XENDIT')
+
+    expect(provider).toBeInstanceOf(XenditPaymentProvider)
+
+    const error = await PaymentService.createPayment('XENDIT', params).catch(
+      (cause: unknown) => cause
+    )
+
+    expect(error).toBeInstanceOf(PaymentProviderRetiredError)
+    expect(error).toBeInstanceOf(PaymentProviderUnavailableError)
+    expect(error).toMatchObject({ message: 'Payment method XENDIT is retired' })
+    expect(fetchSpy).not.toHaveBeenCalled()
   })
 
-  it('routes XENDIT to the active provider and maps the session result', async () => {
-    vi.mocked(createPaymentSession).mockResolvedValue({
-      payment_session_id: 'sess-1',
-      reference_id: 'PNT-00001',
-      payment_link_url: 'https://checkout.xendit.co/pay/sess-1',
-      status: 'ACTIVE',
-      amount: '33000',
-      currency: 'IDR',
-      country: 'ID',
-      session_type: 'PAY',
-      mode: 'PAYMENT_LINK',
-      business_id: 'biz-1',
-      created: '2026-08-19T10:15:00Z',
-      updated: '2026-08-19T10:15:00Z',
-      expires_at: '2026-08-19T10:45:00Z',
-    } satisfies PaymentSessionResponse)
+  it('keeps the exported Xendit provider inert when instantiated directly', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch')
 
-    const result = await PaymentService.createPayment('XENDIT', params)
-
-    expect(createPaymentSession).toHaveBeenCalledWith({
-      referenceId: params.referenceId,
-      amount: params.amount,
-      description: params.description,
-      successReturnUrl: params.successReturnUrl,
-      cancelReturnUrl: params.cancelReturnUrl,
-      expiresAt: params.expiresAt,
-      metadata: params.metadata,
-    })
-    expect(result).toEqual({
-      paymentLinkUrl: 'https://checkout.xendit.co/pay/sess-1',
-      providerTransactionId: 'sess-1',
-      status: 'PENDING',
-    })
+    await expect(new XenditPaymentProvider().createPayment(params)).rejects.toThrow(
+      PaymentProviderRetiredError
+    )
+    expect(fetchSpy).not.toHaveBeenCalled()
   })
 
-  it('raises a provider-unavailable error for dormant CASH', async () => {
+  it('keeps the low-level session export inert without reading credentials or fetching', async () => {
+    vi.stubEnv('XENDIT_API_KEY', 'historical-key')
+    const fetchSpy = vi.spyOn(globalThis, 'fetch')
+
+    await expect(createPaymentSession(params)).rejects.toThrow(XenditGatewayRetiredError)
+    expect(fetchSpy).not.toHaveBeenCalled()
+  })
+
+  it('never accepts retired webhook tokens', () => {
+    vi.stubEnv('XENDIT_WEBHOOK_TOKEN', 'historical-token')
+
+    expect(verifyWebhookToken('historical-token')).toBe(false)
+    expect(verifyWebhookToken(null)).toBe(false)
+  })
+
+  it('continues to reject dormant CASH', async () => {
     await expect(PaymentService.createPayment('CASH', params)).rejects.toThrow(
       PaymentProviderUnavailableError
     )
   })
 
-  it('raises a provider-unavailable error for dormant MANUAL', async () => {
+  it('continues to reject dormant MANUAL', async () => {
     await expect(PaymentService.createPayment('MANUAL', params)).rejects.toThrow(
       PaymentProviderUnavailableError
     )
-  })
-
-  it('exposes the registered providers', () => {
-    expect(PaymentService.getProvider('XENDIT')).toBeInstanceOf(XenditPaymentProvider)
   })
 })

@@ -33,8 +33,7 @@ type UseOrderNotificationsOptions = {
 /**
  * Single source of truth for "a genuinely new order arrived".
  *
- * - One Supabase Realtime channel (INSERT on orders + UPDATE -> PENDING when a
- *   paid PENDING_PAYMENT order enters the kitchen queue).
+ * - One Supabase Realtime channel (INSERT on orders).
  * - One notification per order id (in-memory seen-set).
  * - Cross-tab: Web Locks pick a single "notifying" tab (no duplicate sound /
  *   toast); BroadcastChannel syncs the unread badge to every open tab.
@@ -121,7 +120,8 @@ export function useOrderNotifications({ enabled = true, onNewOrder }: UseOrderNo
       const locks = typeof navigator !== 'undefined' ? navigator.locks : undefined
       if (locks?.request) {
         // Only one tab becomes the notifier; the rest update their badge only.
-        void locks.request(NOTIFY_LOCK_NAME, { ifAvailable: true }, async () => {
+        void locks.request(NOTIFY_LOCK_NAME, { ifAvailable: true }, async (lock) => {
+          if (!lock) return
           perform()
           broadcast()
           // Keep the lock briefly so a concurrently-open tab skips the sound.
@@ -183,19 +183,6 @@ export function useOrderNotifications({ enabled = true, onNewOrder }: UseOrderNo
         (payload) => {
           const record = payload.new as unknown as NewOrderInfo
           notify(record)
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'orders' },
-        (payload) => {
-          const record = payload.new as unknown as NewOrderInfo
-          const previous = payload.old as { status?: string } | undefined
-          // A paid PENDING_PAYMENT order entering the kitchen queue is a new
-          // operational event worth notifying even though the row already exists.
-          if (record.status === 'PENDING' && previous?.status === 'PENDING_PAYMENT') {
-            notify(record)
-          }
         }
       )
       .subscribe((status) => {

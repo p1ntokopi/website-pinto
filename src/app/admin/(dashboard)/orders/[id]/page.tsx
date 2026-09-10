@@ -1,52 +1,90 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect, notFound } from 'next/navigation'
-import { OrderActions } from '@/components/admin/orders/order-actions'
-import { MarkPaidDialog } from '@/components/admin/orders/mark-paid-dialog'
-import { OrderStatus, UserRole } from '@/lib/orders/status-machine'
-import { STATUS_CONFIG } from '@/lib/orders/status-config'
-import { Badge } from '@/components/ui/badge'
-import { ChevronLeft, Receipt, User, FileText, CreditCard, Printer } from 'lucide-react'
-import Link from 'next/link'
-import { Metadata } from 'next'
-import { cn } from '@/lib/utils'
+import { createClient } from "@/lib/supabase/server";
+import { redirect, notFound } from "next/navigation";
+import { OrderActions } from "@/components/admin/orders/order-actions";
+import { MarkPaidDialog } from "@/components/admin/orders/mark-paid-dialog";
+import {
+  normalizeOrderStatus,
+  type OrderStatus,
+  type UserRole,
+} from "@/lib/orders/status-machine";
+import { STATUS_CONFIG } from "@/lib/orders/status-config";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  ChevronLeft,
+  Receipt,
+  User,
+  FileText,
+  CreditCard,
+  Printer,
+} from "lucide-react";
+import Link from "next/link";
+import { Metadata } from "next";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: 'Detail Pesanan - Pinto Admin',
-}
+  title: "Detail Pesanan - Pinto Admin",
+};
 
 type OrderItem = {
-  id: string
-  quantity: number
-  product_name_snapshot: string
-  variant_name_snapshot: string | null
-  subtotal: number
-  notes: string | null
-  options: { id: string; option_value_snapshot: string; price_adjustment: number }[]
-}
+  id: string;
+  quantity: number;
+  product_name_snapshot: string;
+  variant_name_snapshot: string | null;
+  subtotal: number;
+  notes: string | null;
+  options: {
+    id: string;
+    option_value_snapshot: string;
+    price_adjustment: number;
+  }[];
+};
 
 type HistoryEvent = {
-  id: string
-  new_status: OrderStatus
-  created_at: string
-  metadata: { reason?: string } | null
-  changer: { full_name: string | null } | null
-}
+  id: string;
+  new_status: OrderStatus;
+  created_at: string;
+  metadata: { reason?: string } | null;
+  changer: { full_name: string | null } | null;
+};
 
-export default async function OrderDetailPage({ params }: { params: { id: string } }) {
-  const resolvedParams = await params
-  const supabase = await createClient()
+type PaymentRow = {
+  id: string;
+  provider: string;
+  status: string;
+  amount: number;
+  payment_method: string | null;
+  payment_channel: string | null;
+  paid_at: string | null;
+  created_at: string;
+};
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/admin/login')
+export default async function OrderDetailPage({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const resolvedParams = await params;
+  const supabase = await createClient();
 
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  if (!profile) redirect('/admin/login')
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/admin/login");
 
-  const userRole = profile.role as UserRole
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+  if (!profile) redirect("/admin/login");
+
+  const userRole = profile.role as UserRole;
 
   const { data: order, error: orderError } = await supabase
-    .from('orders')
-    .select(`
+    .from("orders")
+    .select(
+      `
       *,
       table:tables(table_number),
       items:order_items(
@@ -56,21 +94,24 @@ export default async function OrderDetailPage({ params }: { params: { id: string
       history:order_status_history(
         id, old_status, new_status, created_at, metadata, changed_by
       )
-    `)
-    .eq('id', resolvedParams.id)
-    .single()
+    `
+    )
+    .eq("id", resolvedParams.id)
+    .single();
 
   if (orderError) {
     // PGRST116 = zero/multiple rows -> genuinely not found. Anything else is
     // a query failure (RLS, embed) that a plain 404 would hide.
-    if (orderError.code === 'PGRST116') notFound()
-    console.error('[order detail]', orderError.code, orderError.message)
+    if (orderError.code === "PGRST116") notFound();
+    console.error("[order detail]", orderError.code, orderError.message);
     return (
       <div className="mx-auto w-full max-w-4xl space-y-4 pt-10">
-        <h1 className="font-display text-2xl font-bold text-ink">Gagal memuat pesanan</h1>
+        <h1 className="font-display text-2xl font-bold text-ink">
+          Gagal memuat pesanan
+        </h1>
         <p className="text-sm text-muted-text">
-          Pesanan ditemukan tetapi datanya tidak bisa ditampilkan. Detail error tercatat di
-          console browser — coba muat ulang halaman.
+          Pesanan ditemukan tetapi datanya tidak bisa ditampilkan. Detail error
+          tercatat di console browser — coba muat ulang halaman.
         </p>
         <Link
           href="/admin/orders"
@@ -79,30 +120,37 @@ export default async function OrderDetailPage({ params }: { params: { id: string
           ← Kembali ke Pesanan
         </Link>
       </div>
-    )
+    );
   }
 
-  if (!order) notFound()
+  if (!order) notFound();
 
   // changed_by points to auth.users, so changer names are resolved manually
   // through profiles (PostgREST cannot embed across that FK).
-  const historyRows = ((order.history || []) as {
-    id: string
-    new_status: OrderStatus
-    created_at: string
-    metadata: { reason?: string } | null
-    changed_by: string | null
-  }[]).sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+  const historyRows = (
+    (order.history || []) as {
+      id: string;
+      new_status: OrderStatus;
+      created_at: string;
+      metadata: { reason?: string } | null;
+      changed_by: string | null;
+    }[]
+  ).sort(
+    (a, b) =>
+      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  );
 
-  const changerIds = [...new Set(historyRows.map((h) => h.changed_by).filter(Boolean))] as string[]
-  const changerNames = new Map<string, string>()
+  const changerIds = [
+    ...new Set(historyRows.map((h) => h.changed_by).filter(Boolean)),
+  ] as string[];
+  const changerNames = new Map<string, string>();
   if (changerIds.length > 0) {
     const { data: changers } = await supabase
-      .from('profiles')
-      .select('id, full_name')
-      .in('id', changerIds)
+      .from("profiles")
+      .select("id, full_name")
+      .in("id", changerIds);
     for (const changer of changers ?? []) {
-      changerNames.set(changer.id, changer.full_name)
+      changerNames.set(changer.id, changer.full_name);
     }
   }
 
@@ -111,69 +159,138 @@ export default async function OrderDetailPage({ params }: { params: { id: string
     new_status: row.new_status,
     created_at: row.created_at,
     metadata: row.metadata,
-    changer: { full_name: row.changed_by ? changerNames.get(row.changed_by) ?? null : null },
-  }))
+    changer: {
+      full_name: row.changed_by
+        ? (changerNames.get(row.changed_by) ?? null)
+        : null,
+    },
+  }));
 
   const { data: payments } = await supabase
-    .from('payments')
-    .select('id, provider, status, amount, payment_method, payment_channel, paid_at, created_at')
-    .eq('order_id', order.id)
-    .order('created_at', { ascending: false })
-    .limit(1)
+    .from("payments")
+    .select(
+      "id, provider, status, amount, payment_method, payment_channel, paid_at, created_at"
+    )
+    .eq("order_id", order.id)
+    .order("created_at", { ascending: false })
+    .limit(1);
+  const directPayment: PaymentRow | null = payments?.[0] ?? null;
 
-  const payment = payments?.[0] ?? null
+  // Dine-in bills are paid at the session level, so check for a session
+  // payment that supersedes any direct-order payment record.
+  let sessionPayment: PaymentRow | null = null;
+  if (order.dining_session_id) {
+    const { data: sessionPaymentRows } = await supabase
+      .from("payments")
+      .select(
+        "id, provider, status, amount, payment_method, payment_channel, paid_at, created_at"
+      )
+      .eq("dining_session_id", order.dining_session_id)
+      .order("created_at", { ascending: false })
+      .limit(1);
+    sessionPayment = sessionPaymentRows?.[0] ?? null;
+  }
 
-  const config = STATUS_CONFIG[order.status as OrderStatus]
-  const StatusIcon = config.icon
-  const items = (order.items || []) as OrderItem[]
+  const preferSession =
+    sessionPayment &&
+    (sessionPayment.status === "PAID" || directPayment?.status !== "PAID");
+  const payment = preferSession ? sessionPayment : directPayment;
+  const paymentIsSessionBill = preferSession && Boolean(sessionPayment);
+
+  const { data: receiptRows } = await supabase
+    .from("receipts")
+    .select("id, receipt_number")
+    .eq("order_id", order.id)
+    .order("issued_at", { ascending: false })
+    .limit(1);
+  let receipt = receiptRows?.[0] ?? null;
+  let receiptIsSessionBill = false;
+  if (order.dining_session_id && !receipt) {
+    const { data: sessionReceiptRows } = await supabase
+      .from("receipts")
+      .select("id, receipt_number")
+      .eq("dining_session_id", order.dining_session_id)
+      .order("issued_at", { ascending: false })
+      .limit(1);
+    receipt = sessionReceiptRows?.[0] ?? null;
+    receiptIsSessionBill = Boolean(receipt);
+  }
+
+  const canonicalStatus = normalizeOrderStatus(order.status as OrderStatus);
+  const config = STATUS_CONFIG[canonicalStatus];
+  const StatusIcon = config.icon;
+  const items = (order.items || []) as OrderItem[];
 
   const formatPrice = (price: number) =>
-    new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
+    new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
       maximumFractionDigits: 0,
-    }).format(price)
+    }).format(price);
 
   const formatTime = (isoString: string) =>
-    new Date(isoString).toLocaleString('id-ID', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
+    new Date(isoString).toLocaleString("id-ID", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
 
-  const PAYMENT_STATUS_CONFIG: Record<string, { label: string; color: string }> = {
-    PAID: { label: 'Lunas', color: 'bg-success/10 text-success border-success/25' },
-    PENDING: { label: 'Menunggu', color: 'bg-warning/10 text-warning border-warning/25' },
-    EXPIRED: { label: 'Kedaluwarsa', color: 'bg-muted text-muted-text border-border' },
-    FAILED: { label: 'Gagal', color: 'bg-destructive/10 text-destructive border-destructive/25' },
-    CANCELED: { label: 'Dibatalkan', color: 'bg-muted text-muted-text border-border' },
-    REFUNDED: { label: 'Dikembalikan', color: 'bg-info/10 text-info border-info/25' },
-  }
+  const PAYMENT_STATUS_CONFIG: Record<
+    string,
+    { label: string; color: string }
+  > = {
+    PAID: {
+      label: "Lunas",
+      color: "bg-success/10 text-success border-success/25",
+    },
+    PENDING: {
+      label: "Menunggu",
+      color: "bg-warning/10 text-warning border-warning/25",
+    },
+    EXPIRED: {
+      label: "Kedaluwarsa",
+      color: "bg-muted text-muted-text border-border",
+    },
+    FAILED: {
+      label: "Gagal",
+      color: "bg-destructive/10 text-destructive border-destructive/25",
+    },
+    CANCELED: {
+      label: "Dibatalkan",
+      color: "bg-muted text-muted-text border-border",
+    },
+    REFUNDED: {
+      label: "Dikembalikan",
+      color: "bg-info/10 text-info border-info/25",
+    },
+  };
 
   const METHOD_LABELS: Record<string, string> = {
-    CASH: 'Cash',
-    TRANSFER: 'Transfer',
-    EWALLET: 'E-Wallet',
-    OTHER: 'Lainnya',
-    MANUAL: 'Manual (Kasir)',
-    BANK_TRANSFER: 'Transfer Bank',
-    QR_CODE: 'QRIS',
-    DIRECT_DEBIT: 'Debit Langsung',
-    CARD: 'Kartu',
-    RETAIL_OUTLET: 'Toko Ritel',
-    PAY_LATER: 'Pay Later',
-    CRYPTOCURRENCY: 'Crypto',
-    OTC: 'Tunai',
-  }
+    CASH: "Cash",
+    QRIS: "QRIS",
+    TRANSFER: "Transfer",
+    EWALLET: "E-Wallet",
+    OTHER: "Lainnya",
+    MANUAL: "Manual (Kasir)",
+    BANK_TRANSFER: "Transfer Bank",
+    QR_CODE: "QRIS",
+    DIRECT_DEBIT: "Debit Langsung",
+    CARD: "Kartu",
+    RETAIL_OUTLET: "Toko Ritel",
+    PAY_LATER: "Pay Later",
+    CRYPTOCURRENCY: "Crypto",
+    OTC: "Tunai",
+  };
 
   const paymentMethodLabel = (p: typeof payment) => {
-    if (!p) return '—'
-    if (p.payment_channel) return p.payment_channel
-    if (p.payment_method) return METHOD_LABELS[p.payment_method] ?? p.payment_method
-    return p.provider
-  }
+    if (!p) return "—";
+    if (p.payment_channel) return p.payment_channel;
+    if (p.payment_method)
+      return METHOD_LABELS[p.payment_method] ?? p.payment_method;
+    return p.provider;
+  };
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6 pb-20">
@@ -190,34 +307,64 @@ export default async function OrderDetailPage({ params }: { params: { id: string
         </h1>
         <Badge
           variant="outline"
-          className={cn('gap-1 border font-semibold', config.color)}
+          className={cn("gap-1 border font-semibold", config.color)}
         >
           <StatusIcon className="h-3.5 w-3.5" />
           {config.label}
         </Badge>
-        {order.status === 'COMPLETED' && (
+        {receipt && (
           <Link
-            href={`/admin/orders/${order.id}/receipt`}
+            href={`/admin/receipts/${receipt.id}`}
             className="ml-auto inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border border-coffee/30 bg-coffee/5 px-4 text-sm font-semibold text-coffee transition-colors hover:bg-coffee/10 focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
           >
             <Printer className="h-4 w-4" />
-            Cetak Struk
+            {receiptIsSessionBill ? "Cetak Struk Sesi" : "Cetak Struk"}
           </Link>
         )}
       </div>
 
       <div className="flex flex-col justify-between gap-4 border border-border-custom/70 bg-card p-5 md:flex-row md:items-center">
         <div>
-          <h3 className="text-sm font-semibold text-ink">Perbarui Status &amp; Pembayaran</h3>
+          <h3 className="text-sm font-semibold text-ink">
+            Perbarui Status &amp; Pembayaran
+          </h3>
           <p className="mt-0.5 text-sm text-muted-text">
             Geser pesanan ini melalui alur kerja operasional.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {order.status !== 'CANCELLED' && payment?.status !== 'PAID' && (
-            <MarkPaidDialog orderId={order.id} />
+          {canonicalStatus !== "CANCELLED" &&
+            payment?.status !== "PAID" &&
+            !order.dining_session_id && (
+              <MarkPaidDialog orderId={order.id} amount={Number(order.total)} />
+            )}
+          {canonicalStatus !== "CANCELLED" &&
+            payment?.status !== "PAID" &&
+            Boolean(order.dining_session_id) && (
+              <Button
+                variant="outline"
+                render={
+                  <Link href={`/admin/sessions/${order.dining_session_id}`} />
+                }
+              >
+                Bayar di Sesi Meja
+              </Button>
+            )}
+          {order.dining_session_id && (
+            <Button
+              variant="outline"
+              render={
+                <Link href={`/admin/sessions/${order.dining_session_id}`} />
+              }
+            >
+              Kelola Sesi Meja
+            </Button>
           )}
-          <OrderActions orderId={order.id} currentStatus={order.status as OrderStatus} userRole={userRole} />
+          <OrderActions
+            orderId={order.id}
+            currentStatus={order.status as OrderStatus}
+            userRole={userRole}
+          />
         </div>
       </div>
 
@@ -237,18 +384,26 @@ export default async function OrderDetailPage({ params }: { params: { id: string
             <div className="space-y-5 p-5">
               {items.map((item) => (
                 <div key={item.id} className="flex gap-4">
-                  <div className="font-bold text-muted-text">{item.quantity}×</div>
+                  <div className="font-bold text-muted-text">
+                    {item.quantity}×
+                  </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex justify-between gap-3 font-semibold text-ink">
                       <span>{item.product_name_snapshot}</span>
-                      <span className="shrink-0">{formatPrice(item.subtotal)}</span>
+                      <span className="shrink-0">
+                        {formatPrice(item.subtotal)}
+                      </span>
                     </div>
                     <div className="mt-1 space-y-1 text-sm text-muted-text">
-                      {item.variant_name_snapshot && <p>{item.variant_name_snapshot}</p>}
+                      {item.variant_name_snapshot && (
+                        <p>{item.variant_name_snapshot}</p>
+                      )}
                       {item.options?.map((opt) => (
                         <p key={opt.id}>
                           {opt.option_value_snapshot}
-                          {opt.price_adjustment > 0 ? ` (+${formatPrice(opt.price_adjustment)})` : ''}
+                          {opt.price_adjustment > 0
+                            ? ` (+${formatPrice(opt.price_adjustment)})`
+                            : ""}
                         </p>
                       ))}
                       {item.notes && (
@@ -289,13 +444,30 @@ export default async function OrderDetailPage({ params }: { params: { id: string
                   Meja
                 </span>
                 {order.table ? (
-                  <Badge variant="outline" className="border-border-custom bg-muted/50 px-3 py-1 text-sm font-semibold">
+                  <Badge
+                    variant="outline"
+                    className="border-border-custom bg-muted/50 px-3 py-1 text-sm font-semibold"
+                  >
                     Meja {order.table.table_number}
                   </Badge>
                 ) : (
                   <span className="text-sm text-muted-text">Bawa pulang</span>
                 )}
               </div>
+
+              {order.dining_session_id && (
+                <div>
+                  <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-text">
+                    Sesi meja
+                  </span>
+                  <Link
+                    href={`/admin/sessions/${order.dining_session_id}`}
+                    className="text-sm font-semibold text-coffee hover:text-ink"
+                  >
+                    Buka checkout sesi
+                  </Link>
+                </div>
+              )}
 
               <div>
                 <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-text">
@@ -314,7 +486,9 @@ export default async function OrderDetailPage({ params }: { params: { id: string
                 <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-text">
                   Dibuat Pada
                 </span>
-                <span className="text-sm font-medium text-ink">{formatTime(order.created_at)}</span>
+                <span className="text-sm font-medium text-ink">
+                  {formatTime(order.created_at)}
+                </span>
               </div>
             </div>
           </div>
@@ -327,6 +501,18 @@ export default async function OrderDetailPage({ params }: { params: { id: string
 
             {payment ? (
               <div className="space-y-5">
+                {paymentIsSessionBill && (
+                  <p className="rounded-sm bg-muted/50 px-3 py-2 text-xs text-muted-text">
+                    Tagihan makan di tempat dibayar sebagai satu sesi —{" "}
+                    <Link
+                      href={`/admin/sessions/${order.dining_session_id}`}
+                      className="font-semibold text-coffee hover:text-ink"
+                    >
+                      lihat checkout sesi
+                    </Link>
+                    .
+                  </p>
+                )}
                 <div>
                   <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-text">
                     Status
@@ -334,13 +520,16 @@ export default async function OrderDetailPage({ params }: { params: { id: string
                   {(() => {
                     const pcfg = PAYMENT_STATUS_CONFIG[payment.status] ?? {
                       label: payment.status,
-                      color: 'bg-muted text-muted-text border-border',
-                    }
+                      color: "bg-muted text-muted-text border-border",
+                    };
                     return (
-                      <Badge variant="outline" className={cn('gap-1 border font-semibold', pcfg.color)}>
+                      <Badge
+                        variant="outline"
+                        className={cn("gap-1 border font-semibold", pcfg.color)}
+                      >
                         {pcfg.label}
                       </Badge>
-                    )
+                    );
                   })()}
                 </div>
 
@@ -357,7 +546,9 @@ export default async function OrderDetailPage({ params }: { params: { id: string
                   <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-text">
                     Nominal
                   </span>
-                  <span className="text-sm font-semibold text-ink">{formatPrice(payment.amount)}</span>
+                  <span className="text-sm font-semibold text-ink">
+                    {formatPrice(payment.amount)}
+                  </span>
                 </div>
 
                 {payment.paid_at && (
@@ -365,12 +556,16 @@ export default async function OrderDetailPage({ params }: { params: { id: string
                     <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-text">
                       Dibayar Pada
                     </span>
-                    <span className="text-sm font-medium text-ink">{formatTime(payment.paid_at)}</span>
+                    <span className="text-sm font-medium text-ink">
+                      {formatTime(payment.paid_at)}
+                    </span>
                   </div>
                 )}
               </div>
             ) : (
-              <p className="text-sm text-muted-text">Belum ada pembayaran tercatat.</p>
+              <p className="text-sm text-muted-text">
+                Belum ada pembayaran tercatat.
+              </p>
             )}
           </div>
 
@@ -382,27 +577,33 @@ export default async function OrderDetailPage({ params }: { params: { id: string
                 <span className="relative z-10 mt-1 h-3 w-3 shrink-0 rounded-full border-2 border-card bg-muted" />
                 <div>
                   <p className="text-sm font-medium text-ink">Pesanan Dibuat</p>
-                  <p className="text-xs text-muted-text">{formatTime(order.created_at)}</p>
+                  <p className="text-xs text-muted-text">
+                    {formatTime(order.created_at)}
+                  </p>
                 </div>
               </li>
 
               {history.map((event) => {
-                const eventConfig = STATUS_CONFIG[event.new_status]
-                const EventIcon = eventConfig.icon
+                const eventStatus = normalizeOrderStatus(event.new_status);
+                const eventConfig = STATUS_CONFIG[eventStatus];
+                const EventIcon = eventConfig.icon;
                 return (
-                  <li key={event.id} className="relative flex items-start gap-3">
+                  <li
+                    key={event.id}
+                    className="relative flex items-start gap-3"
+                  >
                     <span
                       className={cn(
-                        'relative z-10 mt-1 flex h-3 w-3 shrink-0 items-center justify-center rounded-full border-2 border-card',
-                        'bg-coffee'
+                        "relative z-10 mt-1 flex h-3 w-3 shrink-0 items-center justify-center rounded-full border-2 border-card",
+                        "bg-coffee"
                       )}
                     />
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-ink">
-                        Ditandai{' '}
+                        Ditandai{" "}
                         <span
                           className={cn(
-                            'inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
+                            "inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
                             eventConfig.color
                           )}
                         >
@@ -411,7 +612,8 @@ export default async function OrderDetailPage({ params }: { params: { id: string
                         </span>
                       </p>
                       <p className="mb-1 text-xs text-muted-text">
-                        oleh {event.changer?.full_name || 'Sistem'} · {formatTime(event.created_at)}
+                        oleh {event.changer?.full_name || "Sistem"} ·{" "}
+                        {formatTime(event.created_at)}
                       </p>
                       {event.metadata?.reason && (
                         <p className="mt-1 rounded-sm bg-muted/50 p-2 text-xs italic text-ink/70">
@@ -420,12 +622,12 @@ export default async function OrderDetailPage({ params }: { params: { id: string
                       )}
                     </div>
                   </li>
-                )
+                );
               })}
             </ol>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -45,6 +45,21 @@ export type FinancialSummary = {
   cash_flow: { in: number; out: number; net: number }
 }
 
+export type RealizedPayment = {
+  id: string
+  status: string
+  amount: number
+  order_id?: string | null
+  dining_session_id?: string | null
+  paid_at?: string | null
+  created_at?: string | null
+}
+
+export type RealizedOrder = {
+  id: string
+  dining_session_id?: string | null
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
@@ -85,4 +100,70 @@ export function computeEstimatedSurplus(summary: FinancialSummary): number {
 export function computeAov(summary: FinancialSummary): number {
   const count = summary.sales.paid_order_count
   return count > 0 ? computeNetSales(summary) / count : 0
+}
+
+function paymentTime(payment: RealizedPayment): number {
+  const timestamp = payment.paid_at ?? payment.created_at
+  if (!timestamp) return Number.NEGATIVE_INFINITY
+  const time = new Date(timestamp).getTime()
+  return Number.isNaN(time) ? Number.NEGATIVE_INFINITY : time
+}
+
+function isLaterPayment(
+  candidate: RealizedPayment,
+  current: RealizedPayment,
+): boolean {
+  const candidateTime = paymentTime(candidate)
+  const currentTime = paymentTime(current)
+  return candidateTime > currentTime ||
+    (candidateTime === currentTime && candidate.id > current.id)
+}
+
+/**
+ * Selects one deterministic PAID event per bill target. When a canonical
+ * session bill exists, direct payments for orders in that session are excluded
+ * so historical cross-target anomalies cannot inflate realized revenue.
+ */
+export function canonicalizeRealizedPayments(
+  payments: readonly RealizedPayment[],
+  orders: readonly RealizedOrder[] = [],
+): RealizedPayment[] {
+  const canonicalByTarget = new Map<string, RealizedPayment>()
+
+  for (const payment of payments) {
+    if (payment.status !== 'PAID') continue
+    const target = payment.dining_session_id
+      ? `session:${payment.dining_session_id}`
+      : payment.order_id
+        ? `order:${payment.order_id}`
+        : null
+    if (!target) continue
+
+    const current = canonicalByTarget.get(target)
+    if (!current || isLaterPayment(payment, current)) {
+      canonicalByTarget.set(target, payment)
+    }
+  }
+
+  const sessionByOrder = new Map(
+    orders
+      .filter((order) => order.dining_session_id)
+      .map((order) => [order.id, order.dining_session_id as string]),
+  )
+
+  return [...canonicalByTarget.values()].filter((payment) => {
+    if (!payment.order_id) return true
+    const sessionId = sessionByOrder.get(payment.order_id)
+    return !sessionId || !canonicalByTarget.has(`session:${sessionId}`)
+  })
+}
+
+export function computeRealizedRevenue(
+  payments: readonly RealizedPayment[],
+  orders: readonly RealizedOrder[] = [],
+): number {
+  return canonicalizeRealizedPayments(payments, orders).reduce(
+    (total, payment) => total + payment.amount,
+    0,
+  )
 }

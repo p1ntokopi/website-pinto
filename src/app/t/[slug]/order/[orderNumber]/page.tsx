@@ -1,151 +1,105 @@
-import { createClient } from '@/lib/supabase/server'
-import { getSessionToken } from '@/lib/ordering/session'
-import { redirect, notFound } from 'next/navigation'
-import Link from 'next/link'
-import { Suspense } from 'react'
-import { CheckCircle2, Clock } from 'lucide-react'
-import { Metadata } from 'next'
+import { createClient } from "@/lib/supabase/server";
+import { getSessionToken } from "@/lib/ordering/session";
+import { redirect, notFound } from "next/navigation";
+import Link from "next/link";
+import { CheckCircle2 } from "lucide-react";
+import { Metadata } from "next";
 
-import { OrderStatusTimeline } from '@/components/ordering/order-status-timeline'
-import { PaymentSection, PaymentInfo } from '@/components/ordering/payment-section'
-import { OrderReceipt } from '@/components/ordering/order-receipt'
-import { getAppSettings } from '@/lib/settings'
-import { Button } from '@/components/ui/button'
-import { OrderingHeader } from '@/components/ordering/ordering-header'
+import type { CustomerOrderStatus } from "@/components/ordering/order-status-timeline";
+import type { PaymentInfo } from "@/components/ordering/payment-section";
+import { OrderSessionDetails } from "@/components/ordering/order-session-details";
+import { Button } from "@/components/ui/button";
+import { OrderingHeader } from "@/components/ordering/ordering-header";
 
 export const metadata: Metadata = {
-  title: 'Status Pesanan - Pinto',
-}
+  title: "Status Pesanan - Pinto",
+};
 
 export default async function OrderTrackingPage({
   params,
 }: {
-  params: { slug: string; orderNumber: string }
+  params: Promise<{ slug: string; orderNumber: string }>;
 }) {
-  const resolvedParams = await params
-  const supabase = await createClient()
-  const sessionToken = await getSessionToken()
+  const resolvedParams = await params;
+  const supabase = await createClient();
+  const sessionToken = await getSessionToken();
 
   const { data: table } = await supabase
-    .from('tables')
-    .select('id, table_number')
-    .eq('slug', resolvedParams.slug)
-    .single()
+    .from("tables")
+    .select("id, table_number")
+    .eq("slug", resolvedParams.slug)
+    .single();
 
   if (!table || !sessionToken) {
-    redirect(`/t/${resolvedParams.slug}`)
+    redirect(`/t/${resolvedParams.slug}`);
   }
 
-  const { data: result } = await supabase.rpc('get_order_tracking', {
+  const { data: result } = await supabase.rpc("get_order_tracking", {
     p_table_slug: resolvedParams.slug,
     p_session_token: sessionToken,
     p_order_number: resolvedParams.orderNumber,
-  })
+  });
 
   if (!result || !result.success || !result.order) {
-    notFound()
+    notFound();
   }
 
   const order = result.order as {
-    id: string
-    order_number: string
-    status: 'PENDING_PAYMENT' | 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'READY' | 'COMPLETED' | 'CANCELLED'
-    total: number
-    payment: PaymentInfo | null
-    items: {
-      id: string
-      quantity: number
-      product_name_snapshot: string
-      variant_name_snapshot: string | null
-      unit_price: number
-      subtotal: number
-      notes: string | null
-      options: {
-        option_value_snapshot: string
-        price_adjustment: number
-      }[]
-    }[]
-  }
-
-  const isAwaitingPayment = order.status === 'PENDING_PAYMENT'
-  const settings = await getAppSettings()
+    id: string;
+    order_number: string;
+    status: CustomerOrderStatus;
+    total: number;
+    payment: PaymentInfo | null;
+  };
 
   return (
-    <div className="min-h-screen bg-background pb-32">
+    <div className="min-h-dvh bg-background pb-24 sm:pb-12">
       <OrderingHeader
         backHref={`/t/${resolvedParams.slug}/menu`}
         title={`Pesanan #${order.order_number}`}
       />
 
-      <main className="mx-auto max-w-2xl space-y-6 p-4 pt-6">
-        <div className="border border-border/60 bg-white p-6 text-center">
-          {isAwaitingPayment ? (
-            <>
-              <Clock className="mx-auto mb-3 h-12 w-12 text-warning" />
-              <h1 className="text-xl font-bold text-ink">Menunggu Pembayaran</h1>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Selesaikan pembayaran di bawah ini untuk mengirim pesanan ke dapur.
-              </p>
-            </>
-          ) : (
-            <>
-              <CheckCircle2 className="mx-auto mb-3 h-12 w-12 text-success" />
-              <h1 className="text-xl font-bold text-ink">Pesanan Diterima</h1>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Pesanan Anda telah dikirim ke dapur.
-              </p>
-            </>
-          )}
+      <main className="mx-auto w-full max-w-3xl space-y-5 px-3 py-4 sm:space-y-6 sm:px-6 sm:py-8">
+        <OrderSessionDetails
+          tableSlug={resolvedParams.slug}
+          orderId={order.id}
+          orderNumber={order.order_number}
+          initialStatus={order.status}
+          initialTotal={order.total}
+          initialPayment={order.payment}
+        >
+          <CheckCircle2
+            className="mx-auto mb-3 h-11 w-11 text-success sm:h-12 sm:w-12"
+            aria-hidden="true"
+          />
+          <h1 className="text-xl font-bold text-ink sm:text-2xl">
+            Pesanan berhasil dikirim.
+          </h1>
+          <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-muted-foreground">
+            Pesanan Anda sudah diterima. Status pembuatan akan diperbarui di
+            halaman ini.
+          </p>
           <div className="mt-4 inline-flex rounded-full bg-muted px-4 py-1.5 text-sm font-semibold">
             Meja {table.table_number}
           </div>
+        </OrderSessionDetails>
 
-          <div className="mt-6">
-            <OrderStatusTimeline initialStatus={order.status} orderId={order.id} />
-          </div>
+        <div className="rounded-lg border border-coffee/20 bg-coffee/10 p-4 text-sm leading-relaxed text-ink sm:p-5">
+          <p className="font-semibold">Masih ingin menambah pesanan?</p>
+          <p className="mt-1 text-muted-foreground">
+            Pesanan berikutnya tetap masuk ke tagihan meja yang sama selama sesi
+            meja aktif.
+          </p>
         </div>
 
-        <div className="flex justify-center">
-          <OrderReceipt
-            orderNumber={order.order_number}
-            tableNumber={table.table_number}
-            items={order.items}
-            total={order.total}
-            paymentStatus={order.payment?.status ?? null}
-            business={{
-              name: settings.businessName,
-              tagline: settings.tagline,
-              website: settings.website,
-              footerMessage: settings.footerMessage,
-            }}
-          />
-        </div>
-
-        <div className="border border-border/60 bg-white p-6">
-          <h2 className="mb-4 text-lg font-bold">Pembayaran</h2>
-
-          <Suspense fallback={null}>
-            <PaymentSection
-              tableSlug={resolvedParams.slug}
-              orderId={order.id}
-              orderNumber={order.order_number}
-              orderStatus={order.status}
-              total={order.total}
-              payment={order.payment}
-            />
-          </Suspense>
-        </div>
-
-        <div className="pt-2">
-          <Button
-            render={<Link href={`/t/${resolvedParams.slug}/menu`} />}
-            variant="outline"
-            className="h-14 w-full"
-          >
-            Buat Pesanan Baru
-          </Button>
-        </div>
+        <Button
+          render={<Link href={`/t/${resolvedParams.slug}/menu`} />}
+          variant="outline"
+          className="h-14 w-full text-base"
+        >
+          Pesan Lagi
+        </Button>
       </main>
     </div>
-  )
+  );
 }

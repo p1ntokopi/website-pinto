@@ -1,94 +1,147 @@
-'use client'
+"use client";
 
-import { useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import Image from 'next/image'
-import { Minus, Plus, Trash2, Loader2, ShoppingBag } from 'lucide-react'
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
+import { Minus, Plus, Trash2, Loader2, ShoppingBag } from "lucide-react";
 
-import { useCart } from '@/components/ordering/cart-context'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { OrderingHeader } from '@/components/ordering/ordering-header'
-import { useToast } from '@/hooks/use-toast'
-import { submitOrder } from '@/app/t/[slug]/actions'
-import { cn } from '@/lib/utils'
+import { useCart } from "@/components/ordering/cart-context";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { OrderingHeader } from "@/components/ordering/ordering-header";
+import { useToast } from "@/hooks/use-toast";
+import { submitOrder } from "@/app/t/[slug]/actions";
+import { cn } from "@/lib/utils";
 
 export function CartClient({
   tableSlug,
   tableNumber,
 }: {
-  tableSlug: string
-  tableNumber: string | null
+  tableSlug: string;
+  tableNumber: string | null;
 }) {
-  const { items, updateQuantity, removeItem, clearCart, cartTotal } = useCart()
-  const router = useRouter()
-  const { toast } = useToast()
+  const { items, updateQuantity, removeItem, clearCart, cartTotal } = useCart();
+  const router = useRouter();
+  const { toast } = useToast();
 
-  const [orderNotes, setOrderNotes] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [confirmClear, setConfirmClear] = useState(false)
-  const clearTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [orderNotes, setOrderNotes] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
+  const clearTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const requestIdRef = useRef<string | null>(null);
+  const cartSnapshotRef = useRef<string | null>(null);
+
+  const createCartSnapshot = () =>
+    JSON.stringify({
+      notes: orderNotes,
+      items: items.map((item) => ({
+        id: item.id,
+        product_id: item.product_id,
+        variant_id: item.variant_id ?? null,
+        quantity: item.quantity,
+        notes: item.notes ?? null,
+        options: item.options.map((option) => ({
+          option_id: option.option_id,
+          option_value_id: option.option_value_id,
+        })),
+      })),
+    });
+
+  const getRequestId = (snapshot: string) => {
+    if (!requestIdRef.current || cartSnapshotRef.current !== snapshot) {
+      requestIdRef.current = crypto.randomUUID();
+      cartSnapshotRef.current = snapshot;
+    }
+
+    return requestIdRef.current;
+  };
 
   const formatPrice = (price: number) =>
-    new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
+    new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
       maximumFractionDigits: 0,
-    }).format(price)
+    }).format(price);
 
   useEffect(() => {
     return () => {
-      if (clearTimer.current) clearTimeout(clearTimer.current)
-    }
-  }, [])
+      if (clearTimer.current) clearTimeout(clearTimer.current);
+    };
+  }, []);
 
   const handleClear = () => {
     if (!confirmClear) {
-      setConfirmClear(true)
-      clearTimer.current = setTimeout(() => setConfirmClear(false), 3000)
-      return
+      setConfirmClear(true);
+      clearTimer.current = setTimeout(() => setConfirmClear(false), 3000);
+      return;
     }
-    clearCart()
-    setConfirmClear(false)
-    toast({ title: 'Pesanan dibersihkan', description: 'Keranjang Anda sekarang kosong.' })
-  }
+    clearCart();
+    setConfirmClear(false);
+    toast({
+      title: "Pesanan dibersihkan",
+      description: "Keranjang Anda sekarang kosong.",
+    });
+  };
 
   const handleCheckout = async () => {
-    if (items.length === 0) return
+    if (items.length === 0 || isSubmitting) return;
 
-    setIsSubmitting(true)
-    const requestId = Math.random().toString(36).substring(2, 15)
+    setIsSubmitting(true);
+    const snapshot = createCartSnapshot();
+    const requestId = getRequestId(snapshot);
 
-    const result = await submitOrder(tableSlug, orderNotes, items, requestId)
-    setIsSubmitting(false)
+    try {
+      const result = await submitOrder(tableSlug, orderNotes, items, requestId);
 
-    if (result.error) {
-      toast({ variant: 'destructive', title: 'Pembayaran Gagal', description: result.error })
-      return
-    }
+      if (result.error) {
+        toast({
+          variant: "destructive",
+          title: "Pesanan Belum Terkirim",
+          description: result.error,
+        });
+        return;
+      }
 
-    if (result.success && result.orderNumber) {
-      clearCart()
+      if (result.success && result.orderNumber) {
+        requestIdRef.current = null;
+        cartSnapshotRef.current = null;
+        clearCart();
+        toast({
+          title: "Pesanan berhasil dikirim.",
+          description: `Pesanan #${result.orderNumber} telah diterima. Silakan lakukan pembayaran di kasir setelah selesai.`,
+        });
+        router.push(`/t/${tableSlug}/order/${result.orderNumber}`);
+      }
+    } catch (error) {
+      console.error("Order submission failed:", error);
       toast({
-        title: 'Pesanan terkirim!',
-        description: `Pesanan #${result.orderNumber} Anda telah diterima.`,
-      })
-      router.push(`/t/${tableSlug}/order/${result.orderNumber}`)
+        variant: "destructive",
+        title: "Pesanan Belum Terkirim",
+        description:
+          "Periksa koneksi Anda, lalu coba lagi. Pesanan yang sama tidak akan diduplikasi.",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
-  }
+  };
 
   if (items.length === 0) {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center bg-paper px-6 text-center">
         <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-sm border border-ink/15 bg-white/60">
-          <ShoppingBag className="h-7 w-7 text-muted-foreground" aria-hidden="true" />
+          <ShoppingBag
+            className="h-7 w-7 text-muted-foreground"
+            aria-hidden="true"
+          />
         </div>
         <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.25em] text-coffee">
           Pesanan Anda
         </p>
-        <h2 className="font-display text-3xl text-ink">Belum ada yang dipesan</h2>
+        <h2 className="font-display text-3xl text-ink">
+          Belum ada yang dipesan
+        </h2>
         <p className="mx-auto mt-3 max-w-xs leading-relaxed text-muted-foreground">
           Jelajahi menu Pinto dan temukan cangkir favorit Anda berikutnya.
         </p>
@@ -99,7 +152,7 @@ export function CartClient({
           Lihat Menu
         </Button>
       </div>
-    )
+    );
   }
 
   return (
@@ -112,15 +165,19 @@ export function CartClient({
           <button
             type="button"
             onClick={handleClear}
-            aria-label={confirmClear ? 'Konfirmasi hapus semua pesanan' : 'Hapus semua pesanan'}
-            className={cn(
-              'rounded-sm px-3 py-2 text-xs font-semibold transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/40',
+            aria-label={
               confirmClear
-                ? 'bg-danger text-white'
-                : 'text-danger hover:bg-danger/10'
+                ? "Konfirmasi hapus semua pesanan"
+                : "Hapus semua pesanan"
+            }
+            className={cn(
+              "rounded-sm px-3 py-2 text-xs font-semibold transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/40",
+              confirmClear
+                ? "bg-danger text-white"
+                : "text-danger hover:bg-danger/10"
             )}
           >
-            {confirmClear ? 'Ketuk untuk konfirmasi' : 'Hapus'}
+            {confirmClear ? "Ketuk untuk konfirmasi" : "Hapus"}
           </button>
         }
       />
@@ -141,7 +198,7 @@ export function CartClient({
               const lineTotal =
                 (item.base_price +
                   item.options.reduce((s, o) => s + o.price_adjustment, 0)) *
-                item.quantity
+                item.quantity;
               return (
                 <li
                   key={item.id}
@@ -181,7 +238,7 @@ export function CartClient({
                             {opt.option_value_name}
                             {opt.price_adjustment > 0
                               ? ` +${formatPrice(opt.price_adjustment)}`
-                              : ''}
+                              : ""}
                           </p>
                         ))}
                       </div>
@@ -198,7 +255,9 @@ export function CartClient({
                         <button
                           type="button"
                           onClick={() =>
-                            item.quantity > 1 ? updateQuantity(item.id, -1) : removeItem(item.id)
+                            item.quantity > 1
+                              ? updateQuantity(item.id, -1)
+                              : removeItem(item.id)
                           }
                           aria-label={
                             item.quantity > 1
@@ -210,7 +269,10 @@ export function CartClient({
                           {item.quantity > 1 ? (
                             <Minus className="h-4 w-4" aria-hidden="true" />
                           ) : (
-                            <Trash2 className="h-4 w-4 text-danger" aria-hidden="true" />
+                            <Trash2
+                              className="h-4 w-4 text-danger"
+                              aria-hidden="true"
+                            />
                           )}
                         </button>
                         <span
@@ -231,7 +293,7 @@ export function CartClient({
                     </div>
                   </div>
                 </li>
-              )
+              );
             })}
           </ul>
         </div>
@@ -242,8 +304,14 @@ export function CartClient({
             <h2 className="font-display text-2xl text-ink">Detail Pesanan</h2>
 
             <div className="mt-5 space-y-2">
-              <Label htmlFor="order-notes" className="text-sm font-semibold text-ink">
-                Catatan Umum <span className="font-normal text-muted-foreground">(opsional)</span>
+              <Label
+                htmlFor="order-notes"
+                className="text-sm font-semibold text-ink"
+              >
+                Catatan Umum{" "}
+                <span className="font-normal text-muted-foreground">
+                  (opsional)
+                </span>
               </Label>
               <Textarea
                 id="order-notes"
@@ -257,7 +325,9 @@ export function CartClient({
 
             {tableNumber && (
               <div className="mt-5 flex items-center justify-between rounded-sm bg-coffee/10 px-4 py-3">
-                <span className="text-sm text-muted-foreground">Pesanan untuk</span>
+                <span className="text-sm text-muted-foreground">
+                  Pesanan untuk
+                </span>
                 <span className="font-display text-lg font-semibold text-coffee">
                   Meja {tableNumber}
                 </span>
@@ -277,6 +347,12 @@ export function CartClient({
               </span>
             </div>
 
+            <div className="mt-4 rounded-sm border border-coffee/20 bg-coffee/10 px-4 py-3 text-sm leading-relaxed text-ink">
+              Pesanan langsung diteruskan ke kasir. Pembayaran seluruh tagihan
+              meja dilakukan setelah selesai melalui kasir dengan tunai atau
+              QRIS.
+            </div>
+
             <Button
               onClick={handleCheckout}
               disabled={isSubmitting}
@@ -284,11 +360,14 @@ export function CartClient({
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" aria-hidden="true" />
-                  Membuat Pesanan...
+                  <Loader2
+                    className="mr-2 h-5 w-5 animate-spin"
+                    aria-hidden="true"
+                  />
+                  Mengirim Pesanan...
                 </>
               ) : (
-                `Pesan Sekarang • ${formatPrice(cartTotal)}`
+                `Kirim Pesanan • ${formatPrice(cartTotal)}`
               )}
             </Button>
           </section>
@@ -305,15 +384,18 @@ export function CartClient({
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" aria-hidden="true" />
-                Membuat Pesanan...
+                <Loader2
+                  className="mr-2 h-5 w-5 animate-spin"
+                  aria-hidden="true"
+                />
+                Mengirim Pesanan...
               </>
             ) : (
-              `Pesan Sekarang • ${formatPrice(cartTotal)}`
+              `Kirim Pesanan • ${formatPrice(cartTotal)}`
             )}
           </Button>
         </div>
       </div>
     </div>
-  )
+  );
 }

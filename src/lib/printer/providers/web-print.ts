@@ -80,20 +80,6 @@ export class WebPrintProvider implements PrinterProvider {
     openPrintWindow(renderReceiptHtml(createSampleReceipt(), DEFAULT_PAPER_WIDTH), 1)
   }
 
-  async printRawText(text: string): Promise<void> {
-    if (typeof window === 'undefined') {
-      throw new PrinterUnavailableError('Web print hanya tersedia di browser.')
-    }
-    const escaped = text.replaceAll('&', '&amp;').replaceAll('<', '&lt;')
-    openPrintWindow(
-      `<!doctype html><html><head><title>Tiket</title><style>` +
-        `body{font-family:monospace;font-size:13px;line-height:1.35;margin:8px;color:#000}` +
-        `pre{margin:0;white-space:pre-wrap}` +
-        `</style></head><body><pre>${escaped}</pre></body></html>`,
-      1
-    )
-  }
-
   async getStatus(): Promise<PrinterStatus> {
     if (typeof window === 'undefined') return 'disconnected'
     return 'connected'

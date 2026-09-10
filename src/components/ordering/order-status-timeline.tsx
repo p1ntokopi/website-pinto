@@ -1,106 +1,172 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
-import { CheckCircle2, Clock, Coffee, Package, Check, TriangleAlert } from 'lucide-react'
+import {
+  Check,
+  CheckCircle2,
+  Clock,
+  Coffee,
+  Package,
+  TriangleAlert,
+} from "lucide-react";
 
-type OrderStatus = 'PENDING_PAYMENT' | 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'READY' | 'COMPLETED' | 'CANCELLED'
+import type { DiningSessionSummary } from "@/app/t/[slug]/actions";
+import { cn } from "@/lib/utils";
 
-const STATUS_STEPS: { id: OrderStatus, label: string, icon: React.ElementType }[] = [
-  { id: 'PENDING', label: 'Pesanan Diterima', icon: Clock },
-  { id: 'CONFIRMED', label: 'Terkonfirmasi', icon: CheckCircle2 },
-  { id: 'PREPARING', label: 'Disiapkan', icon: Coffee },
-  { id: 'READY', label: 'Siap', icon: Package },
-  { id: 'COMPLETED', label: 'Selesai', icon: Check },
-]
+export type CustomerOrderStatus =
+  | "NEW"
+  | "PREPARING"
+  | "READY"
+  | "SERVED"
+  | "PENDING_PAYMENT"
+  | "PENDING"
+  | "CONFIRMED"
+  | "COMPLETED"
+  | "CANCELLED";
 
-export function OrderStatusTimeline({ initialStatus, orderId }: { initialStatus: OrderStatus, orderId: string }) {
-  const [status, setStatus] = useState<OrderStatus>(initialStatus)
+type DisplayStatus = "NEW" | "PREPARING" | "READY" | "SERVED" | "CANCELLED";
 
-  useEffect(() => {
-    // Setup Supabase Realtime subscription
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+const STATUS_STEPS: {
+  id: Exclude<DisplayStatus, "CANCELLED">;
+  label: string;
+  description: string;
+  icon: React.ElementType;
+}[] = [
+  {
+    id: "NEW",
+    label: "Pesanan Diterima",
+    description: "Pesanan masuk ke kasir.",
+    icon: Clock,
+  },
+  {
+    id: "PREPARING",
+    label: "Sedang Dibuat",
+    description: "Kasir menyiapkan pesanan.",
+    icon: Coffee,
+  },
+  {
+    id: "READY",
+    label: "Siap Diantar",
+    description: "Pesanan selesai dibuat.",
+    icon: Package,
+  },
+  {
+    id: "SERVED",
+    label: "Sudah Diantar",
+    description: "Pesanan telah sampai di meja.",
+    icon: Check,
+  },
+];
 
-    const channel = supabase
-      .channel(`order_tracking_${orderId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'orders',
-          filter: `id=eq.${orderId}`
-        },
-        (payload) => {
-          if (payload.new && payload.new.status) {
-            setStatus(payload.new.status as OrderStatus)
-          }
-        }
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [orderId])
-
-  if (status === 'CANCELLED') {
-    return (
-      <div className="bg-destructive/10 text-destructive p-4 rounded-xl text-center">
-        <p className="font-semibold">Pesanan Dibatalkan</p>
-        <p className="text-sm opacity-80 mt-1">Silakan hubungi staf untuk detail.</p>
-      </div>
-    )
+export function normalizeCustomerOrderStatus(status: string): DisplayStatus {
+  switch (status) {
+    case "PENDING_PAYMENT":
+    case "PENDING":
+    case "CONFIRMED":
+    case "NEW":
+      return "NEW";
+    case "PREPARING":
+      return "PREPARING";
+    case "READY":
+      return "READY";
+    case "COMPLETED":
+    case "SERVED":
+      return "SERVED";
+    case "CANCELLED":
+      return "CANCELLED";
+    default:
+      return "NEW";
   }
+}
 
-  if (status === 'PENDING_PAYMENT') {
+export function OrderStatusTimeline({
+  initialStatus,
+  orderId,
+  orderNumber,
+  summary,
+}: {
+  initialStatus: CustomerOrderStatus;
+  orderId: string;
+  orderNumber: string;
+  summary: DiningSessionSummary | null;
+}) {
+  const currentOrder = summary?.orders.find(
+    (order) => order.order_number === orderNumber || order.id === orderId
+  );
+  const status = normalizeCustomerOrderStatus(
+    currentOrder?.status ?? initialStatus
+  );
+
+  if (status === "CANCELLED") {
     return (
-      <div className="bg-warning/10 text-warning p-4 rounded-xl text-center">
-        <TriangleAlert className="mx-auto mb-2 h-8 w-8" />
-        <p className="font-semibold">Menunggu Pembayaran</p>
-        <p className="text-sm opacity-80 mt-1">
-          Pesanan belum dikirim ke dapur hingga pembayaran selesai.
+      <div
+        className="rounded-lg bg-destructive/10 p-4 text-center text-destructive"
+        role="status"
+      >
+        <TriangleAlert className="mx-auto mb-2 h-7 w-7" aria-hidden="true" />
+        <p className="font-semibold">Pesanan Dibatalkan</p>
+        <p className="mt-1 text-sm opacity-80">
+          Hubungi kasir jika Anda memerlukan bantuan.
         </p>
       </div>
-    )
+    );
   }
 
-  const currentIndex = STATUS_STEPS.findIndex(s => s.id === status)
+  const currentIndex = STATUS_STEPS.findIndex((step) => step.id === status);
 
   return (
-    <div className="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent">
-      {STATUS_STEPS.map((step, index) => {
-        const isCompleted = index < currentIndex
-        const isCurrent = index === currentIndex
-        const Icon = step.icon
+    <div>
+      <p className="mb-3 text-xs text-muted-foreground" role="status">
+        Status diperbarui otomatis saat halaman ini aktif.
+      </p>
+      <ol
+        className="grid grid-cols-1 gap-3 text-left sm:grid-cols-4"
+        aria-label="Status pesanan"
+      >
+        {STATUS_STEPS.map((step, index) => {
+          const isCompleted = index < currentIndex;
+          const isCurrent = index === currentIndex;
+          const Icon = isCompleted ? CheckCircle2 : step.icon;
 
-        return (
-          <div key={step.id} className={`relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active`}>
-            {/* Icon */}
-            <div className={`flex items-center justify-center w-10 h-10 rounded-full border-4 border-white shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm z-10 transition-colors duration-300 ${
-              isCompleted ? 'bg-primary text-primary-foreground' :
-              isCurrent ? 'bg-primary text-primary-foreground animate-pulse' :
-              'bg-muted text-muted-foreground'
-            }`}>
-              <Icon className="w-4 h-4" />
-            </div>
-            
-            {/* Content */}
-            <div className={`w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border border-border/50 shadow-sm transition-colors duration-300 ${
-              isCurrent ? 'bg-white border-primary/20 shadow-md' : 'bg-muted/30'
-            }`}>
-              <div className="flex items-center justify-between space-x-2">
-                <div className={`font-semibold ${isCurrent ? 'text-primary' : isCompleted ? 'text-ink' : 'text-muted-foreground'}`}>
-                  {step.label}
-                </div>
+          return (
+            <li
+              key={step.id}
+              aria-current={isCurrent ? "step" : undefined}
+              className={cn(
+                "flex min-w-0 items-center gap-3 rounded-lg border p-3 sm:block sm:min-h-32",
+                isCurrent && "border-coffee/35 bg-coffee/10",
+                isCompleted && "border-success/25 bg-success/5",
+                !isCurrent &&
+                  !isCompleted &&
+                  "border-border/60 bg-muted/20 text-muted-foreground"
+              )}
+            >
+              <div
+                className={cn(
+                  "flex h-9 w-9 shrink-0 items-center justify-center rounded-full sm:mb-3",
+                  isCurrent && "bg-coffee text-paper",
+                  isCompleted && "bg-success text-white",
+                  !isCurrent && !isCompleted && "bg-muted text-muted-foreground"
+                )}
+              >
+                <Icon className="h-4 w-4" aria-hidden="true" />
               </div>
-            </div>
-          </div>
-        )
-      })}
+              <div className="min-w-0">
+                <p
+                  className={cn(
+                    "text-sm font-semibold",
+                    (isCurrent || isCompleted) && "text-ink"
+                  )}
+                >
+                  {step.label}
+                </p>
+                <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                  {step.description}
+                </p>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
     </div>
-  )
+  );
 }

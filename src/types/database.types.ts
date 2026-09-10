@@ -19,6 +19,28 @@ export interface Database {
         }
         Returns: unknown
       }
+      transition_order_status: {
+        Args: {
+          p_order_id: string
+          p_expected_status: Database['public']['Tables']['orders']['Row']['status']
+          p_new_status: Database['public']['Tables']['orders']['Row']['status']
+          p_reason?: string | null
+          p_metadata?: Json
+        }
+        Returns: Json
+      }
+      create_cashier_order: {
+        Args: {
+          p_idempotency_key: string
+          p_items: Json
+          p_table_id?: string | null
+          p_customer_name?: string | null
+          p_notes?: string | null
+          p_fulfillment_type?: Database['public']['Tables']['orders']['Row']['fulfillment_type']
+          p_dining_session_id?: string | null
+        }
+        Returns: Json
+      }
       record_order_payment: {
         Args: {
           p_order_id: string
@@ -38,6 +60,40 @@ export interface Database {
           p_canceled_at?: string | null
         }
         Returns: unknown
+      }
+      confirm_cashier_payment: {
+        Args: {
+          p_idempotency_key: string
+          p_method: 'CASH' | 'QRIS'
+          p_order_id?: string | null
+          p_dining_session_id?: string | null
+          p_tendered_amount?: number | null
+          p_cashier_metadata?: Json
+        }
+        Returns: Json
+      }
+      complete_dining_session: {
+        Args: {
+          p_dining_session_id: string
+          p_idempotency_key: string
+        }
+        Returns: Json
+      }
+      record_receipt_print_attempt: {
+        Args: {
+          p_receipt_id: string
+          p_status: 'REQUESTED' | 'SUCCEEDED' | 'FAILED'
+          p_printer_metadata?: Json | null
+          p_error_message?: string | null
+        }
+        Returns: string
+      }
+      get_dining_session_summary: {
+        Args: {
+          p_table_slug: string
+          p_session_token: string
+        }
+        Returns: Json
       }
       start_or_resume_dining_session: {
         Args: {
@@ -66,6 +122,13 @@ export interface Database {
           p_end: string
         }
         Returns: unknown
+      }
+      get_realized_revenue: {
+        Args: {
+          p_start: string
+          p_end: string
+        }
+        Returns: number
       }
     }
     Views: {
@@ -211,7 +274,7 @@ export interface Database {
         Row: {
           id: string
           order_number: string
-          order_type: 'DINE_IN' | 'ONLINE'
+          order_type: 'DINE_IN' | 'TAKEAWAY' | 'ONLINE'
           fulfillment_type: 'TABLE' | 'PICKUP' | 'DELIVERY'
           customer_id: string | null
           table_id: string | null
@@ -222,7 +285,7 @@ export interface Database {
           shipping_fee: number
           discount: number
           total: number
-          status: 'PENDING_PAYMENT' | 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'READY' | 'COMPLETED' | 'CANCELLED'
+          status: 'NEW' | 'PREPARING' | 'READY' | 'SERVED' | 'CANCELLED' | 'PENDING_PAYMENT' | 'PENDING' | 'CONFIRMED' | 'COMPLETED'
           customer_name: string | null
           customer_phone: string | null
           shipping_recipient: string | null
@@ -232,6 +295,9 @@ export interface Database {
           shipping_postal_code: string | null
           notes: string | null
           client_request_id: string | null
+          request_fingerprint: string | null
+          source: 'CUSTOMER' | 'CASHIER' | 'LEGACY'
+          created_by: string | null
           created_at: string
           updated_at: string
           cancelled_at: string | null
@@ -319,13 +385,37 @@ export interface Database {
         Row: {
           id: string
           table_id: string
+          session_token: string | null
           status: 'open' | 'closed'
+          started_at: string
+          closed_at: string | null
+          created_at: string
+          updated_at: string
+          completed_by: string | null
+          completion_idempotency_key: string | null
+          total_snapshot: number | null
+          receipt_snapshot: Json | null
+          completed_at: string | null
         }
+        Insert: Omit<Database['public']['Tables']['dining_sessions']['Row'], 'id' | 'status' | 'started_at' | 'created_at' | 'updated_at' | 'completed_by' | 'completion_idempotency_key' | 'total_snapshot' | 'receipt_snapshot' | 'completed_at'> & {
+          id?: string
+          status?: 'open' | 'closed'
+          started_at?: string
+          created_at?: string
+          updated_at?: string
+          completed_by?: string | null
+          completion_idempotency_key?: string | null
+          total_snapshot?: number | null
+          receipt_snapshot?: Json | null
+          completed_at?: string | null
+        }
+        Update: Partial<Database['public']['Tables']['dining_sessions']['Insert']>
       }
       payments: {
         Row: {
           id: string
-          order_id: string
+          order_id: string | null
+          dining_session_id: string | null
           provider: string
           provider_transaction_id: string | null
           status: 'PENDING' | 'PAID' | 'FAILED' | 'EXPIRED' | 'CANCELED' | 'REFUNDED'
@@ -340,11 +430,48 @@ export interface Database {
           payment_method: string | null
           payment_channel: string | null
           canceled_at: string | null
+          cashier_id: string | null
+          cashier_metadata: Json | null
+          idempotency_key: string | null
+          payment_origin: 'XENDIT' | 'PROVIDER' | 'LEGACY_MANUAL' | 'CASHIER'
+          confirmed_by: string | null
+          confirmed_at: string | null
+          cash_received: number | null
+          change_amount: number | null
           created_at: string
           updated_at: string
         }
         Insert: Omit<Database['public']['Tables']['payments']['Row'], 'id' | 'created_at' | 'updated_at'> & { id?: string, created_at?: string, updated_at?: string }
         Update: Partial<Database['public']['Tables']['payments']['Insert']>
+      }
+      receipts: {
+        Row: {
+          id: string
+          payment_id: string
+          order_id: string | null
+          dining_session_id: string | null
+          receipt_number: string
+          snapshot: Json
+          issued_by: string
+          issued_at: string
+          created_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['receipts']['Row'], 'id' | 'issued_at' | 'created_at'> & { id?: string, issued_at?: string, created_at?: string }
+        Update: Partial<Database['public']['Tables']['receipts']['Insert']>
+      }
+      receipt_print_attempts: {
+        Row: {
+          id: string
+          receipt_id: string
+          requested_by: string
+          status: 'REQUESTED' | 'SUCCEEDED' | 'FAILED'
+          printer_metadata: Json | null
+          error_message: string | null
+          attempted_at: string
+          created_at: string
+        }
+        Insert: Omit<Database['public']['Tables']['receipt_print_attempts']['Row'], 'id' | 'status' | 'attempted_at' | 'created_at'> & { id?: string, status?: 'REQUESTED' | 'SUCCEEDED' | 'FAILED', attempted_at?: string, created_at?: string }
+        Update: Partial<Database['public']['Tables']['receipt_print_attempts']['Insert']>
       }
       payment_webhook_events: {
         Row: {

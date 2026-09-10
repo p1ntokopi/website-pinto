@@ -23,7 +23,10 @@ const GRANULARITIES = [
 
 type Granularity = (typeof GRANULARITIES)[number]['key']
 
-function buildQuery(period: { key: string; range: { start: string; end: string } }, g: string) {
+function buildQuery(
+  period: { key: string; range: { start: string; end: string } },
+  g: string,
+) {
   const search = new URLSearchParams({ p: period.key, g })
   if (period.key === 'CUSTOM') {
     search.set('from', period.range.start)
@@ -45,9 +48,15 @@ export default async function OwnerSalesPage({
   const { data: summary, error } = await getFinancialSummary(period.range)
 
   const revenuePoints =
-    summary?.revenue_series.map((point) => ({ day: point.day, value: point.revenue })) ?? []
+    summary?.revenue_series.map((point) => ({
+      day: point.day,
+      value: point.revenue,
+    })) ?? []
   const orderPoints =
-    summary?.orders_series.map((point) => ({ day: point.day, value: point.order_count })) ?? []
+    summary?.orders_series.map((point) => ({
+      day: point.day,
+      value: point.order_count,
+    })) ?? []
 
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-8">
@@ -58,13 +67,17 @@ export default async function OwnerSalesPage({
         <h1 className="font-display text-3xl font-bold tracking-tight text-ink">
           Analitik Penjualan
         </h1>
-        <p className="text-sm text-muted-text">Periode {formatRangeLabel(period.range)}</p>
+        <p className="text-sm text-muted-text">
+          Periode {formatRangeLabel(period.range)}
+        </p>
       </div>
 
       <div className="space-y-3">
         <PeriodFilter currentKey={period.key} />
         <div className="flex items-center gap-1.5">
-          <span className="text-xs font-medium text-muted-text">Granulasi:</span>
+          <span className="text-xs font-medium text-muted-text">
+            Granulasi:
+          </span>
           {GRANULARITIES.map((option) => (
             <Link
               key={option.key}
@@ -85,7 +98,10 @@ export default async function OwnerSalesPage({
 
       {error ? (
         <div className="flex items-start gap-2 rounded-sm border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
-          <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <TriangleAlert
+            className="mt-0.5 h-4 w-4 shrink-0"
+            aria-hidden="true"
+          />
           {error}
         </div>
       ) : summary ? (
@@ -134,15 +150,20 @@ export default async function OwnerSalesPage({
                   return (
                     <div key={item.category}>
                       <div className="flex items-baseline justify-between text-xs">
-                        <span className="font-medium text-ink">{item.category}</span>
+                        <span className="font-medium text-ink">
+                          {item.category}
+                        </span>
                         <span className="text-muted-text">
-                          {formatIDR(item.revenue)} · {formatNumberID(item.units)} item
+                          {formatIDR(item.revenue)} ·{' '}
+                          {formatNumberID(item.units)} item
                         </span>
                       </div>
                       <div className="mt-1 h-2 rounded-full bg-muted">
                         <div
                           className="h-full rounded-full bg-coffee/70"
-                          style={{ width: `${Math.max((item.revenue / max) * 100, 3)}%` }}
+                          style={{
+                            width: `${Math.max((item.revenue / max) * 100, 3)}%`,
+                          }}
                         />
                       </div>
                     </div>
@@ -163,13 +184,25 @@ export default async function OwnerSalesPage({
             ) : (
               <div className="grid grid-cols-2 divide-y divide-border-custom/60 rounded-sm border border-border-custom bg-card sm:grid-cols-4 sm:divide-x sm:divide-y-0">
                 {[
-                  { label: 'Total Penjualan', value: formatIDR(summary.beans.revenue) },
-                  { label: 'Unit Terjual', value: formatNumberID(summary.beans.units) },
+                  {
+                    label: 'Total Penjualan',
+                    value: formatIDR(summary.beans.revenue),
+                  },
+                  {
+                    label: 'Unit Terjual',
+                    value: formatNumberID(summary.beans.units),
+                  },
                   {
                     label: 'Harga Rata-rata',
-                    value: summary.beans.avg_price ? formatIDR(summary.beans.avg_price) : '—',
+                    value: summary.beans.avg_price
+                      ? formatIDR(summary.beans.avg_price)
+                      : '—',
                   },
-                  { label: 'Produk Terlaris', value: summary.beans.top_product ?? '—', small: true },
+                  {
+                    label: 'Produk Terlaris',
+                    value: summary.beans.top_product ?? '—',
+                    small: true,
+                  },
                 ].map((item) => (
                   <div key={item.label} className="px-4 py-4">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-text">
@@ -190,8 +223,10 @@ export default async function OwnerSalesPage({
           </section>
 
           <p className="text-xs leading-relaxed text-muted-text">
-            <span className="font-semibold text-ink">Catatan:</span> Pendapatan produk dihitung
-            dari subtotal item (sebelum diskon order) untuk order lunas pada periode ini, sehingga
+            <span className="font-semibold text-ink">Catatan:</span> Pendapatan
+            produk dihitung dari subtotal item (sebelum diskon order) untuk
+            order yang tercakup pembayaran PAID pada periode ini, termasuk satu
+            tagihan sesi kasir tanpa menggandakan pembayarannya. Karena itu
             total produk dapat sedikit berbeda dari Net Sales.
           </p>
         </>

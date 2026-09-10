@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { jakartaDayBounds } from '@/lib/finance/period'
 import { toCsv } from '@/lib/finance/csv'
 import { aggregateSeries } from '@/lib/finance/series'
 import {
@@ -6,6 +7,8 @@ import {
   computeNetSales,
   computeEstimatedSurplus,
   computeAov,
+  computeRealizedRevenue,
+  canonicalizeRealizedPayments,
   type FinancialSummary,
 } from '@/lib/finance/types'
 
@@ -108,7 +111,9 @@ describe('financial formulas', () => {
   it('rejects malformed payloads', () => {
     expect(() => parseFinancialSummary(null)).toThrow()
     expect(() => parseFinancialSummary({ foo: 1 })).toThrow()
-    expect(() => parseFinancialSummary({ ...baseSummary, revenue_series: undefined })).toThrow()
+    expect(() =>
+      parseFinancialSummary({ ...baseSummary, revenue_series: undefined }),
+    ).toThrow()
   })
 
   it('computes net sales as gross - discount - refund + adjustments', () => {
@@ -121,6 +126,137 @@ describe('financial formulas', () => {
 
   it('computes AOV from net sales and paid orders', () => {
     expect(computeAov(baseSummary)).toBe(93_500)
-    expect(computeAov({ ...baseSummary, sales: { ...baseSummary.sales, paid_order_count: 0 } })).toBe(0)
+    expect(
+      computeAov({
+        ...baseSummary,
+        sales: { ...baseSummary.sales, paid_order_count: 0 },
+      }),
+    ).toBe(0)
+  })
+})
+
+describe('Jakarta day bounds', () => {
+  it('maps a Jakarta calendar day to an exclusive UTC range', () => {
+    expect(jakartaDayBounds('2026-09-10')).toEqual({
+      start: '2026-09-09T17:00:00.000Z',
+      end: '2026-09-10T17:00:00.000Z',
+    })
+  })
+})
+
+describe('realized payment revenue', () => {
+  it('counts historical order payments and session bills once each', () => {
+    expect(
+      computeRealizedRevenue([
+        {
+          id: 'pay-order',
+          order_id: 'order-1',
+          status: 'PAID',
+          amount: 45_000,
+        },
+        {
+          id: 'pay-session',
+          dining_session_id: 'session-1',
+          status: 'PAID',
+          amount: 120_000,
+        },
+      ]),
+    ).toBe(165_000)
+  })
+
+  it('does not multiply a session payment repeated by an order join', () => {
+    const sessionPayment = {
+      id: 'pay-session',
+      dining_session_id: 'session-1',
+      status: 'PAID',
+      amount: 120_000,
+    }
+
+    expect(
+      computeRealizedRevenue([sessionPayment, sessionPayment, sessionPayment]),
+    ).toBe(120_000)
+  })
+
+  it('chooses the latest PAID row for each target with an ID tie-breaker', () => {
+    const canonical = canonicalizeRealizedPayments([
+      {
+        id: 'payment-a',
+        order_id: 'order-1',
+        status: 'PAID',
+        amount: 10_000,
+        paid_at: '2026-09-10T10:00:00.000Z',
+      },
+      {
+        id: 'payment-b',
+        order_id: 'order-1',
+        status: 'PAID',
+        amount: 20_000,
+        paid_at: '2026-09-10T11:00:00.000Z',
+      },
+      {
+        id: 'payment-c',
+        dining_session_id: 'session-1',
+        status: 'PAID',
+        amount: 30_000,
+        created_at: '2026-09-10T12:00:00.000Z',
+      },
+      {
+        id: 'payment-d',
+        dining_session_id: 'session-1',
+        status: 'PAID',
+        amount: 40_000,
+        created_at: '2026-09-10T12:00:00.000Z',
+      },
+    ])
+
+    expect(canonical.map((payment) => payment.id).sort()).toEqual([
+      'payment-b',
+      'payment-d',
+    ])
+    expect(computeRealizedRevenue(canonical)).toBe(60_000)
+  })
+
+  it('lets a session bill suppress direct payments for its underlying orders', () => {
+    expect(
+      computeRealizedRevenue(
+        [
+          {
+            id: 'direct-order-payment',
+            order_id: 'order-1',
+            status: 'PAID',
+            amount: 45_000,
+          },
+          {
+            id: 'session-bill',
+            dining_session_id: 'session-1',
+            status: 'PAID',
+            amount: 120_000,
+          },
+        ],
+        [{ id: 'order-1', dining_session_id: 'session-1' }],
+      ),
+    ).toBe(120_000)
+  })
+
+  it('ignores PAID rows without an order or session target', () => {
+    expect(
+      computeRealizedRevenue([
+        { id: 'targetless', status: 'PAID', amount: 999_999 },
+      ]),
+    ).toBe(0)
+  })
+
+  it('ignores unrealized payment attempts', () => {
+    expect(
+      computeRealizedRevenue([
+        {
+          id: 'pending',
+          order_id: 'order-1',
+          status: 'PENDING',
+          amount: 45_000,
+        },
+        { id: 'failed', order_id: 'order-2', status: 'FAILED', amount: 75_000 },
+      ]),
+    ).toBe(0)
   })
 })

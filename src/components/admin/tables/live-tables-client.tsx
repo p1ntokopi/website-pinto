@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Users, Receipt, Clock, Ban } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -30,7 +30,6 @@ interface LiveTablesClientProps {
 }
 
 export function LiveTablesClient({ initialTables }: LiveTablesClientProps) {
-  const [tables] = useState<LiveTableData[]>(initialTables)
   const router = useRouter()
 
   // Poll the server for fresh data every 30 seconds so occupancy
@@ -57,7 +56,7 @@ export function LiveTablesClient({ initialTables }: LiveTablesClientProps) {
 
   return (
     <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-5">
-      {tables.map((table) => {
+      {initialTables.map((table) => {
         const isOccupied = !!table.session
         const orderCount = table.session?.orders.length || 0
         const totalAmount =

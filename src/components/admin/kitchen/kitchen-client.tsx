@@ -1,37 +1,82 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { Database } from '@/types/database.types'
-import { OrderStatus } from '@/lib/orders/status-machine'
+import {
+  normalizeOrderStatus,
+  type CanonicalOrderStatus,
+} from '@/lib/orders/status-machine'
 import { KitchenOrder } from '@/lib/orders/kitchen-types'
 import { KitchenCard } from './kitchen-card'
-import { Maximize, Minimize, Wifi, WifiOff } from 'lucide-react'
+import { Maximize, Minimize, Wifi, WifiOff, TriangleAlert } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { playNewOrderSound } from '@/lib/notifications/sound'
 import { getNotificationsEnabled, getSoundEnabled } from '@/lib/notifications/preferences'
-import { PrinterService } from '@/lib/printer/printer-service'
-import { buildReceiptFromOrder } from '@/lib/receipt/receipt-service'
-import type { ReceiptBusiness, ReceiptOrderInput } from '@/lib/receipt/receipt-types'
 
-type AutoPrintBusiness = Pick<
-  ReceiptBusiness,
-  'name' | 'tagline' | 'address' | 'website' | 'wifiName' | 'wifiPassword' | 'footerMessage'
->
+// Legacy statuses that still mean "new" so old rows keep flowing to the KDS.
+const ACTIVE_STATUSES = [
+  'NEW',
+  'PENDING_PAYMENT',
+  'PENDING',
+  'CONFIRMED',
+  'PREPARING',
+  'READY',
+] as const
+
+const KDS_SELECT = `
+  id, order_number, status, created_at, notes,
+  table:tables(table_number),
+  items:order_items(
+    id, quantity, product_name_snapshot, variant_name_snapshot, notes,
+    options:order_item_options(option_value_snapshot)
+  )
+`
+
+function canonicalOrderStatus(status: string): CanonicalOrderStatus {
+  return normalizeOrderStatus(status as Parameters<typeof normalizeOrderStatus>[0])
+}
+
+function isActiveForKitchen(status: string): boolean {
+  return (ACTIVE_STATUSES as readonly string[]).includes(status)
+}
+
+// Terminal (or customer-side-only) statuses leave the board.
+function isTerminalForKitchen(status: string): boolean {
+  const canonical = canonicalOrderStatus(status)
+  return canonical === 'SERVED' || canonical === 'CANCELLED'
+}
 
 export function KitchenClient({
   initialOrders,
-  business,
+  initialError,
 }: {
   initialOrders: KitchenOrder[]
-  business: AutoPrintBusiness
+  initialError?: string | null
 }) {
   const [orders, setOrders] = useState<KitchenOrder[]>(initialOrders)
+  const [loadError, setLoadError] = useState<string | null>(initialError ?? null)
   const [isConnected, setIsConnected] = useState(true)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [currentTime, setCurrentTime] = useState('')
-  // Payments already auto-printed in this tab session (dedupe realtime replays).
-  const printedReceipts = useRef<Set<string>>(new Set())
+  const wasConnectedRef = useRef(true)
+  const lastInitialSyncRef = useRef(JSON.stringify(initialOrders))
+  const supabaseRef = useRef<ReturnType<typeof createBrowserClient<Database>> | null>(null)
+
+  // Keep server-rendered rows in sync after router.refresh() on the page.
+  useEffect(() => {
+    const next = JSON.stringify(initialOrders)
+    if (next !== lastInitialSyncRef.current) {
+      lastInitialSyncRef.current = next
+      setOrders((prev) => {
+        const byId = new Map(prev.map((order) => [order.id, order]))
+        for (const order of initialOrders) byId.set(order.id, order)
+        return [...byId.values()].filter((order) =>
+          isActiveForKitchen(order.status)
+        )
+      })
+    }
+  }, [initialOrders])
 
   // Clock
   useEffect(() => {
@@ -56,102 +101,33 @@ export function KitchenClient({
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
   }, [])
 
+  const refreshOrders = useCallback(async (
+    supabase: ReturnType<typeof createBrowserClient<Database>> | null
+  ) => {
+    if (!supabase) return
+    const { data, error } = await supabase
+      .from('orders')
+      .select(KDS_SELECT)
+      .in('status', [...ACTIVE_STATUSES])
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      setLoadError('Gagal memuat antrean dapur. Menampilkan data terakhir.')
+      return
+    }
+
+    setLoadError(null)
+    const fetched = (data as unknown as KitchenOrder[]) || []
+    setOrders(fetched)
+  }, [])
+
   // Realtime
   useEffect(() => {
     const supabase = createBrowserClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
-
-    // Auto-print: receipt is printed only when the order reaches COMPLETED
-    // (and has been paid). Deduped per order per tab session.
-    const maybeAutoPrintReceipt = async (orderId: string) => {
-      if (printedReceipts.current.has(orderId)) return
-      if (!PrinterService.getConfig().autoReceiptPrint) return
-      printedReceipts.current.add(orderId)
-
-      try {
-        const { data: paid } = await supabase
-          .from('payments')
-          .select('id')
-          .eq('order_id', orderId)
-          .eq('status', 'PAID')
-          .limit(1)
-        if (!paid || paid.length === 0) return
-
-        const { data } = await supabase
-          .from('orders')
-          .select(
-            `order_number, subtotal, tax, discount, total, notes, created_at,
-             table:tables(table_number),
-             items:order_items(
-               quantity, product_name_snapshot, variant_name_snapshot, unit_price, subtotal, notes,
-               options:order_item_options(option_value_snapshot, price_adjustment)
-             )`,
-          )
-          .eq('id', orderId)
-          .single()
-        // Hand-maintained database.types.ts has no Relationships metadata,
-        // so embed results are cast explicitly.
-        const orderRow = data as unknown as {
-          order_number: string
-          subtotal: number
-          tax: number | null
-          discount: number | null
-          total: number
-          notes: string | null
-          created_at: string
-          table: { table_number: string } | { table_number: string }[] | null
-          items:
-            | {
-                quantity: number
-                product_name_snapshot: string
-                variant_name_snapshot: string | null
-                unit_price: number
-                subtotal: number
-                notes: string | null
-                options: { option_value_snapshot: string; price_adjustment: number }[] | null
-              }[]
-            | null
-        } | null
-        if (!orderRow) return
-
-        const table = Array.isArray(orderRow.table)
-          ? orderRow.table[0] ?? null
-          : orderRow.table
-        const receiptData = buildReceiptFromOrder(
-          {
-            order_number: orderRow.order_number,
-            subtotal: orderRow.subtotal,
-            tax: orderRow.tax ?? 0,
-            discount: orderRow.discount ?? 0,
-            total: orderRow.total,
-            notes: orderRow.notes ?? null,
-            created_at: orderRow.created_at,
-            table: table ? { table_number: table.table_number } : null,
-            items: (orderRow.items ?? []).map((item) => ({
-              quantity: item.quantity,
-              product_name_snapshot: item.product_name_snapshot,
-              variant_name_snapshot: item.variant_name_snapshot ?? null,
-              unit_price: item.unit_price,
-              subtotal: item.subtotal,
-              notes: item.notes ?? null,
-              options: (item.options ?? []).map((opt) => ({
-                option_value_snapshot: opt.option_value_snapshot,
-                price_adjustment: opt.price_adjustment,
-              })),
-            })),
-          } as ReceiptOrderInput,
-          { method: null, channel: null, status: 'PAID' },
-          business,
-        )
-        await PrinterService.printReceipt(receiptData, {
-          paperWidth: PrinterService.getConfig().paperWidth,
-        })
-      } catch (err) {
-        console.error('Auto-print receipt failed:', err)
-      }
-    }
+    supabaseRef.current = supabase
 
     const channel = supabase.channel('kitchen_orders')
       .on(
@@ -161,20 +137,19 @@ export function KitchenClient({
           if (payload.eventType === 'INSERT') {
             const { data } = await supabase
               .from('orders')
-              .select(`
-                id, order_number, status, created_at, notes,
-                table:tables(table_number),
-                items:order_items(
-                  id, quantity, product_name_snapshot, variant_name_snapshot, notes,
-                  options:order_item_options(option_value_snapshot)
-                )
-              `)
+              .select(KDS_SELECT)
               .eq('id', payload.new.id)
               .single()
 
             const order = data as unknown as KitchenOrder | null
-            if (order && ['PENDING', 'CONFIRMED', 'PREPARING', 'READY'].includes(order.status)) {
-              setOrders(prev => [...prev, order])
+            if (order && isActiveForKitchen(order.status)) {
+              // Upsert by ID: duplicate Realtime deliveries must not double the card.
+              setOrders(prev => {
+                const exists = prev.some(o => o.id === order.id)
+                return exists
+                  ? prev.map(o => (o.id === order.id ? order : o))
+                  : [...prev, order]
+              })
               // Play the synthesized chime when notifications are enabled.
               if (getNotificationsEnabled() && getSoundEnabled()) {
                 playNewOrderSound()
@@ -182,10 +157,7 @@ export function KitchenClient({
             }
           } else if (payload.eventType === 'UPDATE') {
             const newStatus = payload.new.status
-            if (newStatus === 'COMPLETED') {
-              setOrders(prev => prev.filter(o => o.id !== payload.new.id))
-              void maybeAutoPrintReceipt(payload.new.id)
-            } else if (newStatus === 'CANCELLED') {
+            if (isTerminalForKitchen(newStatus)) {
               setOrders(prev => prev.filter(o => o.id !== payload.new.id))
             } else {
               setOrders(prev => prev.map(o =>
@@ -198,26 +170,53 @@ export function KitchenClient({
         }
       )
       .subscribe((status) => {
-        setIsConnected(status === 'SUBSCRIBED')
+        const connected = status === 'SUBSCRIBED'
+        setIsConnected(connected)
+        // Reconcile any events missed while the channel was down.
+        if (connected && !wasConnectedRef.current) {
+          void refreshOrders(supabase)
+        }
+        wasConnectedRef.current = connected
       })
 
+    const handleReconcile = () => {
+      if (document.visibilityState === 'visible' && !wasConnectedRef.current) {
+        void refreshOrders(supabase)
+      }
+    }
+    document.addEventListener('visibilitychange', handleReconcile)
+    window.addEventListener('focus', handleReconcile)
+
     return () => {
+      document.removeEventListener('visibilitychange', handleReconcile)
+      window.removeEventListener('focus', handleReconcile)
       supabase.removeChannel(channel)
     }
-  }, [business])
+  }, [refreshOrders])
 
-  const handleOptimisticUpdate = (orderId: string, newStatus: OrderStatus) => {
-    if (['COMPLETED', 'CANCELLED'].includes(newStatus)) {
+  const handleOptimisticUpdate = (
+    orderId: string,
+    newStatus: CanonicalOrderStatus
+  ) => {
+    if (isTerminalForKitchen(newStatus)) {
       setOrders(prev => prev.filter(o => o.id !== orderId))
     } else {
-      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o))
+      setOrders(prev => prev.map(o =>
+        o.id === orderId ? { ...o, status: newStatus } : o
+      ))
     }
   }
 
-  // Filter columns
-  const newOrders = orders.filter(o => o.status === 'PENDING' || o.status === 'CONFIRMED')
-  const preparingOrders = orders.filter(o => o.status === 'PREPARING')
-  const readyOrders = orders.filter(o => o.status === 'READY')
+  // Column assignment uses the canonical status so legacy rows land correctly.
+  const newOrders = orders.filter(o =>
+    canonicalOrderStatus(o.status) === 'NEW'
+  )
+  const preparingOrders = orders.filter(o =>
+    canonicalOrderStatus(o.status) === 'PREPARING'
+  )
+  const readyOrders = orders.filter(o =>
+    canonicalOrderStatus(o.status) === 'READY'
+  )
 
   return (
     <>
@@ -267,6 +266,17 @@ export function KitchenClient({
       </header>
 
       <div className="flex-1 grid grid-cols-1 gap-4 overflow-hidden bg-[#16140F] p-4 md:grid-cols-3 md:gap-6 md:p-6">
+        {loadError && (
+          <div className="md:col-span-3">
+            <p
+              role="status"
+              className="flex items-center gap-2 rounded-sm border border-[#C94C4C]/30 bg-[#C94C4C]/10 px-4 py-3 text-sm font-medium text-[#E0655F]"
+            >
+              <TriangleAlert className="h-4 w-4 shrink-0" aria-hidden="true" />
+              {loadError}
+            </p>
+          </div>
+        )}
         <div className="flex flex-col overflow-hidden rounded-lg border border-[#2C2923] bg-[#1A1814]">
           <div className="flex items-center justify-between border-b border-[#2C2923] bg-[#201D18] p-4">
             <h2 className="text-lg font-bold tracking-wide text-[#F7F5F0]">BARU / TERKONFIRMASI</h2>
@@ -276,7 +286,12 @@ export function KitchenClient({
           </div>
           <div className="flex-1 space-y-4 overflow-y-auto p-4">
             {newOrders.map(order => (
-              <KitchenCard key={order.id} order={order} onStatusChangeOptimistic={handleOptimisticUpdate} />
+              <KitchenCard
+                key={order.id}
+                order={order}
+                onStatusChangeOptimistic={handleOptimisticUpdate}
+                onRefreshRequested={() => void refreshOrders(supabaseRef.current)}
+              />
             ))}
             {newOrders.length === 0 && (
               <div className="flex h-full items-center justify-center text-lg font-medium text-[#6E665A]">
@@ -295,7 +310,12 @@ export function KitchenClient({
           </div>
           <div className="flex-1 space-y-4 overflow-y-auto p-4">
             {preparingOrders.map(order => (
-              <KitchenCard key={order.id} order={order} onStatusChangeOptimistic={handleOptimisticUpdate} />
+              <KitchenCard
+                key={order.id}
+                order={order}
+                onStatusChangeOptimistic={handleOptimisticUpdate}
+                onRefreshRequested={() => void refreshOrders(supabaseRef.current)}
+              />
             ))}
             {preparingOrders.length === 0 && (
               <div className="flex h-full items-center justify-center text-lg font-medium text-[#6E665A]">
@@ -314,7 +334,12 @@ export function KitchenClient({
           </div>
           <div className="flex-1 space-y-4 overflow-y-auto p-4">
             {readyOrders.map(order => (
-              <KitchenCard key={order.id} order={order} onStatusChangeOptimistic={handleOptimisticUpdate} />
+              <KitchenCard
+                key={order.id}
+                order={order}
+                onStatusChangeOptimistic={handleOptimisticUpdate}
+                onRefreshRequested={() => void refreshOrders(supabaseRef.current)}
+              />
             ))}
             {readyOrders.length === 0 && (
               <div className="flex h-full items-center justify-center text-lg font-medium text-[#6E665A]">

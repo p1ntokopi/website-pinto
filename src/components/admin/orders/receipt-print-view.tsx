@@ -1,17 +1,18 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Bluetooth, Loader2, Printer, RotateCcw, TriangleAlert } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { formatReceiptText } from '@/lib/receipt/receipt-service'
+import type { ReceiptData, ThermalPaperWidth } from '@/lib/receipt/receipt-types'
 import { PrinterService } from '@/lib/printer/printer-service'
 import type { PrinterStatus } from '@/lib/printer/printer-types'
 import {
   ReceiptPrinter,
   type ReceiptPrinterStage,
 } from '@/components/receipt/receipt-printer'
-import type { ReceiptData, ThermalPaperWidth } from '@/lib/receipt/receipt-types'
+import { recordReceiptPrintAttempt } from '@/app/admin/(dashboard)/orders/actions'
 
 const PAPER_OPTIONS: { value: ThermalPaperWidth; label: string }[] = [
   { value: 58, label: '58mm' },
@@ -40,7 +41,15 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-export function ReceiptPrintView({ orderId, receiptData }: { orderId: string; receiptData: ReceiptData }) {
+export function ReceiptPrintView({
+  receiptId,
+  returnHref,
+  receiptData,
+}: {
+  receiptId?: string
+  returnHref: string
+  receiptData: ReceiptData
+}) {
   const [paperWidth, setPaperWidth] = useState<ThermalPaperWidth>(58)
   const [providerId, setProviderId] = useState<string>('web-print')
   const [status, setStatus] = useState<PrinterStatus>('disconnected')
@@ -49,6 +58,41 @@ export function ReceiptPrintView({ orderId, receiptData }: { orderId: string; re
   const [busy, setBusy] = useState(false)
   const [connecting, setConnecting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [auditWarning, setAuditWarning] = useState<string | null>(null)
+  const autoPrintStartedRef = useRef(false)
+  const paperWidthRef = useRef(paperWidth)
+
+  useEffect(() => {
+    paperWidthRef.current = paperWidth
+  }, [paperWidth])
+
+  const recordAttempt = useCallback(
+    async (
+      attemptStatus: 'REQUESTED' | 'SUCCEEDED' | 'FAILED',
+      provider: string,
+      attemptError?: string | null,
+    ) => {
+      if (!receiptId) return true
+      const result = await recordReceiptPrintAttempt(
+        receiptId,
+        attemptStatus,
+        { provider, paperWidth: paperWidthRef.current, source: 'receipt_print_view' },
+        attemptError,
+      )
+      if (result.error) {
+        setAuditWarning(result.error)
+        return false
+      }
+      setAuditWarning(null)
+      return true
+    },
+    [receiptId],
+  )
+
+  const requestBrowserPrint = useCallback(async () => {
+    await recordAttempt('REQUESTED', 'web-print')
+    window.print()
+  }, [recordAttempt])
 
   const isEscpos = providerId === 'escpos-bluetooth'
 
@@ -77,8 +121,11 @@ export function ReceiptPrintView({ orderId, receiptData }: { orderId: string; re
       if (cancelled) return
       setProviderId(config.activeProviderId)
       setPaperWidth(config.paperWidth)
-      if (config.activeProviderId === 'web-print') {
-        autoPrintTimer = setTimeout(() => window.print(), 500)
+      if (config.activeProviderId === 'web-print' && !autoPrintStartedRef.current) {
+        autoPrintStartedRef.current = true
+        autoPrintTimer = setTimeout(() => {
+          if (!cancelled) void requestBrowserPrint()
+        }, 500)
       }
     }
     void init()
@@ -87,7 +134,7 @@ export function ReceiptPrintView({ orderId, receiptData }: { orderId: string; re
       cancelled = true
       if (autoPrintTimer) clearTimeout(autoPrintTimer)
     }
-  }, [refreshStatus])
+  }, [refreshStatus, requestBrowserPrint])
 
   async function handleQuickConnect() {
     setConnecting(true)
@@ -105,12 +152,14 @@ export function ReceiptPrintView({ orderId, receiptData }: { orderId: string; re
   async function handlePrint() {
     setError(null)
     if (!isEscpos) {
-      window.print()
+      await requestBrowserPrint()
       return
     }
 
     setBusy(true)
+    let requestedRecorded = false
     try {
+      requestedRecorded = await recordAttempt('REQUESTED', 'escpos-bluetooth')
       if (status !== 'connected') {
         setStage('processing')
         setConnecting(true)
@@ -120,32 +169,32 @@ export function ReceiptPrintView({ orderId, receiptData }: { orderId: string; re
       }
 
       setStage('printing')
-      let printError: unknown = null
-      const printPromise = PrinterService.printReceipt(receiptData, { paperWidth }).catch(
-        (err: unknown) => {
-          printError = err
-        },
+      const printResultPromise = PrinterService.printReceipt(receiptData, { paperWidth }).then(
+        () => ({ ok: true as const }),
+        (printError: unknown) => ({ ok: false as const, printError }),
       )
 
-      // The machine feeds while the printer does the real work.
-      await sleep(FEED_DURATION_MS)
-      setStage('tearing')
-      await sleep(TEAR_DURATION_MS)
+      // Keep the physical animation and printer write in sync. A successful
+      // receipt state requires both to complete; browser print never enters it.
+      const [printResult] = await Promise.all([
+        printResultPromise,
+        (async () => {
+          await sleep(FEED_DURATION_MS)
+          setStage('tearing')
+          await sleep(TEAR_DURATION_MS)
+        })(),
+      ])
       setStage('complete')
+      if (!printResult.ok) throw printResult.printError
       setHasPrinted(true)
-
-      await printPromise
-      if (printError) {
-        setError(
-          printError instanceof Error
-            ? printError.message
-            : 'Gagal mencetak struk. Periksa printer Anda.'
-        )
-        await refreshStatus()
-      }
+      await recordAttempt('SUCCEEDED', 'escpos-bluetooth')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Gagal mencetak struk.')
+      const message = err instanceof Error ? err.message : 'Gagal mencetak struk.'
+      setError(message)
       setStage('complete')
+      if (requestedRecorded) {
+        await recordAttempt('FAILED', 'escpos-bluetooth', message)
+      }
       await refreshStatus()
     } finally {
       setBusy(false)
@@ -177,7 +226,7 @@ export function ReceiptPrintView({ orderId, receiptData }: { orderId: string; re
         <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <Link
-              href={`/admin/orders/${orderId}`}
+              href={returnHref}
               className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-text transition-colors hover:text-ink focus-visible:ring-3 focus-visible:ring-ring/40 outline-none rounded-sm"
             >
               <RotateCcw className="h-4 w-4" />
@@ -230,7 +279,7 @@ export function ReceiptPrintView({ orderId, receiptData }: { orderId: string; re
             {isEscpos && status !== 'connected' && (
               <button
                 type="button"
-                onClick={() => window.print()}
+                onClick={() => void requestBrowserPrint()}
                 className="inline-flex min-h-11 items-center justify-center rounded-sm border border-border-custom bg-paper px-4 text-sm font-semibold text-ink transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
               >
                 Cetak via Browser
@@ -259,6 +308,17 @@ export function ReceiptPrintView({ orderId, receiptData }: { orderId: string; re
             >
               <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
               {error}
+            </p>
+          </div>
+        )}
+        {auditWarning && (
+          <div className="mx-auto mt-3 w-full max-w-3xl">
+            <p
+              role="status"
+              className="flex items-start gap-2 rounded-sm border border-warning/30 bg-warning/10 px-3 py-2 text-sm text-warning"
+            >
+              <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              Struk tetap dapat dicetak, tetapi {auditWarning.toLowerCase()}
             </p>
           </div>
         )}

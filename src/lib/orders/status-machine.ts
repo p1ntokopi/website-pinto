@@ -1,50 +1,59 @@
-export type OrderStatus = 'PENDING_PAYMENT' | 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'READY' | 'COMPLETED' | 'CANCELLED'
-export type UserRole = 'admin' | 'staff' | 'kitchen' | 'owner'
+export type CanonicalOrderStatus =
+  "NEW" | "PREPARING" | "READY" | "SERVED" | "CANCELLED";
+export type LegacyOrderStatus =
+  "PENDING_PAYMENT" | "PENDING" | "CONFIRMED" | "COMPLETED";
+export type OrderStatus = CanonicalOrderStatus | LegacyOrderStatus;
+export type UserRole = "admin" | "staff" | "kitchen" | "owner";
 
-// Owner is a superset of admin for every operational transition.
-function effectiveRole(role: UserRole): 'admin' | 'staff' | 'kitchen' {
-  return role === 'owner' ? 'admin' : role
+const LEGACY_STATUS_MAP: Record<LegacyOrderStatus, CanonicalOrderStatus> = {
+  PENDING_PAYMENT: "NEW",
+  PENDING: "NEW",
+  CONFIRMED: "NEW",
+  COMPLETED: "SERVED",
+};
+
+const TRANSITIONS: Record<CanonicalOrderStatus, CanonicalOrderStatus[]> = {
+  NEW: ["PREPARING", "CANCELLED"],
+  PREPARING: ["READY", "CANCELLED"],
+  READY: ["SERVED", "CANCELLED"],
+  SERVED: [],
+  CANCELLED: [],
+};
+
+const ROLE_TARGETS: Record<UserRole, CanonicalOrderStatus[]> = {
+  admin: ["PREPARING", "READY", "SERVED", "CANCELLED"],
+  owner: ["PREPARING", "READY", "SERVED", "CANCELLED"],
+  staff: ["PREPARING", "SERVED", "CANCELLED"],
+  kitchen: ["PREPARING", "READY"],
+};
+
+export function normalizeOrderStatus(
+  status: OrderStatus
+): CanonicalOrderStatus {
+  return (
+    LEGACY_STATUS_MAP[status as LegacyOrderStatus] ??
+    (status as CanonicalOrderStatus)
+  );
 }
 
-interface TransitionRule {
-  from: OrderStatus
-  to: OrderStatus
-  allowedRoles: UserRole[]
+export function canTransition(
+  currentStatus: OrderStatus,
+  targetStatus: OrderStatus,
+  role: UserRole
+): boolean {
+  const current = normalizeOrderStatus(currentStatus);
+  const target = normalizeOrderStatus(targetStatus);
+
+  if (current === target || !ROLE_TARGETS[role].includes(target)) return false;
+  return TRANSITIONS[current].includes(target);
 }
 
-const TRANSITIONS: TransitionRule[] = [
-  // PENDING_PAYMENT (order not paid yet)
-  { from: 'PENDING_PAYMENT', to: 'CANCELLED', allowedRoles: ['admin', 'staff'] },
-
-  // PENDING
-  { from: 'PENDING', to: 'CONFIRMED', allowedRoles: ['admin', 'staff'] },
-  { from: 'PENDING', to: 'CANCELLED', allowedRoles: ['admin', 'staff'] },
-  
-  // CONFIRMED
-  { from: 'CONFIRMED', to: 'PREPARING', allowedRoles: ['admin', 'kitchen'] },
-  { from: 'CONFIRMED', to: 'CANCELLED', allowedRoles: ['admin', 'staff'] }, // Sometimes staff need to cancel before prep starts
-  
-  // PREPARING
-  { from: 'PREPARING', to: 'READY', allowedRoles: ['admin', 'kitchen'] },
-  
-  // READY
-  { from: 'READY', to: 'COMPLETED', allowedRoles: ['admin', 'staff'] }
-]
-
-export function canTransition(currentStatus: OrderStatus, targetStatus: OrderStatus, role: UserRole): boolean {
-  if (currentStatus === targetStatus) return false
-
-  const transition = TRANSITIONS.find(
-    (t) => t.from === currentStatus && t.to === targetStatus
-  )
-
-  if (!transition) return false
-
-  return transition.allowedRoles.includes(effectiveRole(role))
-}
-
-export function getAvailableTransitions(currentStatus: OrderStatus, role: UserRole): OrderStatus[] {
-  return TRANSITIONS
-    .filter((t) => t.from === currentStatus && t.allowedRoles.includes(effectiveRole(role)))
-    .map((t) => t.to)
+export function getAvailableTransitions(
+  currentStatus: OrderStatus,
+  role: UserRole
+): CanonicalOrderStatus[] {
+  const current = normalizeOrderStatus(currentStatus);
+  return TRANSITIONS[current].filter((target) =>
+    ROLE_TARGETS[role].includes(target)
+  );
 }

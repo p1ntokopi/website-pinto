@@ -4,9 +4,13 @@ import {
   ThermalPaperWidth,
   ReceiptData,
   ReceiptBusiness,
+  ReceiptInput,
   ReceiptLineItem,
   ReceiptOrderInput,
   ReceiptPayment,
+  ReceiptPaymentDetails,
+  ReceiptPaymentMethod,
+  ReceiptSnapshotRecord,
   defaultReceiptBusiness,
 } from '@/lib/receipt/receipt-types'
 
@@ -26,12 +30,31 @@ export function formatReceiptDate(isoString: string): string {
   return `${pad(d.getDate())} ${MONTHS[d.getMonth()]} ${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
-export function displayPaymentMethod(payment: ReceiptPayment | null): string {
+function normalizePaymentMethod(method: string | null, channel: string | null): ReceiptPaymentMethod | null {
+  const values = [channel, method].filter((value): value is string => Boolean(value)).map((value) => value.toUpperCase())
+  if (values.includes('CASH')) return 'CASH'
+  if (values.some((value) => value === 'QRIS' || value === 'QR_CODE')) return 'QRIS'
+  return null
+}
+
+function normalizePayment(payment?: ReceiptPayment | null): ReceiptPaymentDetails {
+  const method = normalizePaymentMethod(payment?.method ?? null, payment?.channel ?? null)
+  const legacyLabel = payment?.channel || payment?.method || null
+  return {
+    method,
+    displayLabel: method ?? legacyLabel,
+    status: payment?.status ?? null,
+    cashier: payment?.cashier ?? null,
+    paidAt: payment?.paidAt ?? null,
+    cashReceived: method === 'CASH' ? (payment?.cashReceived ?? null) : null,
+    change: method === 'CASH' ? (payment?.change ?? null) : null,
+  }
+}
+
+export function displayPaymentMethod(payment: ReceiptPaymentDetails | ReceiptPayment | null): string {
   if (!payment) return '-'
-  // Prefer the concrete channel (DANA, BCA, QRIS) over the generic type (EWALLET).
-  const source = payment.channel || payment.method
-  if (source) return source
-  return 'ONLINE'
+  if ('displayLabel' in payment) return payment.displayLabel || payment.method || '-'
+  return normalizePayment(payment).displayLabel || '-'
 }
 
 export function displayPaymentStatus(status: string | null): string {
@@ -79,6 +102,111 @@ function blank(): string {
   return ''
 }
 
+/** Build the canonical customer receipt, including compatibility aliases. */
+export function buildReceipt(input: ReceiptInput): ReceiptData {
+  const items = input.sourceOrders.flatMap((sourceOrder) => sourceOrder.items)
+  return {
+    ...input,
+    business: input.business ?? defaultReceiptBusiness(),
+    orderNumber: input.bill.reference,
+    createdAt: input.bill.issuedAt,
+    items,
+  }
+}
+
+function snapshotBusiness(
+  settings: ReceiptSnapshotRecord['snapshot']['settings'],
+): ReceiptBusiness {
+  const fallback = defaultReceiptBusiness()
+  return {
+    name: settings?.business_name || fallback.name,
+    tagline: settings?.tagline || fallback.tagline,
+    address: settings?.address || fallback.address,
+    website: settings?.website || fallback.website,
+    wifiName: settings?.wifi_name || fallback.wifiName,
+    wifiPassword: settings?.wifi_password || fallback.wifiPassword,
+    footerMessage: settings?.footer_message || fallback.footerMessage,
+  }
+}
+
+function snapshotCashier(
+  record: ReceiptSnapshotRecord,
+): string | null {
+  if (record.cashierName) return record.cashierName
+  const metadata = record.snapshot.payment.cashier_metadata
+  if (!metadata) return null
+  for (const key of ['cashier_name', 'cashierName', 'name']) {
+    const value = metadata[key]
+    if (typeof value === 'string' && value.trim()) return value.trim()
+  }
+  return null
+}
+
+/** Map an immutable receipts.snapshot record into the printable receipt domain. */
+export function buildReceiptFromSnapshot(record: ReceiptSnapshotRecord): ReceiptData {
+  const { snapshot } = record
+  if (snapshot.schema_version !== 1) {
+    throw new Error(`Unsupported receipt snapshot version: ${String(snapshot.schema_version)}`)
+  }
+  if (snapshot.orders.length === 0) {
+    throw new Error('Receipt snapshot has no source orders.')
+  }
+
+  const payment = normalizePayment({
+    method: snapshot.payment.method,
+    channel: snapshot.payment.channel,
+    status: snapshot.payment.status,
+    cashier: snapshotCashier(record),
+    paidAt: snapshot.payment.paid_at,
+    cashReceived: snapshot.payment.cash_received,
+    change: snapshot.payment.change_amount,
+  })
+  const issuedAt = snapshot.issued_at || record.issued_at || payment.paidAt
+  if (!issuedAt) throw new Error('Receipt snapshot has no issue timestamp.')
+  const tableNumber = snapshot.orders.find((order) => order.table_number)?.table_number ?? null
+
+  return buildReceipt({
+    business: snapshotBusiness(snapshot.settings),
+    bill: {
+      reference: record.receipt_number,
+      sessionReference:
+        snapshot.target.type === 'DINING_SESSION' ? snapshot.target.id : null,
+      issuedAt,
+    },
+    sourceOrders: snapshot.orders.map((order) => ({
+      label: order.order_number,
+      items: order.items.map((item) => ({
+        name: item.product_name,
+        variant: item.variant_name ?? null,
+        quantity: item.quantity,
+        unitPrice: item.unit_price,
+        subtotal: item.subtotal,
+        notes: item.notes ?? null,
+        options: (item.options ?? []).map((option) => ({
+          label: option.option_name
+            ? `${option.option_name}: ${option.option_value}`
+            : option.option_value,
+          priceAdjustment: option.price_adjustment,
+        })),
+      })),
+    })),
+    tableLabel: tableNumber ? tableLabel(tableNumber) : null,
+    subtotal: snapshot.orders.reduce((sum, order) => sum + order.subtotal, 0),
+    discount: snapshot.orders.reduce((sum, order) => sum + (order.discount ?? 0), 0),
+    tax: snapshot.orders.reduce(
+      (sum, order) => sum + (order.tax ?? 0) + (order.service_fee ?? 0) + (order.shipping_fee ?? 0),
+      0,
+    ),
+    total: snapshot.orders.reduce((sum, order) => sum + order.total, 0),
+    payment,
+    notes: snapshot.orders.length === 1 ? (snapshot.orders[0].notes ?? null) : null,
+  })
+}
+
+/**
+ * Compatibility adapter for existing single-order callers. New bill/session
+ * flows should call buildReceipt with all source order groups.
+ */
 export function buildReceiptFromOrder(
   order: ReceiptOrderInput,
   payment?: ReceiptPayment | null,
@@ -97,23 +225,22 @@ export function buildReceiptFromOrder(
     })),
   }))
 
-  return {
+  return buildReceipt({
     business,
-    orderNumber: order.order_number,
+    bill: {
+      reference: order.bill_reference || order.order_number,
+      sessionReference: order.session_reference ?? null,
+      issuedAt: payment?.paidAt || order.created_at,
+    },
+    sourceOrders: [{ label: order.source_order_label || order.order_number, items }],
     tableLabel: order.table ? tableLabel(order.table.table_number) : null,
-    createdAt: order.created_at,
-    items,
     subtotal: order.subtotal,
     discount: order.discount || 0,
     tax: order.tax || 0,
     total: order.total,
-    payment: {
-      method: payment?.method ?? null,
-      channel: payment?.channel ?? null,
-      status: payment?.status ?? null,
-    },
+    payment: normalizePayment(payment),
     notes: order.notes ?? null,
-  }
+  })
 }
 
 /**
@@ -130,8 +257,9 @@ export function formatReceiptText(data: ReceiptData, paperWidth: ThermalPaperWid
   lines.push(center(data.business.address, w))
   lines.push(blank())
   lines.push(divider(w))
-  lines.push(fit(`ORDER ${data.orderNumber}`, '', w))
-  lines.push(fit(formatReceiptDate(data.createdAt), '', w))
+  lines.push(fit(`BILL ${data.bill.reference}`, '', w))
+  if (data.bill.sessionReference) lines.push(fit(`SESI ${data.bill.sessionReference}`, '', w))
+  lines.push(fit(formatReceiptDate(data.bill.issuedAt), '', w))
   lines.push(blank())
 
   if (data.tableLabel) {
@@ -139,11 +267,20 @@ export function formatReceiptText(data: ReceiptData, paperWidth: ThermalPaperWid
     lines.push(blank())
   }
 
-  data.items.forEach((item) => {
-    lines.push(fit(`${item.quantity}x ${item.name}`, formatIDR(item.subtotal), w))
-    if (item.variant) lines.push(`  ${item.variant}`)
-    item.options.forEach((opt) => lines.push(`  ${opt.label}`))
-    if (item.notes) lines.push(`  (${item.notes})`)
+  const showSourceLabels =
+    data.sourceOrders.length > 1 ||
+    data.sourceOrders.some((sourceOrder) => sourceOrder.label !== data.bill.reference)
+  data.sourceOrders.forEach((sourceOrder, index) => {
+    if (showSourceLabels) {
+      if (index > 0) lines.push(blank())
+      lines.push(fit(`ORDER ${sourceOrder.label}`, '', w))
+    }
+    sourceOrder.items.forEach((item) => {
+      lines.push(fit(`${item.quantity}x ${item.name}`, formatIDR(item.subtotal), w))
+      if (item.variant) lines.push(`  ${item.variant}`)
+      item.options.forEach((opt) => lines.push(`  ${opt.label}`))
+      if (item.notes) lines.push(`  (${item.notes})`)
+    })
   })
 
   lines.push(blank())
@@ -155,6 +292,14 @@ export function formatReceiptText(data: ReceiptData, paperWidth: ThermalPaperWid
   lines.push(blank())
   lines.push(fit(`PAYMENT: ${displayPaymentMethod(data.payment)}`, '', w))
   lines.push(fit(`STATUS: ${displayPaymentStatus(data.payment.status)}`, '', w))
+  if (data.payment.paidAt) lines.push(fit(`DIBAYAR: ${formatReceiptDate(data.payment.paidAt)}`, '', w))
+  if (data.payment.cashier) lines.push(fit(`KASIR: ${data.payment.cashier}`, '', w))
+  if (data.payment.method === 'CASH') {
+    if (data.payment.cashReceived !== null) {
+      lines.push(fit('TUNAI', formatIDR(data.payment.cashReceived), w))
+    }
+    if (data.payment.change !== null) lines.push(fit('KEMBALI', formatIDR(data.payment.change), w))
+  }
   lines.push(blank())
   lines.push(fit(`WEB: ${data.business.website}`, '', w))
   lines.push(fit(`WiFi: ${data.business.wifiName} / Pass: ${data.business.wifiPassword}`, '', w))
