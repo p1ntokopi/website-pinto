@@ -15,7 +15,7 @@ const FIELDS: { key: keyof BusinessSettings; label: string; placeholder?: string
   { key: 'tagline', label: 'Tagline', placeholder: 'Kopi • Makanan • Biji Kopi' },
   { key: 'address', label: 'Alamat', multiline: true },
   { key: 'website', label: 'Website', placeholder: 'www.pintokopi.web.id' },
-  { key: 'openingHours', label: 'Jam Buka', placeholder: '08:00 – 22:00 (Setiap hari)' },
+  { key: 'openingHours', label: 'Jam Buka', placeholder: '13.00 – 24.00 (Setiap hari)' },
   { key: 'wifiName', label: 'Nama WiFi', placeholder: 'P1NTO' },
   { key: 'wifiPassword', label: 'Password WiFi', placeholder: 'terimakasih' },
   { key: 'footerMessage', label: 'Pesan Footer Struk', multiline: true },

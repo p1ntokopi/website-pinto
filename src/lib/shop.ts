@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { normalizeImageUrl } from '@/lib/storage/r2';
 
 export type CoffeeVariant = {
   id: string;
@@ -22,6 +23,7 @@ export type CoffeeBean = {
   slug: string;
   base_price: number;
   is_featured: boolean;
+  image_url: string | null;
   description: string | null;
   process: string | null;
   roast_level: string | null;
@@ -97,6 +99,7 @@ async function fetchCoffeeData() {
         slug: product.slug,
         base_price: product.base_price,
         is_featured: product.is_featured,
+        image_url: normalizeImageUrl(product.image_url),
         description: product.description,
         process: coffee.process,
         roast_level: coffee.roast_level,
@@ -169,7 +172,7 @@ export async function getMenu() {
         description: p.description,
         product_type: p.product_type,
         base_price: p.base_price,
-        image_url: p.image_url,
+        image_url: normalizeImageUrl(p.image_url),
       }));
     sections.push({
       category: {

@@ -14,7 +14,13 @@ export async function GET(
       return new NextResponse('Key is required', { status: 400 })
     }
 
-    const objectKey = keyParts.join('/')
+    const rawObjectKey = keyParts.join('/')
+    let objectKey = rawObjectKey
+    try {
+      objectKey = decodeURIComponent(rawObjectKey)
+    } catch {
+      // keep rawObjectKey if decoding fails
+    }
 
     // Security: avoid path traversal
     if (objectKey.includes('..') || objectKey.startsWith('/')) {

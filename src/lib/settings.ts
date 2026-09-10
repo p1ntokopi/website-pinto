@@ -21,7 +21,7 @@ function defaults(): AppSettings {
     wifiName: BUSINESS.wifiName,
     wifiPassword: BUSINESS.wifiPassword,
     footerMessage: BUSINESS.footerMessage,
-    openingHours: '08:00 – 22:00 (Setiap hari)',
+    openingHours: '13.00 – 24.00 (Setiap hari)',
   }
 }
 
@@ -55,7 +55,7 @@ export async function getAppSettings(): Promise<AppSettings> {
       wifiName: text(row.wifi_name, BUSINESS.wifiName),
       wifiPassword: text(row.wifi_password, BUSINESS.wifiPassword),
       footerMessage: text(row.footer_message, BUSINESS.footerMessage),
-      openingHours: text(row.opening_hours, '08:00 – 22:00 (Setiap hari)'),
+      openingHours: text(row.opening_hours, '13.00 – 24.00 (Setiap hari)'),
     }
   } catch {
     return defaults()

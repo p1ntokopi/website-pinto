@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { buttonVariants } from '@/components/ui/button';
 import { Coffee, Croissant, Wifi, Users } from 'lucide-react';
 import { getAppSettings } from '@/lib/settings';
+import { images } from '@/config/images';
 
 export const metadata = {
   title: 'Kafe Kami | Pinto Coffee',
@@ -34,10 +35,10 @@ const amenities = [
 ];
 
 const gallery = [
-  { src: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=1200&auto=format&fit=crop', alt: 'Interior Kafe Pinto' },
-  { src: 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=800&auto=format&fit=crop', alt: 'Barista menuang kopi' },
-  { src: 'https://images.unsplash.com/photo-1525640788966-69bdb028aa73?q=80&w=800&auto=format&fit=crop', alt: 'Detail meja kopi' },
-  { src: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=800&auto=format&fit=crop', alt: 'Eksterior kafe' },
+  { src: images.cafe.interior, alt: 'Interior Kafe Pinto' },
+  { src: images.cafe.barista, alt: 'Roaster & Barista Pinto' },
+  { src: images.cafe.window, alt: 'Bar Counter Pinto Kupi' },
+  { src: images.cafe.exterior, alt: 'Eksterior Kafe Pinto' },
 ];
 
 export default async function CafePage() {
@@ -63,8 +64,8 @@ export default async function CafePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
             <div className="relative aspect-[4/5] rounded-sm overflow-hidden bg-warm/20">
               <Image
-                src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=1200&auto=format&fit=crop"
-                alt="Interior Kafe Pinto"
+                src={images.cafe.interiorWarm}
+                alt="Suasana Teras Kafe Pinto"
                 fill
                 sizes="(min-width: 1024px) 50vw, 100vw"
                 className="object-cover"

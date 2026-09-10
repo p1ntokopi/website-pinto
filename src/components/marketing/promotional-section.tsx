@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { images } from '@/config/images';
 
 export function PromotionalSection() {
   return (
@@ -21,8 +22,8 @@ export function PromotionalSection() {
           <div className="w-full md:w-[55%] relative">
             <div className="aspect-[4/5] md:aspect-square w-full max-w-xl mx-auto relative overflow-hidden rounded-sm bg-ink/20">
               <Image 
-                src="https://images.unsplash.com/photo-1495474472201-49931ebc1200?q=80&w=1200&auto=format&fit=crop"
-                alt="Coffee pour over"
+                src={images.cafe.morning}
+                alt="Suasana santai di teras Pinto Kupi"
                 fill
                 className="object-cover"
               />

@@ -6,7 +6,7 @@ import { TakeHomeSlider } from './take-home-slider';
 export async function TakeHomeSection() {
   const beans = (await getBeanSummaries()).map((b) => ({
     ...b,
-    image: beanImage(b.slug),
+    image: b.image || beanImage(b.slug),
   }));
 
   return (

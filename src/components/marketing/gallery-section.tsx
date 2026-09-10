@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { GalleryVideo } from './gallery-video';
 import { media } from '@/config/media';
+import { images } from '@/config/images';
 
 export function GallerySection() {
   return (
@@ -9,7 +10,7 @@ export function GallerySection() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 max-w-7xl mx-auto">
           {/* Top Row */}
           <div className="col-span-1 md:col-span-8 relative aspect-[16/9] md:aspect-[4/3] bg-ink/5 rounded-sm overflow-hidden group">
-            <Image src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=1600&auto=format&fit=crop" alt="Cafe interior" fill className="object-cover transition-transform duration-1000 group-hover:scale-105" />
+            <Image src={images.cafe.interior} alt="Interior Kafe Pinto" fill className="object-cover transition-transform duration-1000 group-hover:scale-105" />
           </div>
           <div className="col-span-1 md:col-span-4 relative aspect-[4/5] md:aspect-[3/4] bg-ink/5 mt-0 md:mt-24 rounded-sm overflow-hidden group">
             <GalleryVideo src={media.gallery.video1} />
@@ -20,7 +21,7 @@ export function GallerySection() {
             <GalleryVideo src={media.gallery.video2} />
           </div>
           <div className="col-span-1 md:col-span-7 relative aspect-[16/9] md:aspect-[21/9] bg-ink/5 mt-4 md:mt-12 rounded-sm overflow-hidden group">
-            <Image src="https://images.unsplash.com/photo-1445116572660-236099ec97a0?q=80&w=1600&auto=format&fit=crop" alt="Coffee beans" fill className="object-cover transition-transform duration-1000 group-hover:scale-105" />
+            <Image src={images.beans.bagB} alt="Koleksi kemasan kopi sangrai Pinto Kupi" fill className="object-cover transition-transform duration-1000 group-hover:scale-105" />
           </div>
         </div>
       </div>

@@ -12,7 +12,7 @@ create table if not exists public.app_settings (
   wifi_name text not null default 'P1NTO',
   wifi_password text not null default 'terimakasih',
   footer_message text not null default 'Terima kasih telah berkunjung.',
-  opening_hours text not null default '08:00 – 22:00 (Setiap hari)',
+  opening_hours text not null default '13.00 – 24.00 (Setiap hari)',
   updated_at timestamptz not null default now()
 );
 

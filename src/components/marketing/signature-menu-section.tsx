@@ -29,7 +29,7 @@ function MenuCard({
     <Link href="/menu" className={cn('group block', className)}>
       <div className="relative mb-6 aspect-[4/5] w-full overflow-hidden rounded-sm bg-warm/10">
         <Image
-          src={drinkImage(item.slug)}
+          src={drinkImage(item.slug, item.image_url)}
           alt={item.name}
           fill
           sizes="(min-width: 768px) 50vw, 100vw"

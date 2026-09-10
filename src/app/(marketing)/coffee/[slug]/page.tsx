@@ -82,7 +82,7 @@ export default async function CoffeeDetailPage({
             <div className="lg:col-span-6">
               <div className="relative aspect-[4/3] w-full overflow-hidden rounded-sm bg-ink/5">
                 <Image
-                  src={beanImage(bean.slug)}
+                  src={bean.image_url || beanImage(bean.slug)}
                   alt={bean.name}
                   fill
                   sizes="(min-width: 1024px) 50vw, 100vw"

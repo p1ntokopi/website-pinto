@@ -60,7 +60,7 @@ export function MenuRoastery({
             <RevealFade className="lg:col-span-7">
               <div className="relative aspect-[4/5] overflow-hidden rounded-sm bg-paper/5">
                 <Image
-                  src={beanImage(featured.slug)}
+                  src={featured.image_url || beanImage(featured.slug)}
                   alt={`${featured.name} — kopi sangrai Pinto`}
                   fill
                   priority
@@ -150,7 +150,7 @@ export function MenuRoastery({
                     >
                       <div className="relative mb-4 aspect-square w-full overflow-hidden rounded-sm bg-paper/5">
                         <Image
-                          src={beanImage(bean.slug)}
+                          src={bean.image_url || beanImage(bean.slug)}
                           alt={bean.name}
                           fill
                           sizes="70vw"
@@ -185,7 +185,7 @@ export function MenuRoastery({
                     >
                       <div className="relative mb-6 aspect-square w-full overflow-hidden rounded-sm bg-paper/5">
                         <Image
-                          src={beanImage(bean.slug)}
+                          src={bean.image_url || beanImage(bean.slug)}
                           alt={bean.name}
                           fill
                           sizes="(min-width: 1024px) 22vw, 50vw"

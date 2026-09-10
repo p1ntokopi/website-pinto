@@ -75,7 +75,7 @@ export async function RoasterySection() {
           <RevealFade className="lg:col-span-7">
             <div className="relative aspect-[4/5] overflow-hidden rounded-sm bg-paper/5">
               <Image
-                src={beanImage(featured.slug)}
+                src={featured.image_url || beanImage(featured.slug)}
                 alt={`${featured.name} — kopi sangrai Pinto`}
                 fill
                 priority

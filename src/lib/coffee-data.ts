@@ -1,11 +1,12 @@
 import { formatRupiah, getCoffeeBeans, type CoffeeBean } from '@/lib/shop';
 import type { BeanSummary } from '@/lib/coffee';
+import { beanImage } from '@/config/images';
 
 function displayName(name: string) {
   return name.replace(/\s*Beans?$/i, '').trim();
 }
 
-export function toBeanSummary(bean: CoffeeBean, image: string): BeanSummary {
+export function toBeanSummary(bean: CoffeeBean, image?: string): BeanSummary {
   const price = bean.variants[0]?.price ?? bean.base_price;
   const weight = bean.variants[0]?.weight_grams ?? null;
 
@@ -21,11 +22,11 @@ export function toBeanSummary(bean: CoffeeBean, image: string): BeanSummary {
     weightGrams: weight,
     price,
     priceLabel: formatRupiah(price),
-    image,
+    image: image || bean.image_url || beanImage(bean.slug),
   };
 }
 
 export async function getBeanSummaries(): Promise<BeanSummary[]> {
   const beans = await getCoffeeBeans();
-  return beans.map((bean) => toBeanSummary(bean, ''));
+  return beans.map((bean) => toBeanSummary(bean, bean.image_url || beanImage(bean.slug)));
 }

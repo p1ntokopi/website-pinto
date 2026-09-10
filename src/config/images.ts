@@ -8,12 +8,22 @@
  * Target produksi: R2 bucket `pintokopi-assets` → folder `/images/*`
  */
 
+const rawBase = process.env.NEXT_PUBLIC_R2_PUBLIC_URL || '';
+// Jika domain masih berupa *.r2.dev (yang diblokir ISP Indonesia), arahkan ke proxy lokal /api/storage
+const base = rawBase.includes('.r2.dev') || !rawBase ? '/api/storage' : rawBase.replace(/\/$/, '');
+
+function r2Image(filename: string) {
+  const clean = filename.replace(/^\/+/, '');
+  const encoded = clean.split('/').map(encodeURIComponent).join('/');
+  return `${base}/images/${encoded}`;
+}
+
 const u = (id: string, w = 1200) =>
   `https://images.unsplash.com/${id}?q=80&w=${w}&auto=format&fit=crop`;
 
 export const images = {
   /** Hero fallback ketika video tidak tersedia. */
-  heroFallback: u('photo-1509042239860-f550ce710b93', 2000),
+  heroFallback: r2Image('hero-poster.webp'),
 
   /** Menu signature — minuman andalan dari bar. */
   drinks: {
@@ -26,43 +36,43 @@ export const images = {
     coldBrew: u('photo-1461023058943-07fcbe16d735'),
   },
 
-  /** Biji kopi / roastery. */
+  /** Biji kopi / roastery — foto asli Pinto Kupi. */
   beans: {
-    bagA: u('photo-1559525839-b184a4d698c7'),
-    bagB: u('photo-1587734195503-904fca47e0e9'),
-    bagC: u('photo-1620189507195-68309c04c4d0'),
-    rawA: u('photo-1447933601403-0c6688de566e'),
-    rawB: u('photo-1502355984-b2cb47bc08cf'),
-    roasted: u('photo-1559925393-8be0ec4767c8'),
-    bar: u('photo-1498804103079-a6351b050096'),
-    hands: u('photo-1611162458324-aae1eb4129a4'),
-    scene: u('photo-1445116572660-236099ec97a0'),
-    bagFeet: u('photo-1514432324607-a09d9b4aefdd'),
+    bagA: r2Image('IMG_1109.jpg'), // Rak toples single origin & display pack Pinto
+    bagB: r2Image('IMG_2125.jpg'), // Kraft pouch 'PINTÖ KUPI EST. 1993'
+    bagC: r2Image('IMG_1109.jpg'), // Rak toples display roastery
+    rawA: r2Image('IMG_1116.jpg'), // Macro medium roast beans
+    rawB: r2Image('hero-poster.webp'), // Biji kopi sangrai flat lay
+    roasted: r2Image('IMG_1118.jpg'), // Macro dark roast coffee beans
+    bar: r2Image('IMG_2030.jpg'), // Barista espresso bar station & takeaway cups
+    hands: r2Image('CEO PINTO.jpg'), // Founder / Roaster Pinto Kupi
+    scene: r2Image('IMG_1112.jpg'), // Plakat kayu Pinto Kupi 1993 & alat manual brew
+    bagFeet: r2Image('IMG_2125.jpg'),
   },
 
-  /** Kafe / suasana Pinto. */
+  /** Kafe / suasana Pinto — foto asli Pinto Kupi. */
   cafe: {
-    interior: u('photo-1554118811-1e0d58224f24', 1600),
-    interiorWarm: u('photo-1501339847302-ac426a4a7cbb', 1600),
-    barista: u('photo-1497935586351-b67a49e012bf', 1600),
-    pour: u('photo-1541167760496-1628856ab772'),
-    table: u('photo-1525640788966-69bdb028aa73'),
-    exterior: u('photo-1509042239860-f550ce710b93'),
-    morning: u('photo-1504630083239-32187e466b48'),
-    window: u('photo-1521017432531-fbd92d768814'),
-    latte: u('photo-1534777367038-9404f45b869a'),
+    interior: r2Image('IMG_1996.jpg'), // Ruang santai indoor, meja marmer & art frame
+    interiorWarm: r2Image('IMG_1994.jpg'), // Teras ngopi lantai 2, kursi rotan & tanaman asri
+    barista: r2Image('CEO PINTO.jpg'), // Founder / Roaster Pinto Kupi di bar
+    pour: r2Image('IMG_1112.jpg'), // Manual brewing gear & plakat kayu 1993
+    table: r2Image('IMG_2030.jpg'), // Detail meja bar espresso & cup Pinto
+    exterior: r2Image('IMG_2014.jpg'), // Tampak depan gedung Pinto siang hari
+    morning: r2Image('IMG_1994.jpg'), // Suasana santai teras lantai 2
+    window: r2Image('IMG_2019.jpg'), // Counter kasir / order & pay bar
+    latte: r2Image('IMG_2030.jpg'), // Bar station
   },
 
   /** Perjalanan dari biji ke cangkir. */
   journey: {
-    origin: u('photo-1447933601403-0c6688de566e', 1600),
-    sourcing: u('photo-1611162458324-aae1eb4129a4', 1600),
-    roasting: u('photo-1559925393-8be0ec4767c8', 1600),
-    brewing: u('photo-1524350876685-274059332603', 1600),
+    origin: r2Image('IMG_1109.jpg'), // Toples single origin Nusantara (Gayo Winey, Luwak, dll)
+    sourcing: r2Image('CEO PINTO.jpg'), // Kurasi & seleksi biji oleh roaster Pinto
+    roasting: r2Image('IMG_1116.jpg'), // Biji kopi sangrai segar pilihan
+    brewing: r2Image('IMG_1112.jpg'), // Peralatan seduh presisi di bar Pinto
   },
 
   /** Latar final CTA. */
-  finalCta: u('photo-1611162617474-5b21e879e113', 2000),
+  finalCta: r2Image('IMG_2016.jpg'), // Gedung Pinto Kupi malam hari dengan lampu hangat
 };
 
 /**
@@ -97,7 +107,8 @@ export const beanImages: Record<string, string> = {
 
 const FALLBACK_BEAN = images.beans.bagA;
 
-export function beanImage(slug?: string | null) {
+export function beanImage(slug?: string | null, customUrl?: string | null) {
+  if (customUrl) return customUrl;
   return (slug && beanImages[slug]) || FALLBACK_BEAN;
 }
 
@@ -115,6 +126,7 @@ export const drinkImages: Record<string, string> = {
   'bottle-package-1l': images.beans.bagFeet,
 };
 
-export function drinkImage(slug?: string | null) {
+export function drinkImage(slug?: string | null, customUrl?: string | null) {
+  if (customUrl) return customUrl;
   return (slug && drinkImages[slug]) || images.drinks.espresso;
 }
