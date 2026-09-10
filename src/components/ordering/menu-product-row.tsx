@@ -3,6 +3,7 @@ import Image from "next/image"
 import { Plus } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+import { normalizeImageUrl } from "@/lib/storage/r2"
 
 interface MenuProductRowProps {
   product: {
@@ -38,9 +39,9 @@ export function MenuProductRow({ product, tableSlug }: MenuProductRowProps) {
       )}
     >
       <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-sm bg-cream/50 ring-1 ring-ink/10">
-        {product.image_url ? (
+        {normalizeImageUrl(product.image_url) ? (
           <Image
-            src={product.image_url}
+            src={normalizeImageUrl(product.image_url)!}
             alt={product.name}
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -94,9 +95,9 @@ export function MenuProductRow({ product, tableSlug }: MenuProductRowProps) {
     return (
       <div className="flex items-center gap-5 py-5">
         <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-sm bg-cream/50 ring-1 ring-ink/10">
-          {product.image_url ? (
+          {normalizeImageUrl(product.image_url) ? (
             <Image
-              src={product.image_url}
+              src={normalizeImageUrl(product.image_url)!}
               alt={product.name}
               fill
               className="object-cover"

@@ -13,6 +13,7 @@ import { OrderingHeader } from "@/components/ordering/ordering-header"
 import { useCart, CartItemOption } from "@/components/ordering/cart-context"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
+import { normalizeImageUrl } from "@/lib/storage/r2"
 
 type Product = {
   id: string
@@ -128,7 +129,7 @@ export function ProductDetailClient({
     addItem({
       product_id: product.id,
       product_name: product.name,
-      product_image_url: product.image_url,
+      product_image_url: normalizeImageUrl(product.image_url),
       variant_id: selectedVariantId,
       variant_name: selectedVariant?.name,
       base_price: currentBasePrice,
@@ -138,9 +139,10 @@ export function ProductDetailClient({
     })
 
     toast({
-      title: "Ditambahkan ke pesanan",
-      description: `${quantity}x ${product.name} ditambahkan.`,
+      title: "Berhasil ditambahkan",
+      description: `${quantity}x ${product.name} dimasukkan ke keranjang`,
     })
+
     router.push(`/t/${tableSlug}/menu`)
   }
 
@@ -151,9 +153,9 @@ export function ProductDetailClient({
       <main className="mx-auto max-w-2xl">
         {/* Product Image */}
         <div className="relative aspect-square w-full bg-muted">
-          {product.image_url ? (
+          {normalizeImageUrl(product.image_url) ? (
             <Image
-              src={product.image_url}
+              src={normalizeImageUrl(product.image_url)!}
               alt={product.name}
               fill
               className="object-cover"

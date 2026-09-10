@@ -20,6 +20,7 @@ import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { createProduct, updateProduct } from '@/app/admin/(dashboard)/menu/products/actions'
 import { getImageUploadUrl } from '@/lib/storage/actions'
+import { normalizeImageUrl } from '@/lib/storage/r2'
 import { useToast } from '@/hooks/use-toast'
 import { Loader2, Upload, X } from 'lucide-react'
 import { Database } from '@/types/database.types'
@@ -54,10 +55,70 @@ interface ProductFormProps {
   categories: CategoryRow[]
 }
 
+async function compressImageIfNeeded(file: File): Promise<File> {
+  if (!file.type.startsWith('image/') || file.size <= 1.5 * 1024 * 1024 || file.type === 'image/gif') {
+    return file
+  }
+
+  return new Promise((resolve) => {
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      const maxDim = 1600
+      let { width, height } = img
+      if (width > maxDim || height > maxDim) {
+        if (width > height) {
+          height = Math.round((height * maxDim) / width)
+          width = maxDim
+        } else {
+          width = Math.round((width * maxDim) / height)
+          height = maxDim
+        }
+      }
+
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        resolve(file)
+        return
+      }
+
+      ctx.drawImage(img, 0, 0, width, height)
+      canvas.toBlob(
+        (blob) => {
+          if (blob && blob.size < file.size) {
+            const ext = file.type === 'image/png' ? 'png' : 'jpg'
+            const outType = file.type === 'image/png' ? 'image/png' : 'image/jpeg'
+            const compressedFile = new File([blob], file.name.replace(/\.[^.]+$/, `.${ext}`), {
+              type: outType,
+            })
+            resolve(compressedFile)
+          } else {
+            resolve(file)
+          }
+        },
+        file.type === 'image/png' ? 'image/png' : 'image/jpeg',
+        0.85
+      )
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      resolve(file)
+    }
+    img.src = url
+  })
+}
+
 export function ProductForm({ product, categories }: ProductFormProps) {
-const [isSubmitting, setIsSubmitting] = useState(false)
+  const initialImg = normalizeImageUrl(product?.image_url) || null
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
-  const [imageUrl, setImageUrl] = useState<string | null>(product?.image_url || null)
+  const [imageUrl, setImageUrl] = useState<string | null>(initialImg)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(initialImg)
+  const [imageLoadError, setImageLoadError] = useState(false)
 
   const originalImageUrl = product?.image_url || null
   
@@ -83,32 +144,38 @@ const [isSubmitting, setIsSubmitting] = useState(false)
     const file = e.target.files?.[0]
     if (!file) return
 
-if (!file.type.startsWith('image/')) {
+    if (!file.type.startsWith('image/')) {
       toast({ variant: 'destructive', title: 'Kesalahan', description: 'File harus berupa gambar.' })
       return
     }
 
-setUploadingImage(true)
-    try {
-      const { uploadUrl, publicUrl } = await getImageUploadUrl(
-        'products',
-        file.type,
-        file.size
-      )
+    setImageLoadError(false)
+    const localPreview = URL.createObjectURL(file)
+    setPreviewUrl(localPreview)
+    setUploadingImage(true)
 
-      const response = await fetch(uploadUrl, {
-        method: 'PUT',
-        body: file,
-        headers: { 'Content-Type': file.type },
+    try {
+      const fileToUpload = await compressImageIfNeeded(file)
+      const formData = new FormData()
+      formData.append('file', fileToUpload)
+      formData.append('folder', 'products')
+
+      const response = await fetch('/api/storage/upload', {
+        method: 'POST',
+        body: formData,
       })
 
-      if (!response.ok) {
-        throw new Error('Gagal mengunggah ke penyimpanan.')
+      const data = await response.json()
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Gagal mengunggah ke penyimpanan.')
       }
 
-      setImageUrl(publicUrl)
+      setImageUrl(data.url)
+      setPreviewUrl(data.url)
       toast({ title: 'Berhasil', description: 'Gambar berhasil diunggah.' })
     } catch (err) {
+      setPreviewUrl(imageUrl)
       toast({
         variant: 'destructive',
         title: 'Pengunggahan Gagal',
@@ -116,6 +183,8 @@ setUploadingImage(true)
       })
     } finally {
       setUploadingImage(false)
+      URL.revokeObjectURL(localPreview)
+      e.target.value = ''
     }
   }
 
@@ -351,19 +420,52 @@ toast({
 <h3 className="font-semibold text-lg">Gambar Produk</h3>
             
             <div className="flex flex-col gap-4">
-              {imageUrl ? (
-                <div className="relative group rounded-md overflow-hidden border">
-                  <img src={imageUrl} alt="Pratinjau" className="w-full aspect-square object-cover" />
+              {previewUrl && !imageLoadError ? (
+                <div className="relative group rounded-md overflow-hidden border bg-muted aspect-square">
+                  <img
+                    src={previewUrl}
+                    alt="Pratinjau"
+                    className="w-full h-full object-cover"
+                    onError={() => setImageLoadError(true)}
+                  />
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Button variant="destructive" size="sm" onClick={() => setImageUrl(null)}>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      type="button"
+                      onClick={() => {
+                        setImageUrl(null)
+                        setPreviewUrl(null)
+                        setImageLoadError(false)
+                      }}
+                    >
                       <X className="w-4 h-4 mr-2" /> Hapus
                     </Button>
                   </div>
                 </div>
+              ) : imageLoadError ? (
+                <div className="w-full aspect-square bg-destructive/5 rounded-md border-2 border-dashed border-destructive/30 flex flex-col items-center justify-center p-6 text-center text-muted-foreground">
+                  <X className="w-8 h-8 mb-2 text-destructive opacity-70" />
+                  <p className="text-sm font-medium text-foreground">Gambar tidak dapat dimuat</p>
+                  <p className="text-xs text-muted-foreground mt-1">Ganti gambar dengan memilih file baru</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-3"
+                    type="button"
+                    onClick={() => {
+                      setImageUrl(null)
+                      setPreviewUrl(null)
+                      setImageLoadError(false)
+                    }}
+                  >
+                    Reset Gambar
+                  </Button>
+                </div>
               ) : (
                 <div className="w-full aspect-square bg-muted rounded-md border-2 border-dashed flex flex-col items-center justify-center p-6 text-center text-muted-foreground">
                   <Upload className="w-8 h-8 mb-2 opacity-50" />
-                  <p className="text-sm">Unggah gambar produk</p>
+                  <p className="text-sm font-medium">Unggah gambar produk</p>
                   <p className="text-xs opacity-70 mt-1">PNG, JPG, WebP maksimal 10MB</p>
                 </div>
               )}

@@ -14,6 +14,7 @@ import { OrderingHeader } from "@/components/ordering/ordering-header";
 import { useToast } from "@/hooks/use-toast";
 import { submitOrder } from "@/app/t/[slug]/actions";
 import { cn } from "@/lib/utils";
+import { normalizeImageUrl } from "@/lib/storage/r2";
 
 export function CartClient({
   tableSlug,
@@ -205,9 +206,9 @@ export function CartClient({
                   className="flex gap-4 border-b border-ink/[0.08] py-5 first:border-t lg:gap-5 lg:py-6"
                 >
                   <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-sm bg-cream/50 ring-1 ring-ink/10">
-                    {item.product_image_url ? (
+                    {normalizeImageUrl(item.product_image_url) ? (
                       <Image
-                        src={item.product_image_url}
+                        src={normalizeImageUrl(item.product_image_url)!}
                         alt={item.product_name}
                         fill
                         className="object-cover"

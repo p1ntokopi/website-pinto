@@ -29,6 +29,7 @@ import {
   deleteProduct,
   toggleProductAvailability,
 } from "@/app/admin/(dashboard)/menu/products/actions"
+import { normalizeImageUrl } from "@/lib/storage/r2"
 import { useToast } from "@/hooks/use-toast"
 
 type ProductRow = Database["public"]["Tables"]["products"]["Row"]
@@ -120,7 +121,7 @@ export function ProductList({ products }: { products: ProductWithCategory[] }) {
                       {product.image_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={product.image_url}
+                          src={normalizeImageUrl(product.image_url) || ''}
                           alt={product.name}
                           className="h-10 w-10 rounded-sm border border-border-custom object-cover"
                         />
@@ -203,7 +204,7 @@ export function ProductList({ products }: { products: ProductWithCategory[] }) {
                 {product.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={product.image_url}
+                    src={normalizeImageUrl(product.image_url) || ''}
                     alt={product.name}
                     className="h-14 w-14 shrink-0 rounded-sm border border-border-custom object-cover"
                   />

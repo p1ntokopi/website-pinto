@@ -69,7 +69,9 @@ export function AdminHeader({ user, onMenuOpen, unreadCount = 0, isConnected = t
         </Button>
         <div>
           <div className="text-sm font-semibold leading-tight text-ink lg:text-base">{title}</div>
-          <div className="hidden text-xs text-muted-text sm:block">{formatToday()}</div>
+          <div className="hidden text-xs text-muted-text sm:block" suppressHydrationWarning>
+            {formatToday()}
+          </div>
         </div>
       </div>
 

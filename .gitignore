@@ -40,6 +40,8 @@ yarn-error.log*
 .commandcode/
 skill_frontend_design.txt
 skill_output.txt
+AGENTS.md
+CLAUDE.md
 
 # typescript
 *.tsbuildinfo
