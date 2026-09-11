@@ -19,25 +19,45 @@ function isCartOption(value: unknown): value is CartOption {
 export async function startOrResumeDiningSession(tableSlug: string) {
   const supabase = await createClient();
 
-  // RPC validates the table and creates/resumes the dining session
-  // (security definer bypasses RLS for the insert).
+  // The cashier opens the table session. This path only ever resumes it, so
+  // `p_create_if_missing` is passed explicitly rather than relying on the
+  // database default.
   const { data, error } = await supabase.rpc("start_or_resume_dining_session", {
     p_table_slug: tableSlug,
+    p_create_if_missing: false,
   });
 
   if (error) {
     console.error("Failed to start dining session:", error);
-    return { error: "Tidak dapat memulai sesi makan. Silakan coba lagi." };
+    return { error: "Tidak dapat membuka sesi meja. Silakan coba lagi." };
   }
 
-  if (!data || !data.success) {
+  const result = data as {
+    success?: boolean;
+    code?: string;
+    error?: string;
+    session_token?: string;
+  } | null;
+
+  if (!result?.success) {
+    if (result?.code === "NO_ACTIVE_SESSION") {
+      return {
+        error:
+          result.error ||
+          "Belum ada sesi meja aktif. Silakan melakukan pemesanan di kasir terlebih dahulu.",
+      };
+    }
     return {
       error:
-        data?.error || "Tidak dapat memulai sesi makan. Silakan coba lagi.",
+        result?.error || "Tidak dapat membuka sesi meja. Silakan coba lagi.",
     };
   }
 
-  await setSessionToken(data.session_token);
+  if (!result.session_token) {
+    return { error: "Tidak dapat membuka sesi meja. Silakan coba lagi." };
+  }
+
+  await setSessionToken(result.session_token);
 
   redirect(`/t/${tableSlug}/menu`);
 }

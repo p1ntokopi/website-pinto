@@ -98,6 +98,13 @@ export interface Database {
       start_or_resume_dining_session: {
         Args: {
           p_table_slug: string
+          p_create_if_missing?: boolean
+        }
+        Returns: unknown
+      }
+      get_table_session_status: {
+        Args: {
+          p_table_slug: string
         }
         Returns: unknown
       }

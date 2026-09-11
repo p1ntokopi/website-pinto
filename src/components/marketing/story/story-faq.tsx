@@ -19,7 +19,7 @@ const FAQ = [
   },
   {
     q: 'Bagaimana cara memesan di kafe?',
-    a: 'Scan kode QR di meja Anda untuk membuka menu dan memesan langsung dari ponsel — tanpa antre.',
+    a: 'Pesan di kasir terlebih dahulu — kasir mencatat pesanan Anda dan menyiapkan stand meja. Setelah duduk, scan kode QR pada stand meja untuk menambah pesanan kapan saja.',
   },
   {
     q: 'Bagaimana cara membeli biji kopi?',

@@ -15,22 +15,26 @@ P1NTO is a Next.js and Supabase application for customer table ordering, kitchen
 
 ## Approved operating workflow
 
-1. A customer scans an active table QR. The server starts or resumes that table's single open dining session and stores an opaque session token in an `HttpOnly`, `SameSite=Lax` cookie (`Secure` in production).
-2. Every customer submission uses a client request UUID. The server validates the table/session, recalculates prices from available catalog rows, snapshots item names/prices/options, and returns the existing result on retry. The first operational customer state is `NEW`.
-3. Additional orders attach to the same open session. They do not create a second bill or implicitly close the first order.
-4. Staff advances each order through `NEW → PREPARING → READY → SERVED`. Legacy `PENDING`, `CONFIRMED`, and `COMPLETED` records remain readable during compatibility cutover; do not rewrite history merely to normalize labels.
-5. At checkout, an authorized cashier selects exactly one settlement method: `CASH` or manual `QRIS`. The server locks the target, recomputes the unpaid amount, validates the expected state/amount, records one idempotent `PAID` payment with cashier attribution, and creates one immutable receipt snapshot.
-6. Receipt display/printing is a separate action. A failed, canceled, or repeated print must not alter payment status or duplicate the receipt.
-7. The table session is closed only by an explicit, idempotent cashier action after all non-canceled orders are served and the session is fully paid. Payment, receipt issuance, printing, and closure are four distinct events.
+This is a **cashier-first** flow. The cashier starts the relationship and opens the table session; the table QR is a secondary channel for adding orders to a session that already exists.
+
+1. The customer orders at the counter. The cashier enters the order at the POS (`/admin/orders/new`, "Pesanan Baru"), chooses DINE-IN, and assigns a table. A table that already has an open session is shown as `Terisi` and is never merged into silently: attaching to it requires an explicit "Gabung ke Sesi" confirmation that states the accrued session total.
+2. Before anything is written, the POS shows a review step (`Pesanan Anda`, items, quantities, notes, total, table) and the customer confirms it. Confirmation is an **interaction event, not an order status** — no `CONFIRMED` state is introduced and the create RPC stays atomic and idempotent.
+3. Creating the order opens that table's single open dining session if none exists (cashier path only). The customer receives the table stand and sits anywhere.
+4. Additional orders are added by scanning the stand QR. The landing page resumes the **same** open session and the new order attaches to the same bill. **The QR never opens a session**: with no active session it shows "Belum ada sesi aktif. Silakan melakukan pemesanan di kasir terlebih dahulu." and offers no ordering control.
+5. Every customer submission uses a client request UUID. The server validates the table/session, recalculates prices from available catalog rows, snapshots item names/prices/options, and returns the existing result on retry. The first operational customer state is `NEW`.
+6. Staff advances each order through `NEW → PREPARING → READY → SERVED`. Legacy `PENDING`, `CONFIRMED`, and `COMPLETED` records remain readable during compatibility cutover; do not rewrite history merely to normalize labels.
+7. At checkout, an authorized cashier selects exactly one settlement method: `CASH` or manual `QRIS`. The server locks the target, recomputes the unpaid amount, validates the expected state/amount, records one idempotent `PAID` payment with cashier attribution, and creates one immutable receipt snapshot.
+8. Receipt display/printing is a separate action. A failed, canceled, or repeated print must not alter payment status or duplicate the receipt.
+9. The table session is closed only by an explicit, idempotent cashier action after all non-canceled orders are served and the session is fully paid. Payment, receipt issuance, printing, and closure are four distinct events. Closure releases the table for the next party.
 
 ## Roles, RLS, and trust boundaries
 
-| Role               | Intended access                                                                                                                                                         |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Anonymous customer | Read active catalog/table metadata; start/resume a session and create/read orders only through token-scoped RPCs. No direct order, payment, receipt, or session writes. |
-| `kitchen`          | Read the bounded active queue and advance preparation states only. No payment or closure authority.                                                                     |
-| `staff`            | Read operational data and perform allowed service transitions. No manual settlement unless explicitly promoted to cashier authority.                                    |
-| `admin` / `owner`  | Cashier authority for manual payment, receipt issuance, explicit closure, and operational administration. Owner additionally has finance-only access.                   |
+| Role | Intended access |
+| --- | --- |
+| Anonymous customer | Read active catalog/table metadata and a table-occupancy flag; order only through token-scoped RPCs after resuming a cashier-opened session. Cannot open a session. No direct order, payment, receipt, or session writes. |
+| `kitchen` | Read the bounded active queue and advance preparation states only. No payment or closure authority. |
+| `staff` | Read operational data and perform allowed service transitions. No manual settlement unless explicitly promoted to cashier authority. |
+| `admin` / `owner` | Cashier authority for manual payment, receipt issuance, explicit closure, and operational administration. Owner additionally has finance-only access. |
 
 RLS is defense in depth, not the business-rule engine. Revoke direct mutations on sensitive tables and expose atomic, role-checked RPCs with a fixed `search_path`. Never ship or reference `SUPABASE_SERVICE_ROLE_KEY` in browser code. Server actions must still authenticate, validate role, validate expected state, and derive prices/totals server-side.
 

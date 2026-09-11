@@ -46,7 +46,7 @@ export function AdminSidebar({ role, user, mobile = false }: SidebarProps) {
       title: 'Operasional',
       items: [
         { title: 'Pesanan', href: '/admin/orders', icon: ShoppingBag, roles: ['admin', 'staff', 'owner'] },
-        { title: 'Order Kasir', href: '/admin/orders/new', icon: ShoppingCart, roles: ['admin', 'owner'] },
+        { title: 'Pesanan Baru', href: '/admin/orders/new', icon: ShoppingCart, roles: ['admin', 'owner'] },
         { title: 'Meja Langsung', href: '/admin/tables/live', icon: Armchair, roles: ['admin', 'staff', 'owner'] },
         { title: 'Meja & QR', href: '/admin/tables', icon: QrCode, roles: ['admin', 'owner'] },
         { title: 'Display Dapur', href: '/admin/kitchen', icon: CookingPot, roles: ['admin', 'staff', 'owner'] },

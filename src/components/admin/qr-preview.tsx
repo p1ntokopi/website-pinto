@@ -94,7 +94,7 @@ export function QRPreview({ slug, tableNumber }: QRPreviewProps) {
             <div>COFFEE</div>
             <img src="${pngUrl}" alt="QR Code" />
             <div class="title">MEJA ${tableNumber}</div>
-            <div class="subtitle">Pindai untuk melihat menu kami<br/>Pesan langsung dari meja Anda</div>
+            <div class="subtitle">Sudah duduk?<br/>Scan QR ini untuk menambah pesanan</div>
           </div>
           <script>
             setTimeout(() => {
@@ -128,7 +128,7 @@ export function QRPreview({ slug, tableNumber }: QRPreviewProps) {
         
         <div className="mt-4 font-bold text-lg">MEJA {tableNumber}</div>
         <div className="text-xs text-center text-muted-foreground mt-1 max-w-[180px]">
-          Pindai untuk memesan langsung dari meja Anda
+          Sudah duduk? Scan QR ini untuk menambah pesanan
         </div>
       </div>
 

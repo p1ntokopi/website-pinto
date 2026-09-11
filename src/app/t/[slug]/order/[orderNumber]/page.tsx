@@ -97,7 +97,7 @@ export default async function OrderTrackingPage({
           variant="outline"
           className="h-14 w-full text-base"
         >
-          Pesan Lagi
+          Tambah Pesanan
         </Button>
       </main>
     </div>

@@ -130,7 +130,7 @@ export function MenuPageClient({
               Menu
             </h1>
             <p className="mt-4 max-w-md text-base leading-relaxed text-muted-foreground">
-              Pesan langsung dari meja Anda — aroma segar dari dapur dan bar, disiapkan saat
+              Tambah pesanan kapan saja — aroma segar dari dapur dan bar, disiapkan saat
               dipesan.
             </p>
           </section>

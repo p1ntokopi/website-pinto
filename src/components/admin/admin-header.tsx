@@ -17,7 +17,7 @@ interface HeaderProps {
 }
 
 const TITLE_MAP: Array<{ prefix: string; title: string }> = [
-  { prefix: '/admin/orders/new', title: 'Order Kasir' },
+  { prefix: '/admin/orders/new', title: 'Pesanan Baru' },
   { prefix: '/admin/orders/', title: 'Detail Pesanan' },
   { prefix: '/admin/menu/products/', title: 'Detail Produk' },
   { prefix: '/admin/menu/categories', title: 'Kategori' },

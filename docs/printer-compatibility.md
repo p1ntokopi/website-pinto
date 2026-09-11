@@ -4,14 +4,15 @@ This document separates **receipt correctness**, **browser printing**, and **dir
 
 ## Support status
 
-| Path                                   | Status                                                        | Paper                                 | Evidence / constraint                                                                                                                     |
-| -------------------------------------- | ------------------------------------------------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Browser/system print                   | Supported application fallback; release verification required | 58 mm / 80 mm                         | Uses the OS print dialog and installed printer driver. Test margins, scaling, wrapping, and header/footer settings on the cashier device. |
-| ESC/POS over Web Serial                | Experimental; device/browser verification required            | Primarily 58 mm for PRJ-58D candidate | Requires a browser that exposes a usable serial port and a printer/OS pairing that presents Bluetooth Classic SPP as that port.           |
-| Web Bluetooth                          | Not a Classic SPP transport                                   | —                                     | Web Bluetooth targets Bluetooth Low Energy GATT. A Classic RFCOMM/SPP printer normally will not appear there.                             |
-| Android/native bridge or desktop agent | Not implemented                                               | Device-dependent                      | Preferred fallback if direct browser serial is unavailable or operational reliability is insufficient.                                    |
+| Path | Provider id | Status | Evidence / constraint |
+| --- | --- | --- | --- |
+| Browser/system print | `web-print` | Supported application fallback; release verification required | Uses the OS print dialog and an installed printer driver. 58 mm or 80 mm. Test margins, scaling, wrapping, and header/footer settings on the cashier device. |
+| ESC/POS over Web Serial (Bluetooth Classic SPP) | `escpos-bluetooth` | Experimental; device/browser verification required | Requires a browser that exposes a usable serial port and a printer/OS pairing that presents Bluetooth Classic SPP as that port. Primarily 58 mm for the PRJ-58D candidate. |
+| Web Bluetooth (BLE) | `web-bluetooth` | Implemented; device verification required | BLE GATT transport with the ESC/POS encoder. Not a substitute for Classic SPP: an RFCOMM/SPP-only printer normally will not appear on a BLE scan. |
+| RawBT (Android intent bridge) | `android-print-bridge` | Implemented; requires the RawBT app | Hands the encoded receipt to the RawBT Android app instead of printing from the browser. Device-dependent. |
+| Desktop print agent | `desktop-print-agent` | Not implemented (stub) | Reserved fallback if the direct browser transports prove unreliable. |
 
-**PandaPrinter PRJ-58D has not been physically verified in this repository.** No attached hardware test log, photo, captured receipt, port trace, or signed test record proves the actual unit's protocol, pairing behavior, character table, buffer handling, cut/feed support, or sustained print reliability. Product-listing specifications and source-code support are not physical compatibility evidence.
+**PandaPrinter PRJ-58D status: owner-reported working; not independently verified in this repository.** The owner reports the physical unit printing correctly, and commits `2b63311` / `76121fb` added the Web Bluetooth (BLE) and RawBT direct paths. That is an operator report plus source-code support — it is not captured evidence. No hardware test log, photo, captured receipt, port trace, or signed test record is attached here proving the actual unit's protocol, character table, buffer handling, cut/feed support, or sustained print reliability. The matrix below is how that report becomes a verified record.
 
 ## Recommended production baseline
 
@@ -67,7 +68,7 @@ Record exact values; do not replace unknowns with assumptions.
 | Failure isolation   | Database evidence that canceled/failed/retried prints create no extra payment, receipt, or session closure.                                          |
 | Approval            | Tester/date, captured receipt photos, logs with secrets/customer data redacted, and explicit go/no-go decision.                                      |
 
-Until all applicable rows pass, document PRJ-58D as **not physically verified** and keep browser print available.
+Until all applicable rows pass, record PRJ-58D as **owner-reported working, not independently verified**, and keep browser print available as the fallback.
 
 ## Receipt and print-attempt rules
 

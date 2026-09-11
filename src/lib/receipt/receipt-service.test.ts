@@ -9,11 +9,12 @@ import {
   formatReceiptText,
   tableLabel,
 } from '@/lib/receipt/receipt-service'
-import type {
-  ReceiptData,
-  ReceiptLineItem,
-  ReceiptOrderInput,
-  ReceiptSnapshotRecord,
+import {
+  defaultReceiptBusiness,
+  type ReceiptData,
+  type ReceiptLineItem,
+  type ReceiptOrderInput,
+  type ReceiptSnapshotRecord,
 } from '@/lib/receipt/receipt-types'
 
 const latte: ReceiptLineItem = {
@@ -222,7 +223,7 @@ describe('buildReceiptFromSnapshot', () => {
       issuedAt: '2026-08-19T10:20:00Z',
     })
     expect(data.sourceOrders.map((order) => order.label)).toEqual(['PNT-00001', 'PNT-00002'])
-    expect(data.sourceOrders[0].items[0].options[0].label).toBe('Susu: Oat Milk')
+    expect(data.sourceOrders[0].items[0].options[0].label).toBe('Oat Milk')
     expect(data.tableLabel).toBe('MEJA 03')
     expect(data.total).toBe(51000)
     expect(data.payment).toMatchObject({
@@ -349,7 +350,8 @@ describe('formatReceiptText', () => {
     expect(text).toContain('ORDER PNT-00002')
     expect(text).toContain('MEJA 03')
     expect(text).toContain('PAYMENT: CASH')
-    expect(text).toContain('KASIR: Ayu')
+    // The cashier's name lives on the payment row, not on the customer's copy.
+    expect(text).not.toContain('KASIR')
     expect(text).toContain('TUNAI')
     expect(text).toContain('Rp60.000')
     expect(text).toContain('KEMBALI')
@@ -367,5 +369,249 @@ describe('formatReceiptText', () => {
 
   it('is deterministic for identical input', () => {
     expect(formatReceiptText(sampleData, 58)).toBe(formatReceiptText(sampleData, 58))
+  })
+})
+
+describe('formatReceiptText — one line per item', () => {
+  function receiptWith(items: ReceiptLineItem[]): ReceiptData {
+    return buildReceipt({
+      business: defaultReceiptBusiness(),
+      bill: {
+        reference: 'R-260911-8B33B465EE',
+        sessionReference: '418f81b7-7b1c-4966-82b0-3bf',
+        issuedAt: '2026-09-11T12:53:00Z',
+      },
+      sourceOrders: [{ label: 'R-260911-8B33B465EE', items }],
+      tableLabel: 'MEJA 09',
+      subtotal: items.reduce((sum, item) => sum + item.subtotal, 0),
+      discount: 0,
+      tax: 0,
+      total: items.reduce((sum, item) => sum + item.subtotal, 0),
+      payment: {
+        method: 'QRIS',
+        displayLabel: 'QRIS',
+        status: 'PAID',
+        cashier: null,
+        paidAt: '2026-09-11T12:53:00Z',
+        cashReceived: null,
+        change: null,
+      },
+      notes: null,
+    })
+  }
+
+  function item(overrides: Partial<ReceiptLineItem>): ReceiptLineItem {
+    return {
+      name: 'Americano',
+      variant: null,
+      quantity: 1,
+      unitPrice: 10000,
+      subtotal: 10000,
+      notes: null,
+      options: [],
+      ...overrides,
+    }
+  }
+
+  it('puts a short item and its amount on one line', () => {
+    const text = formatReceiptText(receiptWith([item({})]), 58)
+
+    // "1x Americano" (12) + 12 spaces + "Rp10.000" (8) = 32 columns exactly,
+    // so the amount starts at column 24 and the line is padded to the edge.
+    expect(text.split('\n')).toContain(`${'1x Americano'.padEnd(24)}Rp10.000`)
+  })
+
+  it('prints no variant, no option and no parentheses', () => {
+    const text = formatReceiptText(
+      receiptWith([
+        item({
+          name: 'Sanger Latte',
+          variant: 'Large',
+          options: [
+            { label: 'Dingin / Ice', priceAdjustment: 0 },
+            { label: 'Normal (100%)', priceAdjustment: 0 },
+          ],
+          subtotal: 18000,
+        }),
+      ]),
+      58,
+    )
+
+    expect(text).toContain('1x Sanger Latte')
+    expect(text).toContain('Rp18.000')
+    expect(text).not.toContain('Dingin / Ice')
+    expect(text).not.toContain('Normal')
+    expect(text).not.toContain('Large')
+    // Nothing on the receipt is parenthesised once qualifiers are gone.
+    expect(text).not.toContain('(')
+  })
+
+  it('moves the amount to its own line rather than clipping a long name', () => {
+    const name = 'Kopi Susu Gula Aren Spesial Edisi Akhir Pekan Panjang Sekali'
+    const text = formatReceiptText(receiptWith([item({ name })]), 58)
+    const lines = text.split('\n')
+
+    for (const line of lines) {
+      expect(line.length).toBeLessThanOrEqual(32)
+    }
+    expect(lines.some((line) => line.trim() === 'Rp10.000')).toBe(true)
+    // Everything except the amounts, rejoined, still spells the whole name.
+    const rejoined = lines
+      .filter((line) => !line.includes('Rp'))
+      .join(' ')
+      .replace(/\s+/g, ' ')
+    expect(rejoined).toContain(name)
+  })
+
+  it('keeps order notes, indented under their item', () => {
+    const text = formatReceiptText(receiptWith([item({ notes: 'Tanpa gula' })]), 58)
+
+    expect(text).toContain('\n  (Tanpa gula)')
+    for (const line of text.split('\n')) {
+      expect(line.length).toBeLessThanOrEqual(32)
+    }
+  })
+
+  it('emits no stray line for an item that carries no option', () => {
+    const lines = formatReceiptText(receiptWith([item({ name: 'Espresso' })]), 58).split('\n')
+    // fit() pads every line to the full width, so match on the prefix.
+    const at = lines.findIndex((line) => line.startsWith('MEJA 09'))
+
+    expect(at).toBeGreaterThan(-1)
+    expect(lines[at + 2]).toContain('1x Espresso')
+    expect(lines[at + 3]).toBe('')
+  })
+
+  it('gives a two-item bill exactly two item lines', () => {
+    const lines = formatReceiptText(
+      receiptWith([
+        item({
+          name: 'Sanger Latte',
+          variant: 'Large',
+          options: [{ label: 'Dingin / Ice', priceAdjustment: 0 }],
+          subtotal: 18000,
+        }),
+        item({ name: 'V-60', options: [{ label: 'Panas / Hot', priceAdjustment: 0 }], subtotal: 15000 }),
+      ]),
+      58,
+    ).split('\n')
+
+    const at = lines.findIndex((line) => line.startsWith('MEJA 09'))
+    expect(at).toBeGreaterThan(-1)
+    const rest = lines.slice(at + 2)
+    const untilDivider = rest.slice(0, rest.findIndex((line) => line.startsWith('---')))
+    expect(untilDivider.filter((line) => line.trim()).length).toBe(2)
+  })
+
+  it('keeps every line within 32 columns with long names and notes', () => {
+    const text = formatReceiptText(
+      receiptWith([
+        item({
+          name: 'Vietnam Drip Spesial Akhir Pekan',
+          variant: 'Large',
+          options: [
+            { label: 'Panas / Hot', priceAdjustment: 0 },
+            { label: 'Normal (100%)', priceAdjustment: 0 },
+          ],
+          notes: 'Jangan terlalu manis ya, terima kasih banyak',
+          subtotal: 20000,
+        }),
+      ]),
+      58,
+    )
+
+    for (const line of text.split('\n')) {
+      expect(line.length).toBeLessThanOrEqual(32)
+    }
+    expect(text).not.toContain('Normal')
+  })
+
+  it('drops the postal address from the header', () => {
+    const text = formatReceiptText(receiptWith([item({})]), 58)
+
+    expect(text).toContain('Pinto Kupi')
+    expect(text).not.toContain('Jl. Flamboyan')
+  })
+
+  it('wraps free-text header and footer instead of cutting them off', () => {
+    const data = buildReceipt({
+      business: {
+        ...defaultReceiptBusiness(),
+        name: 'Pinto Kupi Roastery & Kafe Cabang Bogor Selatan',
+        tagline: 'Roastery & Kafe — Bogor',
+        footerMessage: 'Terima kasih telah berkunjung, sampai jumpa lagi di Pinto Kupi.',
+      },
+      bill: {
+        reference: 'R-260911-8B33B465EE',
+        sessionReference: null,
+        issuedAt: '2026-09-11T12:53:00Z',
+      },
+      sourceOrders: [{ label: 'R-260911-8B33B465EE', items: [item({ name: 'V-60', subtotal: 15000 })] }],
+      tableLabel: null,
+      subtotal: 15000,
+      discount: 0,
+      tax: 0,
+      total: 15000,
+      payment: {
+        method: 'QRIS',
+        displayLabel: 'QRIS',
+        status: 'PAID',
+        cashier: null,
+        paidAt: '2026-09-11T12:53:00Z',
+        cashReceived: null,
+        change: null,
+      },
+      notes: null,
+    })
+    const text = formatReceiptText(data, 58)
+
+    for (const line of text.split('\n')) {
+      expect(line.length).toBeLessThanOrEqual(32)
+    }
+    // The whole name survives, just spread over more than one line.
+    const joined = text.replace(/\s+/g, ' ')
+    expect(joined).toContain('Pinto Kupi Roastery & Kafe Cabang Bogor Selatan')
+    expect(joined).toContain('Terima kasih telah berkunjung, sampai jumpa lagi di Pinto Kupi.')
+    expect(text).toContain('Roastery & Kafe — Bogor')
+  })
+
+  it('never truncates free text the shop controls from app_settings', () => {
+    const data = buildReceipt({
+      business: {
+        ...defaultReceiptBusiness(),
+        website: 'www.pintokopi.web.id/cabang-bogor-selatan',
+        wifiPassword: 'rahasiapintukupisekali',
+      },
+      bill: {
+        reference: 'R-260911-8B33B465EE',
+        sessionReference: null,
+        issuedAt: '2026-09-11T12:53:00Z',
+      },
+      sourceOrders: [{ label: 'R-260911-8B33B465EE', items: [item({ name: 'V-60', subtotal: 15000 })] }],
+      tableLabel: null,
+      subtotal: 15000,
+      discount: 0,
+      tax: 0,
+      total: 15000,
+      payment: {
+        method: 'QRIS',
+        displayLabel: 'QRIS',
+        status: 'PAID',
+        cashier: null,
+        paidAt: '2026-09-11T12:53:00Z',
+        cashReceived: null,
+        change: null,
+      },
+      notes: null,
+    })
+    const text = formatReceiptText(data, 58)
+
+    for (const line of text.split('\n')) {
+      expect(line.length).toBeLessThanOrEqual(32)
+    }
+    // Compared with all whitespace stripped, so a wrapped word still matches.
+    const joined = text.replace(/\s+/g, '')
+    expect(joined).toContain('www.pintokopi.web.id/cabang-bogor-selatan')
+    expect(joined).toContain('rahasiapintukupisekali')
   })
 })

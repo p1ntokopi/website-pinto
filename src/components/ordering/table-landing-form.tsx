@@ -6,15 +6,35 @@ import { Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { startOrResumeDiningSession } from "@/app/t/[slug]/actions"
 
-export function TableLandingForm({ tableSlug }: { tableSlug: string }) {
+type LandingState = { error?: string } | null
+
+/**
+ * Resumes the cashier-opened session for this table. The QR never opens a
+ * session, so nothing orderable is rendered when the table has none.
+ */
+export function TableLandingForm({
+  tableSlug,
+  hasActiveSession,
+}: {
+  tableSlug: string
+  hasActiveSession: boolean
+}) {
   const [state, formAction, isPending] = useActionState(
-    async (_prev: { error?: string } | null, _form: FormData) =>
-      startOrResumeDiningSession(tableSlug),
+    async (prev: LandingState, formData: FormData): Promise<LandingState> => {
+      // The slug travels with the submission rather than being captured from the
+      // render, so a stale form cannot resume a different table's session.
+      const slug = String(formData.get("table_slug") ?? "")
+      if (!slug) return prev
+      return (await startOrResumeDiningSession(slug)) ?? null
+    },
     null
   )
 
+  if (!hasActiveSession) return null
+
   return (
     <form action={formAction} className="w-full space-y-3">
+      <input type="hidden" name="table_slug" value={tableSlug} />
       <Button
         type="submit"
         disabled={isPending}
@@ -23,10 +43,10 @@ export function TableLandingForm({ tableSlug }: { tableSlug: string }) {
         {isPending ? (
           <>
             <Loader2 className="w-5 h-5 animate-spin" />
-            Memulai sesi...
+            Membuka menu...
           </>
         ) : (
-          "Lihat Menu & Pesan"
+          "Tambah Pesanan"
         )}
       </Button>
       {state?.error && (

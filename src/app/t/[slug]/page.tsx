@@ -2,8 +2,15 @@ import Link from "next/link"
 import { AlertCircle } from "lucide-react"
 
 import { createClient } from "@/lib/supabase/server"
+import { getSessionToken } from "@/lib/ordering/session"
 import { Button } from "@/components/ui/button"
 import { TableLandingForm } from "@/components/ordering/table-landing-form"
+
+type TableSessionStatus = {
+  success?: boolean
+  table_number?: string
+  has_active_session?: boolean
+}
 
 export default async function TableLandingPage({
   params,
@@ -69,6 +76,36 @@ export default async function TableLandingPage({
     )
   }
 
+  // The QR is a secondary channel: it resumes the session the cashier opened
+  // and never opens one itself. Anything other than an explicit "a session is
+  // open" is treated as no session, so the page fails closed.
+  const { data: statusData } = await supabase.rpc("get_table_session_status", {
+    p_table_slug: table.slug,
+  })
+  const status = statusData as TableSessionStatus | null
+  const hasActiveSession =
+    status?.success === true && status.has_active_session === true
+
+  // "Pesanan Saya" needs the session token, which a freshly scanned device does
+  // not have yet — so it only appears once there is something to show. The token
+  // gate stays exactly as strict as before.
+  let latestOrderNumber: string | null = null
+  if (hasActiveSession) {
+    const sessionToken = await getSessionToken()
+    if (sessionToken) {
+      const { data: summaryData } = await supabase.rpc(
+        "get_dining_session_summary",
+        { p_table_slug: table.slug, p_session_token: sessionToken }
+      )
+      const orders = (
+        summaryData as { orders?: Array<{ order_number?: string }> } | null
+      )?.orders
+      latestOrderNumber = orders?.length
+        ? (orders[orders.length - 1]?.order_number ?? null)
+        : null
+    }
+  }
+
   return (
     <div className="flex min-h-[90vh] flex-col items-center justify-center p-6 text-center max-w-md mx-auto">
       <div className="mb-10">
@@ -82,12 +119,41 @@ export default async function TableLandingPage({
 
       <div className="w-full border border-border/60 bg-white p-8 mb-6">
         <h2 className="text-2xl font-bold mb-1">Meja {table.table_number}</h2>
-        <p className="text-sm text-muted-foreground">
-          Selamat datang. Anda dapat memesan langsung dari perangkat ini.
-        </p>
+        {hasActiveSession ? (
+          <>
+            <p className="text-sm text-muted-foreground">Selamat menikmati.</p>
+            <p className="text-sm text-muted-foreground">
+              Tambah pesanan kapan saja.
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-muted-foreground">
+              Belum ada sesi aktif.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Silakan melakukan pemesanan di kasir terlebih dahulu.
+            </p>
+          </>
+        )}
       </div>
 
-      <TableLandingForm tableSlug={table.slug} />
+      <TableLandingForm
+        tableSlug={table.slug}
+        hasActiveSession={hasActiveSession}
+      />
+
+      {latestOrderNumber && (
+        <Button
+          render={
+            <Link href={`/t/${table.slug}/order/${latestOrderNumber}`} />
+          }
+          variant="outline"
+          className="w-full h-12 mt-3"
+        >
+          Pesanan Saya
+        </Button>
+      )}
     </div>
   )
 }

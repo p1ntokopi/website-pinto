@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
       objectKey,
       url: publicUrl,
     })
-  } catch (error: any) {
+  } catch (error) {
     console.error('Upload handler error:', error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Gagal mengunggah file.' },

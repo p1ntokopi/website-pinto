@@ -1,6 +1,6 @@
 export const BUSINESS = {
-  name: 'Pinto Coffee',
-  tagline: 'Kopi • Makanan • Biji Kopi',
+  name: 'Pinto Kupi',
+  tagline: 'Roastery & Kafe — Bogor',
   address: 'Jl. Flamboyan No. 8, Perumahan Bumi Insani, Tajur Halang, Bogor',
   website: 'www.pintokopi.web.id',
   wifiName: 'P1NTO',

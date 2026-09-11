@@ -3,6 +3,20 @@ import { getR2Client, R2_BUCKET_NAME, GetObjectCommand } from '@/lib/storage/r2'
 
 export const dynamic = 'force-dynamic'
 
+/**
+ * R2 surfaces a missing object either as a named `NoSuchKey` error or as a 404 on
+ * the SDK's `$metadata`. Neither field is guaranteed to be present, so narrow on
+ * the value instead of trusting the error's static type.
+ */
+function isObjectNotFoundError(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) return false
+  const { name, $metadata } = error as {
+    name?: unknown
+    $metadata?: { httpStatusCode?: unknown }
+  }
+  return name === 'NoSuchKey' || $metadata?.httpStatusCode === 404
+}
+
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ key: string[] }> | { key: string[] } }
@@ -64,17 +78,21 @@ export async function GET(
 
     const status = isPartial ? 206 : 200
 
-    // Transform Node stream to Web ReadableStream
-    const webStream = typeof (r2Response.Body as any).transformToWebStream === 'function'
-      ? (r2Response.Body as any).transformToWebStream()
-      : (r2Response.Body as any)
+    // Transform Node stream to Web ReadableStream. The SDK types both runtime
+    // bodies as SdkStream, whose mixin supplies transformToWebStream(); the
+    // fallback passes the body straight through for a pre-transformed stream.
+    const body = r2Response.Body
+    const webStream: ReadableStream =
+      typeof body.transformToWebStream === 'function'
+        ? body.transformToWebStream()
+        : (body as unknown as ReadableStream)
 
     return new NextResponse(webStream, {
       status,
       headers,
     })
-  } catch (error: any) {
-    if (error.name === 'NoSuchKey' || error.$metadata?.httpStatusCode === 404) {
+  } catch (error) {
+    if (isObjectNotFoundError(error)) {
       return new NextResponse('File tidak ditemukan', { status: 404 })
     }
     console.error('Error fetching file from R2 proxy:', error)

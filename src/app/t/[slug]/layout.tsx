@@ -4,7 +4,7 @@ import { ReactNode } from "react"
 
 export const metadata: Metadata = {
   title: "Pinto Ordering",
-  description: "Pesan langsung dari meja Anda.",
+  description: "Tambah pesanan untuk sesi meja Anda.",
   viewport: {
     width: "device-width",
     initialScale: 1,

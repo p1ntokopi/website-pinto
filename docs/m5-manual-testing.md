@@ -62,10 +62,14 @@ Test with separate accounts/tokens; hiding a button is not authorization evidenc
 - [ ] An inactive user and unauthenticated request are denied even with a syntactically valid RPC payload.
 - [ ] Owner-only finance data remains denied to admin/staff/kitchen/anonymous users.
 
-## 4. Customer table session and ordering
+## 4. Cashier-first table session and ordering
 
-- [ ] First scan of an active table starts an open session and sets an opaque `HttpOnly`, `SameSite=Lax` cookie (`Secure` under HTTPS).
-- [ ] A concurrent/repeated scan resumes the same open session; no second open session is created.
+- [ ] The cashier opens the table session from `/admin/orders/new` ("Pesanan Baru"). Creating a cashier DINE-IN order for a free table opens that table's single session; the customer never opens one.
+- [ ] The POS table list marks each table `Tersedia` or `Terisi`. Selecting an occupied table requires the explicit "Gabung ke Sesi" confirmation, which shows the accrued session total; cancelling attaches nothing.
+- [ ] Before the create RPC runs, the POS shows the review step (`Pesanan Anda`, items, quantities, notes, total, table) and the customer confirms. Confirmation is an interaction event — it introduces no order status.
+- [ ] QR scan of a table with **no** open session shows "Belum ada sesi aktif. Silakan melakukan pemesanan di kasir terlebih dahulu.", offers no ordering control, and creates no session. Confirm in the database that no `dining_sessions` row was inserted.
+- [ ] QR scan of a table **with** an open session resumes that same session and sets an opaque `HttpOnly`, `SameSite=Lax` cookie (`Secure` under HTTPS). The landing response does not expose the session token.
+- [ ] The table-occupancy read used by the QR landing returns only success/table number/has-active-session — never a token, order, payment, or customer field.
 - [ ] Different tables receive different sessions/tokens and cannot read one another.
 - [ ] Inactive/unknown tables are rejected without leaking internal database details.
 - [ ] Submit a cart and verify server-side catalog lookup, availability checks, price calculation, snapshots, quantity limits, and note limits. A tampered client price is ignored.
@@ -74,6 +78,7 @@ Test with separate accounts/tokens; hiding a button is not authorization evidenc
 - [ ] Verify a new customer order displays as `NEW` and can progress `NEW → PREPARING → READY → SERVED`.
 - [ ] Attempt a stale or invalid transition from two staff clients; one wins atomically and the other receives a conflict, refreshes, and does not add false history.
 - [ ] Cancel where permitted with a mandatory reason; verify audit/history attribution. Confirm canceled orders are excluded from the bill.
+- [ ] Two cashiers assign the same free table concurrently: exactly one session exists and the second cashier is told the table is occupied rather than merged silently.
 
 ## 5. Scoped polling, streams, and limits
 
@@ -113,7 +118,7 @@ Run the full matrix for a single pickup order and a multi-order table session.
 - [ ] Closure is blocked while a non-canceled order is not served or while the session is not fully paid.
 - [ ] Explicit cashier closure stores completion actor/time, total/receipt snapshot, closes the session, and frees the table.
 - [ ] Retry the closure idempotency key; it returns the same completion. Race a second key; no second close/payment/receipt is created.
-- [ ] After closure, the old customer token cannot append/read an open bill; a new scan creates a distinct session.
+- [ ] After closure, the old customer token cannot append/read an open bill; a new scan shows the no-session refusal and creates no session, and the freed table can be assigned to the next party by the cashier.
 
 ## 9. Xendit retirement and history
 
@@ -141,7 +146,7 @@ Capture actual output; this document does not claim any command passes.
 - [ ] `npm run build`
 - [ ] Unit tests cover state transitions/roles, customer and cashier idempotency, amount recomputation, one-open-session/one-paid-target races, receipt immutability/reprint, closure prerequisites/retry, and Xendit fail-closed behavior.
 - [ ] Integration tests execute RPCs under anonymous, kitchen, staff, admin, owner, inactive, and unauthenticated identities and verify RLS/grant denials.
-- [ ] Browser tests cover scan → two orders → lifecycle → CASH and manual QRIS → receipt retry → explicit closure, including reconnect and duplicate submissions.
+- [ ] Browser tests cover cashier order → customer confirmation → additional QR orders → lifecycle → CASH and manual QRIS → receipt retry → explicit closure, including reconnect and duplicate submissions.
 
 ## 12. Cutover, observation, and recovery
 

@@ -12,6 +12,8 @@ export const seededOrderNumber = process.env.PLAYWRIGHT_ORDER_NUMBER?.trim() ?? 
 export const adminEmail = process.env.PLAYWRIGHT_ADMIN_EMAIL?.trim() ?? ''
 export const adminPassword = process.env.PLAYWRIGHT_ADMIN_PASSWORD ?? ''
 export const seededOrderId = process.env.PLAYWRIGHT_ORDER_ID?.trim() ?? ''
+export const supabaseUrl = process.env.PLAYWRIGHT_SUPABASE_URL?.trim() ?? ''
+export const supabaseAnonKey = process.env.PLAYWRIGHT_SUPABASE_ANON_KEY?.trim() ?? ''
 
 export function seededGuard(...requirements: Array<[value: boolean, message: string]>) {
   const missing = requirements.find(([value]) => !value)

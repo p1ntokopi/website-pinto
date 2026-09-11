@@ -102,6 +102,94 @@ function blank(): string {
   return ''
 }
 
+/** Last resort for a single word longer than the line: cut it, don't lose it. */
+function chunk(text: string, width: number): string[] {
+  if (text.length <= width) return [text]
+  const parts: string[] = []
+  for (let i = 0; i < text.length; i += width) parts.push(text.slice(i, i + width))
+  return parts
+}
+
+/**
+ * Word-wrap to `width`. Nothing is ever truncated: a name or an address that
+ * does not fit continues on the next line, because a clipped line on a
+ * receipt reads as a different item.
+ */
+function wrapWords(text: string, width: number): string[] {
+  const words = text.trim().split(/\s+/).filter(Boolean)
+  if (words.length === 0) return ['']
+  const lines: string[] = []
+  let current = ''
+  for (const word of words) {
+    if (!current) current = word
+    else if (current.length + 1 + word.length <= width) current += ` ${word}`
+    else {
+      lines.push(current)
+      current = word
+    }
+  }
+  lines.push(current)
+  return lines.flatMap((line) => chunk(line, width))
+}
+
+/**
+ * A full-width single-column line. `fit(x, '', w)` slices at the width, which
+ * is how the old address line got cut in half; website, wifi credentials and
+ * cashier name are free text from app_settings and must wrap instead — a
+ * truncated wifi password is worse than one extra line.
+ */
+function labelled(text: string, width: number): string[] {
+  const [first, ...rest] = wrapWords(text, width)
+  const lines = [first.padEnd(width)]
+  for (const line of rest) {
+    for (const wrapped of wrapWords(line, width - 2)) lines.push(`  ${wrapped}`)
+  }
+  return lines
+}
+
+/**
+ * Centre text across as many lines as it needs. `center()` alone slices at the
+ * width, which silently cut the old address line in half; shop name, tagline
+ * and footer all take free text from app_settings, so none of them may clip.
+ */
+function centerWrapped(text: string, width: number): string[] {
+  return wrapWords(text, width).map((line) => center(line, width))
+}
+
+/**
+ * Right-align `amount` against `description`, wrapping the description first
+ * when the two cannot share a line.
+ */
+function fitAmount(description: string, amount: string, width: number): string[] {
+  if (description.length + 1 + amount.length <= width) {
+    return [description + ' '.repeat(width - description.length - amount.length) + amount]
+  }
+  const wrapped = wrapWords(description, width)
+  const last = wrapped.length - 1
+  if (wrapped[last].length + 1 + amount.length <= width) {
+    wrapped[last] += ' '.repeat(width - wrapped[last].length - amount.length) + amount
+    return wrapped
+  }
+  return [...wrapped, amount.padStart(width)]
+}
+
+/**
+ * `1x Americano` on the left, its amount right-aligned — one line per item.
+ *
+ * Variants and chosen options are deliberately not printed on the customer's
+ * copy. Joining them produced lines like `(Dingin / Ice, Normal (100%))`, which
+ * wrapped onto a second line and nested its own parentheses for no gain. The
+ * chosen options stay in the order record the kitchen reads.
+ */
+function itemLines(item: ReceiptLineItem, width: number): string[] {
+  const lines = fitAmount(`${item.quantity}x ${item.name}`, formatIDR(item.subtotal), width)
+
+  if (item.notes) {
+    for (const line of wrapWords(`(${item.notes})`, width - 2)) lines.push(`  ${line}`)
+  }
+  return lines
+}
+
 /** Build the canonical customer receipt, including compatibility aliases. */
 export function buildReceipt(input: ReceiptInput): ReceiptData {
   const items = input.sourceOrders.flatMap((sourceOrder) => sourceOrder.items)
@@ -183,9 +271,9 @@ export function buildReceiptFromSnapshot(record: ReceiptSnapshotRecord): Receipt
         subtotal: item.subtotal,
         notes: item.notes ?? null,
         options: (item.options ?? []).map((option) => ({
-          label: option.option_name
-            ? `${option.option_name}: ${option.option_value}`
-            : option.option_value,
+          // Value only — the group name ("Suhu Penyajian") costs a third of a
+          // 32-column line and the seeded values already describe themselves.
+          label: option.option_value,
           priceAdjustment: option.price_adjustment,
         })),
       })),
@@ -252,9 +340,10 @@ export function formatReceiptText(data: ReceiptData, paperWidth: ThermalPaperWid
   const w = RECEIPT_LINE_WIDTHS[paperWidth]
   const lines: string[] = []
 
-  lines.push(center(data.business.name, w))
-  lines.push(center(data.business.tagline, w))
-  lines.push(center(data.business.address, w))
+  // The postal address is deliberately not printed: the tagline already names
+  // the city, and at 32 columns an address costs two wrapped lines per receipt.
+  lines.push(...centerWrapped(data.business.name, w))
+  if (data.business.tagline) lines.push(...centerWrapped(data.business.tagline, w))
   lines.push(blank())
   lines.push(divider(w))
   lines.push(fit(`BILL ${data.bill.reference}`, '', w))
@@ -276,10 +365,7 @@ export function formatReceiptText(data: ReceiptData, paperWidth: ThermalPaperWid
       lines.push(fit(`ORDER ${sourceOrder.label}`, '', w))
     }
     sourceOrder.items.forEach((item) => {
-      lines.push(fit(`${item.quantity}x ${item.name}`, formatIDR(item.subtotal), w))
-      if (item.variant) lines.push(`  ${item.variant}`)
-      item.options.forEach((opt) => lines.push(`  ${opt.label}`))
-      if (item.notes) lines.push(`  (${item.notes})`)
+      lines.push(...itemLines(item, w))
     })
   })
 
@@ -293,7 +379,9 @@ export function formatReceiptText(data: ReceiptData, paperWidth: ThermalPaperWid
   lines.push(fit(`PAYMENT: ${displayPaymentMethod(data.payment)}`, '', w))
   lines.push(fit(`STATUS: ${displayPaymentStatus(data.payment.status)}`, '', w))
   if (data.payment.paidAt) lines.push(fit(`DIBAYAR: ${formatReceiptDate(data.payment.paidAt)}`, '', w))
-  if (data.payment.cashier) lines.push(fit(`KASIR: ${data.payment.cashier}`, '', w))
+  // The cashier's name is deliberately not printed. It stays in the payment row
+  // (payments.cashier_id, payments.confirmed_by) where it is auditable, and the
+  // customer's copy keeps the one-line-per-field layout.
   if (data.payment.method === 'CASH') {
     if (data.payment.cashReceived !== null) {
       lines.push(fit('TUNAI', formatIDR(data.payment.cashReceived), w))
@@ -301,12 +389,14 @@ export function formatReceiptText(data: ReceiptData, paperWidth: ThermalPaperWid
     if (data.payment.change !== null) lines.push(fit('KEMBALI', formatIDR(data.payment.change), w))
   }
   lines.push(blank())
-  lines.push(fit(`WEB: ${data.business.website}`, '', w))
-  lines.push(fit(`WiFi: ${data.business.wifiName} / Pass: ${data.business.wifiPassword}`, '', w))
+  lines.push(...labelled(`WEB: ${data.business.website}`, w))
+  lines.push(...labelled(`WiFi: ${data.business.wifiName} / Pass: ${data.business.wifiPassword}`, w))
   lines.push(blank())
-  lines.push(center(data.business.footerMessage, w))
-  lines.push(blank())
-  lines.push(center(data.business.name, w))
+  if (data.business.footerMessage) {
+    lines.push(...centerWrapped(data.business.footerMessage, w))
+    lines.push(blank())
+  }
+  lines.push(...centerWrapped(data.business.name, w))
   lines.push(divider(w))
 
   return lines.join('\n')

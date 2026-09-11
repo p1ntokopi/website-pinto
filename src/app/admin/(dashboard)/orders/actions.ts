@@ -93,6 +93,25 @@ function rpcFailure(data: unknown, fallback: string): string | null {
   return null;
 }
 
+/**
+ * The ordering RPCs raise curated, cashier-facing reasons with SQLSTATE 23514
+ * (rule violation, e.g. an occupied table) and 22023 (invalid argument).
+ * PostgreSQL uses the same codes for raw constraint and type failures, so
+ * anything that reads like engine output stays behind the generic fallback.
+ */
+const RAW_DB_MESSAGE =
+  /violates|constraint|relation "|column "|null value|does not exist|permission denied|syntax error/i;
+
+function actionableRpcError(error: {
+  code?: string | null;
+  message?: string | null;
+}): string | null {
+  if (error.code !== "23514" && error.code !== "22023") return null;
+  const message = error.message?.trim();
+  if (!message || RAW_DB_MESSAGE.test(message)) return null;
+  return message;
+}
+
 function paymentResult(
   data: unknown,
   receiptPath: (receiptId: string) => string
@@ -280,12 +299,19 @@ export async function recordReceiptPrintAttempt(
 
 export type PosOrderType = "DINE_IN" | "TAKEAWAY";
 
+/** One chosen value of one option group. The RPC re-validates ownership and availability. */
+export type PosItemOptionInput = {
+  optionId: string;
+  optionValueId: string;
+};
+
 export type PosItemInput = {
   productId: string;
   productVariantId?: string | null;
   coffeeVariantId?: string | null;
   quantity: number;
   notes?: string | null;
+  options?: PosItemOptionInput[] | null;
 };
 
 export type CreatePosOrderInput = {
@@ -360,6 +386,14 @@ export async function createPosOrder(input: CreatePosOrderInput): Promise<{
     if (item.productVariantId && item.coffeeVariantId) {
       return { error: "Item hanya boleh memiliki satu jenis varian." };
     }
+    for (const option of item.options ?? []) {
+      // Which options a product requires, and whether a value belongs to it, is
+      // decided by the RPC — this only rejects entries that are structurally
+      // unusable before they reach the database.
+      if (!option.optionId || !option.optionValueId) {
+        return { error: "Pilihan produk tidak lengkap." };
+      }
+    }
   }
 
   const { data, error: rpcError } = await supabase.rpc("create_cashier_order", {
@@ -376,13 +410,18 @@ export async function createPosOrder(input: CreatePosOrderInput): Promise<{
       coffee_variant_id: item.coffeeVariantId ?? null,
       quantity: item.quantity,
       notes: item.notes?.trim() || null,
-      options: [],
+      options: (item.options ?? []).map((option) => ({
+        option_id: option.optionId,
+        option_value_id: option.optionValueId,
+      })),
     })),
   });
 
   if (rpcError) {
     console.error("create_cashier_order error:", rpcError);
-    return { error: "Gagal membuat pesanan kasir." };
+    return {
+      error: actionableRpcError(rpcError) ?? "Gagal membuat pesanan kasir.",
+    };
   }
 
   const failure = rpcFailure(data, "Pesanan kasir ditolak.");
