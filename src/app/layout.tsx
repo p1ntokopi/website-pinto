@@ -5,6 +5,7 @@ import "./globals.css";
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const cormorantGaramond = Cormorant_Garamond({
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
   icons: {
     icon: "/Pintokupi.webp",
   },
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://www.pintokupi.my.id"),
 };
 
 export default function RootLayout({

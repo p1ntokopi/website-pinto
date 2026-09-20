@@ -81,13 +81,13 @@ export function PintoSpaceSection() {
         <RevealFade delay={0.1}>
           <div className="mt-14 grid grid-cols-1 gap-8 border-t border-paper/10 pt-10 md:mt-20 md:grid-cols-3 md:gap-12">
             <div>
-              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.25em] text-paper/50">
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.25em] text-paper/75">
                 Jam Buka
               </p>
               <p className="text-xl text-cream">13.00 — 24.00 · Setiap Hari</p>
             </div>
             <div>
-              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.25em] text-paper/50">
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.25em] text-paper/75">
                 Lokasi
               </p>
               <p className="text-xl leading-relaxed text-cream">

@@ -11,7 +11,7 @@ function spec(label: string, value: string | null) {
   if (!value) return null;
   return (
     <div className="border-t border-paper/10 py-4">
-      <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-paper/50">
+      <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-paper/75">
         {label}
       </p>
       <p className="text-paper/90">{value}</p>
@@ -36,7 +36,7 @@ export async function RoasterySection() {
     return (
       <section className="w-full bg-ink py-24 text-paper md:py-32">
         <div className="container mx-auto px-4 md:px-8">
-          <p className="text-lg text-paper/60">
+          <p className="text-lg text-paper/85">
             Rak roastery kami sedang diisi ulang. Nantikan kembali.
           </p>
         </div>
@@ -147,7 +147,7 @@ export async function RoasterySection() {
                       href={`/coffee/${bean.slug}`}
                       className="group w-[70%] shrink-0 snap-start border-t border-paper/10 pt-5 transition-colors"
                     >
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-paper/50">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-paper/75">
                         {o} · {bean.roast_level ?? 'Roast'}
                       </p>
                       <h4 className="mt-2 font-display text-2xl text-cream transition-colors duration-300 group-hover:text-warm">
@@ -181,7 +181,7 @@ export async function RoasterySection() {
                       <span className="font-display text-xl text-cream transition-colors duration-300 group-hover:text-warm md:col-span-4 md:text-2xl">
                         {bean.name}
                       </span>
-                      <span className="text-sm text-paper/60 md:col-span-3">
+                      <span className="text-sm text-paper/85 md:col-span-3">
                         {o} · {bean.roast_level ?? 'Roast'}
                       </span>
                       <span className="font-display text-sm italic text-paper/70 md:col-span-3">

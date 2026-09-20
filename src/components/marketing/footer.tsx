@@ -26,11 +26,11 @@ export function Footer() {
               />
               <span className="font-display mt-1 text-3xl font-bold text-cream">Pinto</span>
             </Link>
-            <p className="mb-6 max-w-xs leading-relaxed text-paper/60">
+            <p className="mb-6 max-w-xs leading-relaxed text-paper/85">
               Kafe dan roastery di Bogor. Kopi Nusantara, disangrai in-house
               dalam batch kecil, disajikan untuk setiap momen.
             </p>
-            <p className="text-xs uppercase tracking-[0.25em] text-paper/50">
+            <p className="text-xs uppercase tracking-[0.25em] text-paper/75">
               Kopi · Makanan · Momen Indah
             </p>
           </div>
@@ -39,12 +39,12 @@ export function Footer() {
             <h3 className="mb-6 text-xs font-semibold uppercase tracking-widest text-cream">
               Jelajahi
             </h3>
-            <ul className="space-y-1">
+            <ul className="space-y-2">
               {NAV.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="block py-1.5 text-sm text-paper/60 transition-colors hover:text-white"
+                    className="block py-2 text-sm text-paper/85 transition-colors hover:text-white"
                   >
                     {link.label}
                   </Link>
@@ -57,7 +57,7 @@ export function Footer() {
             <h3 className="mb-6 text-xs font-semibold uppercase tracking-widest text-cream">
               Kunjungi Kami
             </h3>
-            <ul className="space-y-4 text-sm text-paper/60">
+            <ul className="space-y-4 text-sm text-paper/85">
               <li>
                 Perumahan Bumi Insani, Jl. Flamboyan No. 8
                 <br />
@@ -73,7 +73,7 @@ export function Footer() {
                   href="https://maps.app.goo.gl/p7UhDrsRF1SbVEVh9"
                   target="_blank"
                   rel="noreferrer"
-                  className="text-paper/60 underline-offset-4 transition-colors hover:text-white hover:underline"
+                  className="text-paper/85 underline-offset-4 transition-colors hover:text-white hover:underline"
                 >
                   Petunjuk Arah
                 </a>
@@ -83,7 +83,7 @@ export function Footer() {
         </div>
 
         <div
-          className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 text-[10px] uppercase tracking-widest text-paper/50 md:flex-row"
+          className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 text-[10px] uppercase tracking-widest text-paper/75 md:flex-row"
           style={{ paddingBottom: 'calc(env(safe-area-inset-bottom))' }}
         >
           <p>© {new Date().getFullYear()} Pinto Kupi. Hak cipta dilindungi.</p>

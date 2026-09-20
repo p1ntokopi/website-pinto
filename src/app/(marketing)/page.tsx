@@ -12,7 +12,7 @@ import { TestimonialsSection } from '@/components/marketing/testimonials-section
 import { FinalCtaSection } from '@/components/marketing/final-cta-section';
 import { getApprovedTestimonials } from '@/lib/testimonials';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 export const metadata = {
   title: 'Roastery & Kafe di Bogor — Pinto Kupi',

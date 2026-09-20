@@ -73,7 +73,7 @@ export function MenuCarousel({ items }: { items: MenuCarouselItem[] }) {
       </div>
 
       <div className="mt-6 flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1">
           {items.map(({ item }, i) => (
             <button
               key={item.slug}
@@ -81,7 +81,7 @@ export function MenuCarousel({ items }: { items: MenuCarouselItem[] }) {
               onClick={() => go(scrollerRef.current, i)}
               aria-label={`Tampilkan ${item.name}`}
               aria-current={i === active}
-              className="flex h-11 items-center"
+              className="flex h-11 w-8 items-center justify-center focus-visible:outline-none"
             >
               <span
                 className={cn(

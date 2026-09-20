@@ -49,7 +49,7 @@ export function MobileNav() {
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="lg:hidden inline-flex h-11 w-11 items-center justify-center rounded-full text-ink transition-colors hover:bg-ink/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+        className="lg:hidden inline-flex h-12 w-12 items-center justify-center rounded-full text-ink transition-colors hover:bg-ink/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
         aria-label={open ? 'Tutup menu' : 'Buka menu'}
         aria-expanded={open}
         aria-controls="mobile-menu"
@@ -80,7 +80,7 @@ export function MobileNav() {
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="Tutup menu"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full text-ink transition-colors hover:bg-ink/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+                className="inline-flex h-12 w-12 items-center justify-center rounded-full text-ink transition-colors hover:bg-ink/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
               >
                 <X className="h-6 w-6" />
               </button>

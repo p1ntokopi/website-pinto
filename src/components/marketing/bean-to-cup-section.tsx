@@ -72,7 +72,7 @@ function StepBlock({
           active ? 'opacity-100' : 'opacity-30',
         )}
       >
-        <p className="font-display text-5xl leading-none text-coffee/40 md:text-6xl">
+        <p aria-hidden="true" className="font-display text-5xl leading-none text-coffee/80 md:text-6xl">
           {step.num}
         </p>
         <h3 className="mt-4 font-display text-3xl text-ink md:text-5xl">
@@ -110,7 +110,7 @@ export function BeanToCupSection() {
           {STEPS.map((step, i) => (
             <div key={step.num} className="flex flex-col gap-6">
               <div className="flex items-baseline gap-4">
-                <span className="font-display text-4xl leading-none text-coffee/40">
+                <span aria-hidden="true" className="font-display text-4xl leading-none text-coffee/80">
                   {step.num}
                 </span>
                 <h3 className="font-display text-3xl text-ink">

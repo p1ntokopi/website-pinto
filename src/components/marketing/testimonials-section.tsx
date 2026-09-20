@@ -43,7 +43,7 @@ function initials(name: string) {
 
 function Stars({ rating = 5 }: { rating?: number }) {
   return (
-    <div className="flex gap-1" aria-label={`Rating ${rating} dari 5`}>
+    <div className="flex gap-1" role="img" aria-label={`Rating ${rating} dari 5`}>
       {[1, 2, 3, 4, 5].map((star) => (
         <svg
           key={star}
@@ -185,7 +185,7 @@ export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) 
               >
                 <ArrowRight className="h-4 w-4" />
               </button>
-              <div className="ml-2 flex gap-2">
+              <div className="ml-2 flex items-center gap-1">
                 {displayList.map((_, i) => (
                   <button
                     key={i}
@@ -193,11 +193,15 @@ export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) 
                     onClick={() => setIndex(i)}
                     aria-label={`Tampilkan testimoni ${i + 1}`}
                     aria-current={i === index}
-                    className={cn(
-                      'h-1.5 w-1.5 rounded-full transition-all duration-300',
-                      i === index ? 'w-6 bg-coffee' : 'bg-ink/20 hover:bg-ink/40',
-                    )}
-                  />
+                    className="flex h-11 w-8 items-center justify-center focus-visible:outline-none"
+                  >
+                    <span
+                      className={cn(
+                        'block h-1.5 rounded-full transition-all duration-300',
+                        i === index ? 'w-6 bg-coffee' : 'w-1.5 bg-ink/20 hover:bg-ink/40',
+                      )}
+                    />
+                  </button>
                 ))}
               </div>
             </div>

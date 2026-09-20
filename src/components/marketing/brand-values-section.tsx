@@ -154,7 +154,7 @@ export function BrandValuesSection() {
             </div>
 
             <div className="mt-6 flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1">
                 {values.map((value, i) => (
                   <button
                     key={value.num}
@@ -162,7 +162,7 @@ export function BrandValuesSection() {
                     onClick={() => go(scrollerRef.current, i)}
                     aria-label={`Tampilkan nilai ${i + 1}`}
                     aria-current={i === active}
-                    className="flex h-11 items-center"
+                    className="flex h-11 w-8 items-center justify-center focus-visible:outline-none"
                   >
                     <span
                       className={cn(

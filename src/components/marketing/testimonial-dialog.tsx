@@ -86,14 +86,16 @@ export function TestimonialDialog({ children }: TestimonialDialogProps) {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger
         render={
-          <Button
-            type="button"
-            variant="outline"
-            className="rounded-full border-ink/20 bg-transparent px-5 text-sm font-medium text-ink transition-colors hover:border-ink hover:bg-ink hover:text-paper"
-          >
-            <MessageSquarePlus className="mr-2 h-4 w-4 text-coffee" />
-            Tulis Ulasan
-          </Button>
+          (children as React.ReactElement) ?? (
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-full border-ink/20 bg-transparent px-5 text-sm font-medium text-ink transition-colors hover:border-ink hover:bg-ink hover:text-paper"
+            >
+              <MessageSquarePlus className="mr-2 h-4 w-4 text-coffee" />
+              Tulis Ulasan
+            </Button>
+          )
         }
       />
 
@@ -208,7 +210,7 @@ export function TestimonialDialog({ children }: TestimonialDialogProps) {
                   htmlFor="testimonial-role"
                   className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
                 >
-                  Peran / Kunjungan <span className="text-[10px] text-muted-foreground/70">(Opsional)</span>
+                  Peran / Kunjungan <span className="text-[10px] text-muted-foreground">(Opsional)</span>
                 </Label>
                 <Input
                   id="testimonial-role"
