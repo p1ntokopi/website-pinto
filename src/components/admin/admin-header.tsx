@@ -4,6 +4,8 @@ import { Menu } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { NotificationControl } from '@/components/admin/notification-control'
+import { roleLabel } from '@/lib/auth/roles'
+import { getPageTitle } from '@/lib/ui/navigation'
 
 interface HeaderProps {
   user: {
@@ -16,31 +18,6 @@ interface HeaderProps {
   onMarkAllRead?: () => void
 }
 
-const TITLE_MAP: Array<{ prefix: string; title: string }> = [
-  { prefix: '/admin/orders/new', title: 'Pesanan Baru' },
-  { prefix: '/admin/orders/', title: 'Detail Pesanan' },
-  { prefix: '/admin/menu/products/', title: 'Detail Produk' },
-  { prefix: '/admin/menu/categories', title: 'Kategori' },
-  { prefix: '/admin/menu/products', title: 'Produk' },
-  { prefix: '/admin/tables/live', title: 'Meja Langsung' },
-  { prefix: '/admin/tables', title: 'Meja & QR' },
-  { prefix: '/admin/orders', title: 'Pesanan' },
-  { prefix: '/admin/owner/finance', title: 'Ikhtisar Keuangan' },
-  { prefix: '/admin/owner/sales', title: 'Analitik Penjualan' },
-  { prefix: '/admin/owner/expenses', title: 'Pengeluaran' },
-  { prefix: '/admin/owner/adjustments', title: 'Refund & Koreksi' },
-  { prefix: '/admin/owner/audit', title: 'Audit Log' },
-  { prefix: '/admin/owner/reports', title: 'Laporan Keuangan' },
-  { prefix: '/admin/owner/accounts', title: 'Manajemen Akun' },
-  { prefix: '/admin/owner', title: 'Ringkasan Owner' },
-  { prefix: '/admin', title: 'Ringkasan' },
-]
-
-function getPageTitle(pathname: string): string {
-  const match = TITLE_MAP.find((entry) => pathname.startsWith(entry.prefix))
-  return match?.title ?? 'Admin'
-}
-
 function formatToday(): string {
   return new Date().toLocaleDateString('id-ID', {
     weekday: 'long',
@@ -50,7 +27,13 @@ function formatToday(): string {
   })
 }
 
-export function AdminHeader({ user, onMenuOpen, unreadCount = 0, isConnected = true, onMarkAllRead }: HeaderProps) {
+export function AdminHeader({
+  user,
+  onMenuOpen,
+  unreadCount = 0,
+  isConnected = true,
+  onMarkAllRead,
+}: HeaderProps) {
   const pathname = usePathname()
   const title = getPageTitle(pathname)
 
@@ -84,11 +67,11 @@ export function AdminHeader({ user, onMenuOpen, unreadCount = 0, isConnected = t
         <div className="flex items-center gap-3">
           <div className="hidden text-right sm:block">
             <div className="text-sm font-semibold leading-tight text-ink">{user.full_name}</div>
-            <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-text">
-              {user.role === 'admin' ? 'Admin' : 'Staf'}
+            <div className="text-2xs font-semibold uppercase tracking-[0.14em] text-muted-text">
+              {roleLabel(user.role)}
             </div>
           </div>
-          <div className="flex h-9 w-9 items-center justify-center rounded-sm bg-coffee text-sm font-bold text-paper">
+          <div className="flex h-9 w-9 items-center justify-center rounded-panel bg-coffee text-sm font-bold text-paper">
             {user.full_name.charAt(0).toUpperCase()}
           </div>
         </div>

@@ -406,7 +406,7 @@ export function PosClient({
     return (
       <div className="mx-auto w-full max-w-2xl space-y-5">
         <div className="rounded-sm border border-border-custom bg-card p-6">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-text">
+          <p className="text-xs-plus font-semibold uppercase tracking-[0.16em] text-muted-text">
             Pesanan Anda
           </p>
           <ul className="mt-4 divide-y divide-border-custom/60">
@@ -506,8 +506,8 @@ export function PosClient({
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
-      <div className="space-y-4">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="min-w-0 space-y-4">
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative min-w-0 flex-1 sm:max-w-xs">
             <Search
@@ -531,7 +531,7 @@ export function PosClient({
               aria-pressed={categoryId === "ALL"}
               onClick={() => setCategoryId("ALL")}
               className={cn(
-                "min-h-9 shrink-0 rounded-full border px-3.5 text-xs font-semibold transition-colors focus-visible:ring-3 focus-visible:ring-ring/40 outline-none",
+                "min-h-11 shrink-0 rounded-full border px-3.5 text-xs font-semibold transition-colors focus-visible:ring-3 focus-visible:ring-ring/40 outline-none",
                 categoryId === "ALL"
                   ? "border-coffee bg-coffee text-paper"
                   : "border-border-custom bg-paper text-muted-text hover:text-ink"
@@ -546,7 +546,7 @@ export function PosClient({
                 aria-pressed={categoryId === category.id}
                 onClick={() => setCategoryId(category.id)}
                 className={cn(
-                  "min-h-9 shrink-0 rounded-full border px-3.5 text-xs font-semibold transition-colors focus-visible:ring-3 focus-visible:ring-ring/40 outline-none",
+                  "min-h-11 shrink-0 rounded-full border px-3.5 text-xs font-semibold transition-colors focus-visible:ring-3 focus-visible:ring-ring/40 outline-none",
                   categoryId === category.id
                     ? "border-coffee bg-coffee text-paper"
                     : "border-border-custom bg-paper text-muted-text hover:text-ink"
@@ -605,7 +605,7 @@ export function PosClient({
         )}
       </div>
 
-      <div className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+      <div className="min-w-0 space-y-4 lg:sticky lg:top-24 lg:self-start">
         <div className="space-y-4 rounded-sm border border-border-custom bg-card p-4">
           <div className="flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-sm font-semibold text-ink">
@@ -615,7 +615,7 @@ export function PosClient({
               />
               Keranjang
               {totalQuantity > 0 && (
-                <span className="rounded-full bg-coffee px-2 py-0.5 text-[10px] font-bold text-paper">
+                <span className="rounded-full bg-coffee px-2 py-0.5 text-2xs font-bold text-paper">
                   {totalQuantity}
                 </span>
               )}
@@ -624,7 +624,7 @@ export function PosClient({
               <button
                 type="button"
                 onClick={() => setCart({})}
-                className="inline-flex min-h-9 items-center gap-1 rounded-sm px-2 text-xs font-semibold text-muted-text transition-colors hover:text-danger focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
+                className="inline-flex min-h-11 items-center gap-1 rounded-sm px-2 text-xs font-semibold text-muted-text transition-colors hover:text-danger focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
               >
                 <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                 Kosongkan
@@ -729,7 +729,7 @@ export function PosClient({
                         </span>
                         <span
                           className={cn(
-                            "pl-4 text-[11px] font-medium",
+                            "pl-4 text-xs-plus font-medium",
                             isSelected
                               ? "text-paper/80"
                               : occupied
@@ -808,7 +808,7 @@ export function PosClient({
                         type="button"
                         onClick={() => changeQuantity(line.key, -1)}
                         aria-label={`Kurangi ${line.item.name}`}
-                        className="flex h-9 w-9 items-center justify-center rounded-sm border border-border-custom text-ink"
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-sm border border-border-custom text-ink focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
                       >
                         <Minus className="h-3.5 w-3.5" />
                       </button>
@@ -819,7 +819,7 @@ export function PosClient({
                         type="button"
                         onClick={() => changeQuantity(line.key, 1)}
                         aria-label={`Tambah ${line.item.name}`}
-                        className="flex h-9 w-9 items-center justify-center rounded-sm border border-border-custom text-ink"
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-sm border border-border-custom text-ink focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
                       >
                         <Plus className="h-3.5 w-3.5" />
                       </button>
@@ -923,7 +923,7 @@ export function PosClient({
                     )}
                   </h3>
                   {!option.isRequired && (
-                    <span className="text-[11px] text-muted-text">Opsional</span>
+                    <span className="text-xs-plus text-muted-text">Opsional</span>
                   )}
                 </div>
 

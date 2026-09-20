@@ -25,7 +25,7 @@ export function PrimaryMetric({
 }) {
   return (
     <div className="rounded-sm border border-border-custom bg-card p-5 sm:p-6">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-text">
+      <p className="text-xs-plus font-semibold uppercase tracking-[0.16em] text-muted-text">
         {label}
       </p>
       <p
@@ -54,7 +54,7 @@ export function SecondaryMetric({
 }) {
   return (
     <div className="px-4 py-4 sm:px-5">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-text">
+      <p className="text-xs-plus font-semibold uppercase tracking-[0.16em] text-muted-text">
         {label}
       </p>
       <p className={cn('mt-1.5 text-xl font-bold tracking-tight', TONE_VALUE_CLASS[tone])}>

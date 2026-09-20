@@ -10,14 +10,19 @@ import { TakeHomeSection } from '@/components/marketing/take-home-section';
 import { AboutSection } from '@/components/marketing/about-section';
 import { TestimonialsSection } from '@/components/marketing/testimonials-section';
 import { FinalCtaSection } from '@/components/marketing/final-cta-section';
+import { getApprovedTestimonials } from '@/lib/testimonials';
+
+export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'Roastery & Kafe di Bogor — Pinto Coffee',
+  title: 'Roastery & Kafe di Bogor — Pinto Kupi',
   description:
-    'Pinto Coffee — kafe dan roastery di Bogor. Biji kopi Nusantara pilihan, disangrai in-house, dan disajikan untuk setiap momen. Kunjungi kafe atau bawa pulang bijinya.',
+    'Pinto Kupi — kafe dan roastery di Bogor. Biji kopi Nusantara pilihan, disangrai in-house, dan disajikan untuk setiap momen. Kunjungi kafe atau bawa pulang bijinya.',
 };
 
-export default function MarketingPage() {
+export default async function MarketingPage() {
+  const testimonials = await getApprovedTestimonials();
+
   return (
     <>
       <HeroSection />
@@ -30,7 +35,7 @@ export default function MarketingPage() {
       <PintoSpaceSection />
       <TakeHomeSection />
       <AboutSection />
-      <TestimonialsSection />
+      <TestimonialsSection testimonials={testimonials} />
       <FinalCtaSection />
     </>
   );

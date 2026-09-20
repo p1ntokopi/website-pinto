@@ -21,6 +21,8 @@ import {
 import { Search, ArrowRight, ShoppingBag, Wifi, WifiOff } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { canDeleteOrder, type UserRole } from "@/lib/auth/roles";
+import { DeleteOrderDialog } from "@/components/admin/orders/delete-order-dialog";
 
 type PaymentInfo = {
   status: string | null;
@@ -165,9 +167,11 @@ function paymentStatusOf(order: OrderRow): { label: string; cls: string } {
 export function OrdersClient({
   initialOrders,
   initialError,
+  currentRole,
 }: {
   initialOrders: OrderRow[];
   initialError?: string | null;
+  currentRole: UserRole;
 }) {
   const [orders, setOrders] = useState<OrderRow[]>(initialOrders);
   const [loadError, setLoadError] = useState<string | null>(initialError ?? null);
@@ -197,6 +201,7 @@ export function OrdersClient({
       const { data, error } = await supabase
         .from("orders")
         .select(SELECT_QUERY)
+        .is("deleted_at", null)
         .gte(
           "created_at",
           new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
@@ -265,8 +270,9 @@ export function OrdersClient({
             const { data } = await supabase
               .from("orders")
               .select(SELECT_QUERY)
+              .is("deleted_at", null)
               .eq("id", payload.new.id)
-              .single();
+              .maybeSingle();
 
             if (data) {
               const row = normalizeRow(data as unknown as Record<string, unknown>);
@@ -374,7 +380,7 @@ export function OrdersClient({
           onClick={() => setStatusFilter("ALL")}
           aria-pressed={statusFilter === "ALL"}
           className={cn(
-            "inline-flex shrink-0 items-center gap-1.5 rounded-sm px-3 py-2 text-sm font-medium transition-colors focus-visible:ring-3 focus-visible:ring-ring/40 outline-none",
+            "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-sm px-3 py-2 text-sm font-medium transition-colors focus-visible:ring-3 focus-visible:ring-ring/40 outline-none",
             statusFilter === "ALL"
               ? "bg-ink text-paper"
               : "text-muted-text hover:bg-muted hover:text-ink"
@@ -383,7 +389,7 @@ export function OrdersClient({
           Semua
           <span
             className={cn(
-              "rounded-sm px-1.5 py-0.5 text-[10px] font-bold",
+              "rounded-sm px-1.5 py-0.5 text-2xs font-bold",
               statusFilter === "ALL"
                 ? "bg-paper/20 text-paper"
                 : "bg-muted text-muted-text"
@@ -402,7 +408,7 @@ export function OrdersClient({
               onClick={() => setStatusFilter(isActive ? "ALL" : status)}
               aria-pressed={isActive}
               className={cn(
-                "inline-flex shrink-0 items-center gap-1.5 rounded-sm px-3 py-2 text-sm font-medium transition-colors focus-visible:ring-3 focus-visible:ring-ring/40 outline-none",
+                "inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-sm px-3 py-2 text-sm font-medium transition-colors focus-visible:ring-3 focus-visible:ring-ring/40 outline-none",
                 isActive
                   ? "bg-ink text-paper"
                   : "text-muted-text hover:bg-muted hover:text-ink"
@@ -411,7 +417,7 @@ export function OrdersClient({
               {config.label}
               <span
                 className={cn(
-                  "rounded-sm px-1.5 py-0.5 text-[10px] font-bold",
+                  "rounded-sm px-1.5 py-0.5 text-2xs font-bold",
                   isActive
                     ? "bg-paper/20 text-paper"
                     : "bg-muted text-muted-text"
@@ -431,7 +437,7 @@ export function OrdersClient({
             placeholder="Cari nomor pesanan atau meja..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-10 rounded-sm pl-9"
+            className="min-h-11 rounded-sm pl-9"
             aria-label="Cari pesanan"
           />
         </div>
@@ -483,28 +489,22 @@ export function OrdersClient({
         <Table>
           <TableHeader>
             <TableRow className="border-b border-border-custom/70">
-              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-text">
+              <TableHead className="text-xs-plus font-semibold uppercase tracking-wider text-muted-text">
                 Pesanan
               </TableHead>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-text">
+              <TableHead className="text-xs-plus font-semibold uppercase tracking-wider text-muted-text">
                 Waktu
               </TableHead>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-text">
+              <TableHead className="text-xs-plus font-semibold uppercase tracking-wider text-muted-text">
                 Meja
               </TableHead>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-text">
-                Item
-              </TableHead>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-text">
+              <TableHead className="text-xs-plus font-semibold uppercase tracking-wider text-muted-text">
                 Total
               </TableHead>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-text">
-                Pembayaran
-              </TableHead>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-text">
+              <TableHead className="text-xs-plus font-semibold uppercase tracking-wider text-muted-text">
                 Status
               </TableHead>
-              <TableHead className="text-right text-[11px] font-semibold uppercase tracking-wider text-muted-text">
+              <TableHead className="text-right text-xs-plus font-semibold uppercase tracking-wider text-muted-text">
                 Aksi
               </TableHead>
             </TableRow>
@@ -513,7 +513,7 @@ export function OrdersClient({
             {filteredOrders.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={8}
+                  colSpan={6}
                   className="py-16 text-center text-muted-text"
                 >
                   <ShoppingBag className="mx-auto mb-3 h-7 w-7 text-muted-text/50" />
@@ -550,6 +550,11 @@ export function OrdersClient({
                           {order.order_number}
                         </Link>
                       </span>
+                      {order.customer_name ? (
+                        <span className="mt-0.5 block max-w-[14rem] truncate text-xs font-normal text-muted-text">
+                          {order.customer_name}
+                        </span>
+                      ) : null}
                     </TableCell>
                     <TableCell className="text-sm text-muted-text">
                       {formatTime(order.created_at)}
@@ -563,16 +568,11 @@ export function OrdersClient({
                         <span className="text-muted-text">Bawa pulang</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-sm tabular-nums text-muted-text">
-                      {order.itemCount}
-                    </TableCell>
                     <TableCell className="text-sm font-semibold text-ink">
                       {formatPrice(order.total)}
-                    </TableCell>
-                    <TableCell>
                       <span
                         className={cn(
-                          "inline-flex items-center rounded-sm border px-2 py-0.5 text-[11px] font-semibold",
+                          "mt-1 block w-fit rounded-sm border px-1.5 py-0.5 text-2xs font-semibold",
                           pay.cls
                         )}
                       >
@@ -582,7 +582,7 @@ export function OrdersClient({
                     <TableCell>
                       <span
                         className={cn(
-                          "inline-flex items-center gap-1 rounded-sm border px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide",
+                          "inline-flex items-center gap-1 rounded-sm border px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide",
                           config.color
                         )}
                       >
@@ -634,15 +634,18 @@ export function OrdersClient({
             const isNew = isNewArrival(order);
             const pay = paymentStatusOf(order);
             return (
-              <Link
+              <div
                 key={order.id}
-                href={`/admin/orders/${order.id}`}
                 className={cn(
-                  "block rounded-sm border bg-card p-4 transition-colors hover:border-coffee/40 focus-visible:ring-3 focus-visible:ring-ring/40 outline-none",
+                  "rounded-sm border bg-card transition-colors",
                   isNew
                     ? "border-coffee/50 bg-coffee/[0.04]"
                     : "border-border-custom"
                 )}
+              >
+              <Link
+                href={`/admin/orders/${order.id}`}
+                className="block p-4 focus-visible:ring-3 focus-visible:ring-ring/40 outline-none rounded-sm"
               >
                 <div className="flex items-center justify-between gap-3">
                   <span className="flex items-center gap-2 text-sm font-semibold text-ink">
@@ -656,7 +659,7 @@ export function OrdersClient({
                   </span>
                   <span
                     className={cn(
-                      "inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                      "inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide",
                       config.color
                     )}
                   >
@@ -677,7 +680,7 @@ export function OrdersClient({
                     </span>
                     <span
                       className={cn(
-                        "inline-flex items-center rounded-sm border px-1.5 py-0.5 text-[10px] font-semibold",
+                        "inline-flex items-center rounded-sm border px-1.5 py-0.5 text-2xs font-semibold",
                         pay.cls
                       )}
                     >
@@ -690,6 +693,30 @@ export function OrdersClient({
                   </span>
                 </div>
               </Link>
+              {canDeleteOrder(currentRole) && (
+                <div className="flex justify-end border-t border-border-custom/60 px-3 py-2">
+                  <DeleteOrderDialog
+                    order={{
+                      id: order.id,
+                      orderNumber: order.order_number,
+                      customerName: order.customer_name,
+                      tableLabel: order.table
+                        ? `Meja ${tableNumberLabel(order.table.table_number)}`
+                        : null,
+                      totalLabel: formatPrice(order.total),
+                    }}
+                    trigger={
+                      <button
+                        type="button"
+                        className="inline-flex min-h-11 items-center gap-1.5 rounded-sm px-3 text-xs font-semibold text-destructive transition-colors hover:bg-destructive/10 focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
+                      >
+                        Hapus Pesanan
+                      </button>
+                    }
+                  />
+                </div>
+              )}
+              </div>
             );
           })
         )}

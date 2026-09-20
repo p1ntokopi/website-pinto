@@ -73,7 +73,7 @@ export function TableStrip({ initialTables }: TableStripProps) {
                 />
               )}
             </div>
-            <div className="mt-1 text-[11px] font-medium leading-snug text-muted-text">
+            <div className="mt-1 text-xs-plus font-medium leading-snug text-muted-text">
               {!table.is_active
                 ? "Nonaktif"
                 : isOccupied

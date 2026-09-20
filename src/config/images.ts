@@ -1,5 +1,5 @@
 /**
- * CURATED IMAGE LIBRARY — Pinto Coffee
+ * CURATED IMAGE LIBRARY — Pinto Kupi
  * ---------------------------------------------------------------
  * Semua URL di bawah adalah foto editorial PLACEHOLDER dari Unsplash.
  * Ganti dengan foto asli Pinto (produk, barista, interior, biji kopi)

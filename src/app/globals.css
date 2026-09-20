@@ -8,6 +8,13 @@
   --font-sans: var(--font-plus-jakarta);
   --font-display: var(--font-cormorant);
 
+  /* Small-text scale. Admin UI leaned on text-[10px]/text-[11px] in ~166
+     places because no token existed; these replace those arbitrary values. */
+  --text-2xs: 0.625rem;
+  --text-2xs--line-height: 0.875rem;
+  --text-xs-plus: 0.6875rem;
+  --text-xs-plus--line-height: 1rem;
+
   --color-ink: var(--ink);
   --color-paper: var(--paper);
   --color-white: var(--white);
@@ -20,6 +27,20 @@
   --color-warning: var(--warning);
   --color-danger: var(--danger);
   --color-info: var(--info);
+
+  /* Kitchen Display System surfaces. The KDS is an always-dark operational
+     screen, so its panels cannot reuse the theme-aware paper/ink pair; these
+     replace the raw hex the module was building its theme from. */
+  --color-kds-bg: var(--kds-bg);
+  --color-kds-panel: var(--kds-panel);
+  --color-kds-raised: var(--kds-raised);
+  --color-kds-sunken: var(--kds-sunken);
+  --color-kds-border: var(--kds-border);
+  --color-kds-border-strong: var(--kds-border-strong);
+  --color-kds-text: var(--kds-text);
+  --color-kds-muted: var(--kds-muted);
+  --color-kds-faint: var(--kds-faint);
+  --color-kds-accent: var(--kds-accent);
 
   /* shadcn base colors mapped to brand colors */
   --color-background: var(--paper);
@@ -46,6 +67,10 @@
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
+  /* Admin panels use the tighter radius; controls sit between sm and md.
+     Naming them stops the three radius dialects from drifting further. */
+  --radius-panel: 0.25rem;
+  --radius-control: 0.375rem;
 
   /* Shadows — restrained, warm-tinted */
   --shadow-card: 0 1px 2px rgb(23 21 19 / 0.04);
@@ -70,6 +95,18 @@
   --danger: #C94C4C;
   --info: #4C7FA8;
   --radius: 0.5rem;
+
+  /* Kitchen Display System — fixed dark palette, intentionally not themed. */
+  --kds-bg: #16140F;
+  --kds-panel: #1E1B16;
+  --kds-raised: #201D18;
+  --kds-sunken: #1A1814;
+  --kds-border: #2C2923;
+  --kds-border-strong: #3A362E;
+  --kds-text: #F7F5F0;
+  --kds-muted: #A19B8F;
+  --kds-faint: #6E665A;
+  --kds-accent: #C89B6D;
 }
 
 .dark {

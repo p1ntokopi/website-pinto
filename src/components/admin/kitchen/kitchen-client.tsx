@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
 import { createBrowserClient } from '@supabase/ssr'
 import { Database } from '@/types/database.types'
 import {
@@ -9,7 +10,7 @@ import {
 } from '@/lib/orders/status-machine'
 import { KitchenOrder } from '@/lib/orders/kitchen-types'
 import { KitchenCard } from './kitchen-card'
-import { Maximize, Minimize, Wifi, WifiOff, TriangleAlert } from 'lucide-react'
+import { ArrowLeft, Maximize, Minimize, Wifi, WifiOff, TriangleAlert } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { playNewOrderSound } from '@/lib/notifications/sound'
 import { getNotificationsEnabled, getSoundEnabled } from '@/lib/notifications/preferences'
@@ -108,6 +109,7 @@ export function KitchenClient({
     const { data, error } = await supabase
       .from('orders')
       .select(KDS_SELECT)
+      .is('deleted_at', null)
       .in('status', [...ACTIVE_STATUSES])
       .order('created_at', { ascending: true })
 
@@ -221,12 +223,19 @@ export function KitchenClient({
   return (
     <>
       {/* Header */}
-      <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-[#2C2923] bg-[#1E1B16] px-4 sm:px-6">
-        <div className="flex min-w-0 items-center gap-3 sm:gap-6">
-          <h1 className="truncate font-display text-xl font-black tracking-tight text-[#F7F5F0] sm:text-2xl">
-            Pinto<span className="text-[#C89B6D]"> Kitchen</span>
+      <header className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-kds-border bg-kds-panel px-4 sm:px-6">
+        <div className="flex min-w-0 items-center gap-3 sm:gap-4">
+          <Link
+            href="/admin"
+            aria-label="Kembali ke dasbor admin"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-sm border border-kds-border bg-kds-panel text-kds-accent transition-colors hover:bg-kds-border focus-visible:ring-3 focus-visible:ring-warning/50 outline-none"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <h1 className="truncate font-display text-xl font-black tracking-tight text-kds-text sm:text-2xl">
+            Pinto<span className="text-kds-accent"> Kitchen</span>
           </h1>
-          <div className="hidden rounded-sm border border-[#2C2923] bg-[#16140F] px-4 py-1.5 font-mono text-xl font-bold text-[#C89B6D] md:block">
+          <div className="hidden rounded-sm border border-kds-border bg-kds-bg px-4 py-1.5 font-mono text-xl font-bold text-kds-accent md:block">
             {currentTime}
           </div>
         </div>
@@ -234,11 +243,11 @@ export function KitchenClient({
         <div className="flex shrink-0 items-center gap-3 sm:gap-6">
           <div className="hidden sm:flex items-center gap-2">
             {isConnected ? (
-              <span className="flex items-center gap-2 rounded-sm border border-[#2E8B57]/30 bg-[#2E8B57]/10 px-3 py-1.5 text-sm font-medium text-[#6FBF8F]">
+              <span className="flex items-center gap-2 rounded-sm border border-success/30 bg-success/10 px-3 py-1.5 text-sm font-medium text-success">
                 <Wifi className="h-4 w-4" /> LANGSUNG
               </span>
             ) : (
-              <span className="flex animate-pulse items-center gap-2 rounded-sm border border-[#C94C4C]/30 bg-[#C94C4C]/10 px-3 py-1.5 text-sm font-medium text-[#E0655F]">
+              <span className="flex animate-pulse items-center gap-2 rounded-sm border border-danger/30 bg-danger/10 px-3 py-1.5 text-sm font-medium text-danger">
                 <WifiOff className="h-4 w-4" /> MENGHUBUNGKAN ULANG...
               </span>
             )}
@@ -247,8 +256,8 @@ export function KitchenClient({
             className={cn(
               'sm:hidden flex items-center gap-1.5 rounded-sm border px-2.5 py-1 text-xs font-bold',
               isConnected
-                ? 'border-[#2E8B57]/30 bg-[#2E8B57]/10 text-[#6FBF8F]'
-                : 'border-[#C94C4C]/30 bg-[#C94C4C]/10 animate-pulse text-[#E0655F]'
+                ? 'border-success/30 bg-success/10 text-success'
+                : 'border-danger/30 bg-danger/10 animate-pulse text-danger'
             )}
             aria-label={isConnected ? 'Langsung' : 'Menghubungkan ulang'}
           >
@@ -258,29 +267,31 @@ export function KitchenClient({
             type="button"
             onClick={toggleFullscreen}
             aria-label={isFullscreen ? 'Keluar layar penuh' : 'Layar penuh'}
-            className="rounded-sm bg-[#2C2923] p-2 text-[#C89B6D] transition-colors hover:bg-[#3A362E] focus-visible:ring-3 focus-visible:ring-[#C58B2A]/50 outline-none"
+            className="flex min-h-11 min-w-11 items-center justify-center rounded-panel bg-kds-border text-kds-accent transition-colors hover:bg-kds-border-strong focus-visible:ring-3 focus-visible:ring-warning/50 outline-none"
           >
             {isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
           </button>
         </div>
       </header>
 
-      <div className="flex-1 grid grid-cols-1 gap-4 overflow-hidden bg-[#16140F] p-4 md:grid-cols-3 md:gap-6 md:p-6">
+      {/* Mobile: the columns stack, so the page scrolls normally instead of
+          trapping them inside an overflow-hidden grid. */}
+      <div className="flex-1 grid grid-cols-1 gap-4 overflow-y-auto bg-kds-bg p-4 md:grid-cols-3 md:gap-6 md:overflow-hidden md:p-6">
         {loadError && (
           <div className="md:col-span-3">
             <p
               role="status"
-              className="flex items-center gap-2 rounded-sm border border-[#C94C4C]/30 bg-[#C94C4C]/10 px-4 py-3 text-sm font-medium text-[#E0655F]"
+              className="flex items-center gap-2 rounded-sm border border-danger/30 bg-danger/10 px-4 py-3 text-sm font-medium text-danger"
             >
               <TriangleAlert className="h-4 w-4 shrink-0" aria-hidden="true" />
               {loadError}
             </p>
           </div>
         )}
-        <div className="flex flex-col overflow-hidden rounded-lg border border-[#2C2923] bg-[#1A1814]">
-          <div className="flex items-center justify-between border-b border-[#2C2923] bg-[#201D18] p-4">
-            <h2 className="text-lg font-bold tracking-wide text-[#F7F5F0]">BARU / TERKONFIRMASI</h2>
-            <div className="rounded-sm bg-[#2C2923] px-3 py-1 text-sm font-bold text-[#F7F5F0]">
+        <div className="flex flex-col overflow-hidden rounded-panel border border-kds-border bg-kds-sunken">
+          <div className="flex items-center justify-between border-b border-kds-border bg-kds-raised p-4">
+            <h2 className="text-lg font-bold tracking-wide text-kds-text">BARU / TERKONFIRMASI</h2>
+            <div className="rounded-sm bg-kds-border px-3 py-1 text-sm font-bold text-kds-text">
               {newOrders.length}
             </div>
           </div>
@@ -294,17 +305,17 @@ export function KitchenClient({
               />
             ))}
             {newOrders.length === 0 && (
-              <div className="flex h-full items-center justify-center text-lg font-medium text-[#6E665A]">
+              <div className="flex h-full items-center justify-center text-lg font-medium text-kds-faint">
                 Tidak ada pesanan baru
               </div>
             )}
           </div>
         </div>
 
-        <div className="flex flex-col overflow-hidden rounded-lg border border-[#2C2923] bg-[#1A1814]">
-          <div className="flex items-center justify-between border-b border-[#2C2923] bg-[#C58B2A]/10 p-4">
-            <h2 className="text-lg font-bold tracking-wide text-[#D9A441]">DIPROSES</h2>
-            <div className="rounded-sm bg-[#C58B2A] px-3 py-1 text-sm font-bold text-[#16140F]">
+        <div className="flex flex-col overflow-hidden rounded-panel border border-kds-border bg-kds-sunken">
+          <div className="flex items-center justify-between border-b border-kds-border bg-warning/10 p-4">
+            <h2 className="text-lg font-bold tracking-wide text-warning">DIPROSES</h2>
+            <div className="rounded-sm bg-warning px-3 py-1 text-sm font-bold text-kds-bg">
               {preparingOrders.length}
             </div>
           </div>
@@ -318,17 +329,17 @@ export function KitchenClient({
               />
             ))}
             {preparingOrders.length === 0 && (
-              <div className="flex h-full items-center justify-center text-lg font-medium text-[#6E665A]">
+              <div className="flex h-full items-center justify-center text-lg font-medium text-kds-faint">
                 Dapur kosong
               </div>
             )}
           </div>
         </div>
 
-        <div className="flex flex-col overflow-hidden rounded-lg border border-[#2C2923] bg-[#1A1814]">
-          <div className="flex items-center justify-between border-b border-[#2C2923] bg-[#2E8B57]/10 p-4">
-            <h2 className="text-lg font-bold tracking-wide text-[#6FBF8F]">SIAP</h2>
-            <div className="rounded-sm bg-[#2E8B57] px-3 py-1 text-sm font-bold text-[#F7F5F0]">
+        <div className="flex flex-col overflow-hidden rounded-panel border border-kds-border bg-kds-sunken">
+          <div className="flex items-center justify-between border-b border-kds-border bg-success/10 p-4">
+            <h2 className="text-lg font-bold tracking-wide text-success">SIAP</h2>
+            <div className="rounded-sm bg-success px-3 py-1 text-sm font-bold text-kds-text">
               {readyOrders.length}
             </div>
           </div>
@@ -342,7 +353,7 @@ export function KitchenClient({
               />
             ))}
             {readyOrders.length === 0 && (
-              <div className="flex h-full items-center justify-center text-lg font-medium text-[#6E665A]">
+              <div className="flex h-full items-center justify-center text-lg font-medium text-kds-faint">
                 Tidak ada pesanan menunggu
               </div>
             )}

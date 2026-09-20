@@ -61,7 +61,7 @@ export default async function OwnerSalesPage({
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-8">
       <div className="space-y-2">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-coffee">
+        <p className="text-xs-plus font-semibold uppercase tracking-[0.16em] text-coffee">
           Keuangan
         </p>
         <h1 className="font-display text-3xl font-bold tracking-tight text-ink">
@@ -74,7 +74,7 @@ export default async function OwnerSalesPage({
 
       <div className="space-y-3">
         <PeriodFilter currentKey={period.key} />
-        <div className="flex items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5">
           <span className="text-xs font-medium text-muted-text">
             Granulasi:
           </span>
@@ -84,7 +84,7 @@ export default async function OwnerSalesPage({
               href={buildQuery(period, option.key)}
               aria-pressed={granularity === option.key}
               className={cn(
-                'inline-flex min-h-9 items-center rounded-full border px-3.5 text-xs font-semibold transition-colors focus-visible:ring-3 focus-visible:ring-ring/40 outline-none',
+                'inline-flex min-h-11 items-center rounded-full border px-3.5 text-xs font-semibold transition-colors focus-visible:ring-3 focus-visible:ring-ring/40 outline-none',
                 granularity === option.key
                   ? 'border-ink bg-ink text-paper'
                   : 'border-border-custom bg-paper text-muted-text hover:text-ink',
@@ -205,7 +205,7 @@ export default async function OwnerSalesPage({
                   },
                 ].map((item) => (
                   <div key={item.label} className="px-4 py-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-text">
+                    <p className="text-xs-plus font-semibold uppercase tracking-[0.16em] text-muted-text">
                       {item.label}
                     </p>
                     <p

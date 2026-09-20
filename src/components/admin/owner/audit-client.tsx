@@ -128,7 +128,7 @@ export function AuditClient({ rows }: { rows: AuditRow[] }) {
           <div className="hidden overflow-x-auto rounded-sm border border-border-custom bg-card md:block">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border-custom/60 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-text">
+                <tr className="border-b border-border-custom/60 text-left text-xs-plus font-semibold uppercase tracking-wider text-muted-text">
                   <th className="px-4 py-2.5 font-semibold">Waktu</th>
                   <th className="px-4 py-2.5 font-semibold">Aksi</th>
                   <th className="px-4 py-2.5 font-semibold">Detail</th>
@@ -228,7 +228,7 @@ function Chip({
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        'min-h-9 shrink-0 rounded-full border px-3.5 text-xs font-semibold transition-colors focus-visible:ring-3 focus-visible:ring-ring/40 outline-none',
+        'min-h-11 shrink-0 rounded-full border px-3.5 text-xs font-semibold transition-colors focus-visible:ring-3 focus-visible:ring-ring/40 outline-none',
         active
           ? 'border-coffee bg-coffee text-paper'
           : 'border-border-custom bg-paper text-muted-text hover:text-ink',

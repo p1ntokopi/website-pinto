@@ -75,7 +75,7 @@ export default async function OwnerExpensesPage({
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-8">
       <div className="space-y-2">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-coffee">
+        <p className="text-xs-plus font-semibold uppercase tracking-[0.16em] text-coffee">
           Keuangan
         </p>
         <h1 className="font-display text-3xl font-bold tracking-tight text-ink">Pengeluaran</h1>

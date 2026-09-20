@@ -206,11 +206,21 @@ function snapshotBusiness(
   settings: ReceiptSnapshotRecord['snapshot']['settings'],
 ): ReceiptBusiness {
   const fallback = defaultReceiptBusiness()
+  const rawName = settings?.business_name?.trim()
+  const name =
+    rawName && !/^pinto\s+coffe{1,2}$/i.test(rawName)
+      ? rawName
+      : fallback.name
+  const rawWebsite = settings?.website?.trim()
+  const website =
+    rawWebsite && !/^www\.pintokopi\.web\.id$/i.test(rawWebsite)
+      ? rawWebsite
+      : fallback.website
   return {
-    name: settings?.business_name || fallback.name,
+    name,
     tagline: settings?.tagline || fallback.tagline,
     address: settings?.address || fallback.address,
-    website: settings?.website || fallback.website,
+    website,
     wifiName: settings?.wifi_name || fallback.wifiName,
     wifiPassword: settings?.wifi_password || fallback.wifiPassword,
     footerMessage: settings?.footer_message || fallback.footerMessage,
@@ -356,14 +366,9 @@ export function formatReceiptText(data: ReceiptData, paperWidth: ThermalPaperWid
     lines.push(blank())
   }
 
-  const showSourceLabels =
-    data.sourceOrders.length > 1 ||
-    data.sourceOrders.some((sourceOrder) => sourceOrder.label !== data.bill.reference)
-  data.sourceOrders.forEach((sourceOrder, index) => {
-    if (showSourceLabels) {
-      if (index > 0) lines.push(blank())
-      lines.push(fit(`ORDER ${sourceOrder.label}`, '', w))
-    }
+  // Source order labels (e.g. ORDER Pinto-...) are omitted to keep the
+  // customer's receipt compact and minimize thermal paper consumption.
+  data.sourceOrders.forEach((sourceOrder) => {
     sourceOrder.items.forEach((item) => {
       lines.push(...itemLines(item, w))
     })

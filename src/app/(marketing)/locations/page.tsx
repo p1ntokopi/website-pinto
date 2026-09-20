@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { getAppSettings } from '@/lib/settings';
 
 export const metadata = {
-  title: 'Lokasi | Pinto Coffee',
+  title: 'Lokasi | Pinto Kupi',
   description:
     'Temukan PINTO Kupi di Jl. Flamboyan No. 8, Perumahan Bumi Insani, Tajur Halang, Kabupaten Bogor. Buka setiap hari.',
 };
@@ -88,7 +88,7 @@ export default async function LocationsPage() {
               <div className="relative w-full h-[420px] md:h-[520px] rounded-sm overflow-hidden border border-ink/10">
                 <iframe
                   src={MAP_EMBED}
-                  title="Lokasi Pinto Coffee di Google Maps"
+                  title="Lokasi Pinto Kupi di Google Maps"
                   className="absolute inset-0 w-full h-full border-0"
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"

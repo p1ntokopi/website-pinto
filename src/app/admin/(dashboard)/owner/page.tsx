@@ -1,5 +1,13 @@
 import type { Metadata } from 'next'
-import { Banknote, Coffee, TriangleAlert } from 'lucide-react'
+import Link from 'next/link'
+import {
+  Banknote,
+  Coffee,
+  History,
+  Settings,
+  TriangleAlert,
+  Users,
+} from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { resolvePeriod, formatRangeLabel } from '@/lib/finance/period'
 import { getFinancialSummary } from '@/lib/finance/summary'
@@ -70,6 +78,7 @@ export default async function OwnerDashboardPage({
        table:tables(table_number),
        payments(id, status, payment_method, payment_channel, provider, paid_at, created_at)`,
     )
+    .is('deleted_at', null)
     .gte('created_at', `${period.range.start}T00:00:00+07:00`)
     .lte('created_at', `${period.range.end}T23:59:59+07:00`)
     .order('created_at', { ascending: false })
@@ -104,7 +113,7 @@ export default async function OwnerDashboardPage({
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-8">
       <div className="space-y-2">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-coffee">
+        <p className="text-xs-plus font-semibold uppercase tracking-[0.16em] text-coffee">
           Area Owner
         </p>
         <h1 className="font-display text-3xl font-bold tracking-tight text-ink">
@@ -347,6 +356,60 @@ export default async function OwnerDashboardPage({
           </p>
         </>
       ) : null}
+
+      <section className="space-y-4">
+        <SectionHeader title="Manajemen" />
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            {
+              href: '/admin/owner/accounts',
+              label: 'Kelola Admin',
+              hint: 'Akun & peran staf',
+              icon: Users,
+            },
+            {
+              href: '/admin/menu/products',
+              label: 'Produk',
+              hint: 'Menu & harga',
+              icon: Coffee,
+            },
+            {
+              href: '/admin/settings',
+              label: 'Pengaturan',
+              hint: 'Bisnis & printer',
+              icon: Settings,
+            },
+            {
+              href: '/admin/owner/audit',
+              label: 'Audit Log',
+              hint: 'Jejak perubahan',
+              icon: History,
+            },
+          ].map((item) => {
+            const Icon = item.icon
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="flex min-h-11 items-center gap-3 rounded-sm border border-border-custom bg-card px-4 py-3 transition-colors hover:border-coffee/40 hover:bg-muted/40 focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
+              >
+                <Icon
+                  className="h-5 w-5 shrink-0 text-coffee"
+                  aria-hidden="true"
+                />
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-semibold text-ink">
+                    {item.label}
+                  </span>
+                  <span className="block truncate text-xs text-muted-text">
+                    {item.hint}
+                  </span>
+                </span>
+              </Link>
+            )
+          })}
+        </div>
+      </section>
     </div>
   )
 }

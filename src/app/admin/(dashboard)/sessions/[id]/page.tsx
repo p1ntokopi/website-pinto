@@ -64,6 +64,7 @@ export default async function DiningSessionPage({
     supabase
       .from("orders")
       .select("id, order_number, status, total, created_at")
+      .is("deleted_at", null)
       .eq("dining_session_id", id)
       .order("created_at", { ascending: true }),
     supabase
@@ -129,13 +130,13 @@ export default async function DiningSessionPage({
       <div className="flex flex-wrap items-center gap-3">
         <Link
           href="/admin/tables/live"
-          className="-ml-2 flex h-9 w-9 items-center justify-center rounded-sm text-muted-text transition-colors outline-none hover:bg-muted hover:text-ink focus-visible:ring-3 focus-visible:ring-ring/40"
+          className="-ml-2 flex h-11 w-11 items-center justify-center rounded-sm text-muted-text transition-colors outline-none hover:bg-muted hover:text-ink focus-visible:ring-3 focus-visible:ring-ring/40"
           aria-label="Kembali ke meja langsung"
         >
           <ChevronLeft className="h-5 w-5" />
         </Link>
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-coffee">
+          <p className="text-xs-plus font-semibold uppercase tracking-[0.16em] text-coffee">
             Sesi Makan di Tempat
           </p>
           <h1 className="font-display text-2xl font-bold tracking-tight text-ink sm:text-3xl">
@@ -164,11 +165,11 @@ export default async function DiningSessionPage({
         )}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <div className="space-y-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="min-w-0 space-y-6">
           <section className="grid gap-3 border border-border-custom/70 bg-card p-4 sm:grid-cols-3">
             <div>
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-text">
+              <span className="text-xs-plus font-semibold uppercase tracking-wider text-muted-text">
                 Mulai
               </span>
               <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-ink">
@@ -177,7 +178,7 @@ export default async function DiningSessionPage({
               </p>
             </div>
             <div>
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-text">
+              <span className="text-xs-plus font-semibold uppercase tracking-wider text-muted-text">
                 Kapasitas
               </span>
               <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-ink">
@@ -186,7 +187,7 @@ export default async function DiningSessionPage({
               </p>
             </div>
             <div>
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-text">
+              <span className="text-xs-plus font-semibold uppercase tracking-wider text-muted-text">
                 Total Sesi
               </span>
               <p className="mt-1 text-lg font-bold text-ink">

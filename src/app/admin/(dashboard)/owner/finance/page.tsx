@@ -74,7 +74,7 @@ export default async function OwnerFinancePage({
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-8">
       <div className="space-y-2">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-coffee">
+        <p className="text-xs-plus font-semibold uppercase tracking-[0.16em] text-coffee">
           Keuangan
         </p>
         <h1 className="font-display text-3xl font-bold tracking-tight text-ink">
@@ -97,8 +97,8 @@ export default async function OwnerFinancePage({
         </div>
       ) : summary ? (
         <>
-          <div className="grid gap-6 lg:grid-cols-2">
-            <section className="space-y-4">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <section className="min-w-0 space-y-4">
               <SectionHeader title="Pendapatan" />
               <div className="rounded-sm border border-border-custom bg-card px-4 py-2">
                 <BreakdownRow
@@ -151,7 +151,7 @@ export default async function OwnerFinancePage({
               </div>
             </section>
 
-            <section className="space-y-4">
+            <section className="min-w-0 space-y-4">
               <SectionHeader title="Breakdown Pembayaran" />
               {summary.payment_breakdown.length === 0 ? (
                 <EmptyState
@@ -163,7 +163,7 @@ export default async function OwnerFinancePage({
                 <div className="overflow-x-auto rounded-sm border border-border-custom bg-card">
                   <table className="w-full min-w-[420px] text-sm">
                     <thead>
-                      <tr className="border-b border-border-custom/60 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-text">
+                      <tr className="border-b border-border-custom/60 text-left text-xs-plus font-semibold uppercase tracking-wider text-muted-text">
                         <th className="px-4 py-2.5 font-semibold">Metode</th>
                         <th className="px-4 py-2.5 text-right font-semibold">
                           Transaksi

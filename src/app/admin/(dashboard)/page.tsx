@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Receipt } from "lucide-react";
+import { ArrowRight, Plus, Receipt } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { jakartaDayBounds, jakartaToday } from "@/lib/finance/period";
@@ -47,7 +47,7 @@ function SectionHeader({
   return (
     <div className="mb-4 flex items-end justify-between gap-4">
       <div>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-text">
+        <p className="text-xs-plus font-semibold uppercase tracking-[0.16em] text-muted-text">
           {eyebrow}
         </p>
         <h2 className="mt-0.5 flex items-center gap-2 font-display text-xl font-bold tracking-tight text-ink">
@@ -61,7 +61,7 @@ function SectionHeader({
       </div>
       <Link
         href={href}
-        className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-coffee transition-colors hover:text-ink focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
+        className="inline-flex min-h-11 shrink-0 items-center gap-1 text-sm font-medium text-coffee transition-colors hover:text-ink focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
       >
         {linkLabel}
         <ArrowRight className="h-4 w-4" />
@@ -97,6 +97,7 @@ export default async function AdminDashboard() {
   const { count: ordersToday } = await supabase
     .from("orders")
     .select("*", { count: "exact", head: true })
+    .is("deleted_at", null)
     .gte("created_at", todayStartISO)
     .lt("created_at", tomorrowStartISO);
 
@@ -126,6 +127,7 @@ export default async function AdminDashboard() {
   const { data: todayOrderIds } = await supabase
     .from("orders")
     .select("id")
+    .is("deleted_at", null)
     .gte("created_at", todayStartISO)
     .lt("created_at", tomorrowStartISO);
 
@@ -146,6 +148,7 @@ export default async function AdminDashboard() {
     .select(
       "id, order_number, status, total, created_at, table:tables(id, table_number), items:order_items(id, quantity, product_name_snapshot)"
     )
+    .is("deleted_at", null)
     .in("status", [
       "NEW",
       "PREPARING",
@@ -179,6 +182,7 @@ export default async function AdminDashboard() {
     const { data: openOrders } = await supabase
       .from("orders")
       .select("id, order_number, dining_session_id, total, status")
+      .is("deleted_at", null)
       .in("dining_session_id", sessionIds)
       .in("status", [
         "NEW",
@@ -220,6 +224,7 @@ export default async function AdminDashboard() {
     .select(
       "id, order_number, status, total, customer_name, created_at, table:tables(table_number)"
     )
+    .is("deleted_at", null)
     .gte("created_at", todayStartISO)
     .lt("created_at", tomorrowStartISO)
     .order("created_at", { ascending: false })
@@ -250,7 +255,7 @@ export default async function AdminDashboard() {
     <div className="mx-auto w-full max-w-[1240px] space-y-10">
       <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-coffee">
+          <p className="text-xs-plus font-semibold uppercase tracking-[0.16em] text-coffee">
             {todayDisplay.toLocaleDateString("id-ID", {
               weekday: "long",
               day: "numeric",
@@ -267,14 +272,20 @@ export default async function AdminDashboard() {
             · {occupiedTables || 0} meja terisi sekarang.
           </p>
         </div>
-        <Button
-          variant="outline"
-          render={<Link href="/admin/orders" />}
-          className="shrink-0 self-start sm:self-auto"
-        >
-          Lihat Semua Pesanan
-          <ArrowRight className="h-4 w-4" />
-        </Button>
+        <div className="flex shrink-0 flex-col gap-2 self-start sm:flex-row sm:self-auto">
+          <Button render={<Link href="/admin/orders/new" />} className="min-h-11">
+            <Plus className="h-4 w-4" />
+            Pesanan Baru
+          </Button>
+          <Button
+            variant="outline"
+            render={<Link href="/admin/orders" />}
+            className="min-h-11"
+          >
+            Lihat Semua Pesanan
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </div>
       </section>
 
       <section className="flex flex-wrap items-center gap-x-10 gap-y-5 border-y border-border-custom/70 py-5">
@@ -282,7 +293,7 @@ export default async function AdminDashboard() {
           <div className="font-display text-4xl font-bold tracking-tight text-ink">
             {ordersToday || 0}
           </div>
-          <div className="mt-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-text">
+          <div className="mt-1 text-xs-plus font-semibold uppercase tracking-[0.16em] text-muted-text">
             Pesanan Hari Ini
           </div>
         </div>
@@ -290,7 +301,7 @@ export default async function AdminDashboard() {
         {kpiStats.map((stat) => (
           <div key={stat.label}>
             <div className="text-lg font-semibold text-ink">{stat.value}</div>
-            <div className="mt-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-text">
+            <div className="mt-0.5 text-xs-plus font-semibold uppercase tracking-[0.16em] text-muted-text">
               {stat.label}
             </div>
           </div>
@@ -369,7 +380,7 @@ export default async function AdminDashboard() {
                       </span>
                       <span
                         className={cn(
-                          "hidden rounded-sm border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide sm:inline-flex",
+                          "hidden rounded-sm border px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide sm:inline-flex",
                           config.color
                         )}
                       >

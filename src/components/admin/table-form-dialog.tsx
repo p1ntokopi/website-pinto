@@ -182,7 +182,7 @@ toast({
                       Status Aktif
                     </FormLabel>
                     <FormDescription>
-                      Meja nonaktif tidak dapat dipesan dan tampil sebagai arsip.
+                      Meja nonaktif tidak dapat dipesan sampai diaktifkan kembali.
                     </FormDescription>
                   </div>
                   <FormControl>

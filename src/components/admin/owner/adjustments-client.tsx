@@ -92,13 +92,13 @@ export function AdjustmentsClient({
     <div className="space-y-6">
       <div className="grid grid-cols-1 divide-y divide-border-custom/60 rounded-sm border border-border-custom bg-card sm:grid-cols-3 sm:divide-x sm:divide-y-0">
         <div className="px-4 py-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-text">
+          <p className="text-xs-plus font-semibold uppercase tracking-[0.16em] text-muted-text">
             Total Refund
           </p>
           <p className="mt-1.5 text-xl font-bold text-danger">− {formatIDR(strip.refundTotal)}</p>
         </div>
         <div className="px-4 py-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-text">
+          <p className="text-xs-plus font-semibold uppercase tracking-[0.16em] text-muted-text">
             Total Koreksi
           </p>
           <p
@@ -112,7 +112,7 @@ export function AdjustmentsClient({
           </p>
         </div>
         <div className="px-4 py-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-text">
+          <p className="text-xs-plus font-semibold uppercase tracking-[0.16em] text-muted-text">
             Transaksi
           </p>
           <p className="mt-1.5 text-xl font-bold text-ink">{formatNumberID(strip.count)}</p>
@@ -135,7 +135,7 @@ export function AdjustmentsClient({
             aria-pressed={statusFilter === status}
             onClick={() => setStatusFilter(status)}
             className={cn(
-              'min-h-9 rounded-full border px-3.5 text-xs font-semibold transition-colors focus-visible:ring-3 focus-visible:ring-ring/40 outline-none',
+              'min-h-11 rounded-full border px-3.5 text-xs font-semibold transition-colors focus-visible:ring-3 focus-visible:ring-ring/40 outline-none',
               statusFilter === status
                 ? 'border-coffee bg-coffee text-paper'
                 : 'border-border-custom bg-paper text-muted-text hover:text-ink',
@@ -174,7 +174,7 @@ export function AdjustmentsClient({
           <div className="hidden overflow-x-auto rounded-sm border border-border-custom bg-card md:block">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border-custom/60 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-text">
+                <tr className="border-b border-border-custom/60 text-left text-xs-plus font-semibold uppercase tracking-wider text-muted-text">
                   <th className="px-4 py-2.5 font-semibold">Tanggal</th>
                   <th className="px-4 py-2.5 font-semibold">Tipe</th>
                   <th className="px-4 py-2.5 font-semibold">Alasan</th>
@@ -193,7 +193,7 @@ export function AdjustmentsClient({
                     <td className="px-4 py-3">
                       <span
                         className={cn(
-                          'inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium',
+                          'inline-flex items-center rounded-full border px-2 py-0.5 text-xs-plus font-medium',
                           row.adjustment_type === 'REFUND'
                             ? 'border-info/25 bg-info/10 text-info'
                             : 'border-border-custom bg-muted text-ink',
@@ -228,7 +228,7 @@ export function AdjustmentsClient({
                           type="button"
                           onClick={() => handleVoid(row)}
                           disabled={pending}
-                          className="inline-flex min-h-9 items-center gap-1.5 rounded-sm px-2.5 text-xs font-semibold text-danger transition-colors hover:bg-danger/10 focus-visible:ring-3 focus-visible:ring-ring/40 outline-none disabled:opacity-50"
+                          className="inline-flex min-h-11 items-center gap-1.5 rounded-sm px-2.5 text-xs font-semibold text-danger transition-colors hover:bg-danger/10 focus-visible:ring-3 focus-visible:ring-ring/40 outline-none disabled:opacity-50"
                         >
                           <Undo2 className="h-3.5 w-3.5" aria-hidden="true" />
                           Void

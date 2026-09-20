@@ -137,6 +137,33 @@ export interface Database {
         }
         Returns: number
       }
+      admin_delete_order: {
+        Args: {
+          p_order_id: string
+          p_reason: string
+        }
+        Returns: Json
+      }
+      admin_set_profile_role: {
+        Args: {
+          p_target_id: string
+          p_role: Database['public']['Tables']['profiles']['Row']['role']
+        }
+        Returns: Json
+      }
+      admin_set_profile_active: {
+        Args: {
+          p_target_id: string
+          p_is_active: boolean
+        }
+        Returns: Json
+      }
+      admin_delete_table: {
+        Args: {
+          p_table_id: string
+        }
+        Returns: Json
+      }
     }
     Views: {
       [_ in never]: never
@@ -310,6 +337,9 @@ export interface Database {
           cancelled_at: string | null
           cancelled_by: string | null
           cancellation_reason: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          deletion_reason: string | null
         }
         Insert: Omit<Database['public']['Tables']['orders']['Row'], 'id' | 'created_at' | 'updated_at'> & { id?: string, created_at?: string, updated_at?: string }
         Update: Partial<Database['public']['Tables']['orders']['Insert']>
@@ -391,7 +421,9 @@ export interface Database {
       dining_sessions: {
         Row: {
           id: string
-          table_id: string
+          // Nullable because 0034 relaxes the table FK to ON DELETE SET NULL:
+          // a session survives its table's deletion without a pointer.
+          table_id: string | null
           session_token: string | null
           status: 'open' | 'closed'
           started_at: string

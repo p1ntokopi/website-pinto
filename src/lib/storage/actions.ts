@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { assertAdminRole } from '@/lib/auth/authorization'
 import {
   buildObjectKey,
   createPresignedUploadUrl,
@@ -28,26 +28,11 @@ const ALLOWED_MIME: Record<string, string> = {
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 
 async function requireAdmin() {
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser()
-
-  if (authError || !user) {
-    throw new Error('Sesi berakhir. Silakan masuk kembali.')
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (!profile || (profile.role !== 'admin' && profile.role !== 'owner')) {
-    throw new Error('Anda tidak memiliki izin untuk mengunggah.')
-  }
+  await assertAdminRole({
+    unauthenticated: 'Sesi berakhir. Silakan masuk kembali.',
+    inactive: 'Akun Anda tidak aktif. Hubungi Owner.',
+    forbidden: 'Anda tidak memiliki izin untuk mengunggah.',
+  })
 }
 
 export async function getImageUploadUrl(

@@ -97,7 +97,7 @@ export function NotificationControl({
               <Bell className="h-5 w-5" />
             )}
             {unreadCount > 0 && (
-              <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold leading-none text-paper">
+              <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-danger px-1 text-2xs font-bold leading-none text-paper">
                 {badgeCount}
               </span>
             )}

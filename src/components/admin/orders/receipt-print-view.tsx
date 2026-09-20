@@ -228,7 +228,7 @@ export function ReceiptPrintView({
           <div className="flex items-center gap-3">
             <Link
               href={returnHref}
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-text transition-colors hover:text-ink focus-visible:ring-3 focus-visible:ring-ring/40 outline-none rounded-sm"
+              className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-muted-text transition-colors hover:text-ink focus-visible:ring-3 focus-visible:ring-ring/40 outline-none rounded-sm"
             >
               <RotateCcw className="h-4 w-4" />
               Kembali
@@ -269,7 +269,7 @@ export function ReceiptPrintView({
                   onClick={() => handlePaperWidthChange(opt.value)}
                   aria-pressed={paperWidth === opt.value}
                   className={cn(
-                    'rounded-sm px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:ring-3 focus-visible:ring-ring/40 outline-none',
+                    'rounded-sm min-h-11 px-3 py-1.5 text-xs font-semibold md:min-h-0 transition-colors focus-visible:ring-3 focus-visible:ring-ring/40 outline-none',
                     paperWidth === opt.value ? 'bg-ink text-paper' : 'text-muted-text hover:text-ink'
                   )}
                 >

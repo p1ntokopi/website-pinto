@@ -72,9 +72,15 @@ export async function createAdjustment(input: unknown): Promise<AdjustmentAction
     const { data: order } = await supabase
       .from('orders')
       .select('id')
+      .is('deleted_at', null)
       .eq('order_number', parsed.data.orderNumber)
-      .single()
-    if (!order) return { ok: false, error: `Order "${parsed.data.orderNumber}" tidak ditemukan.` }
+      .maybeSingle()
+    if (!order) {
+      return {
+        ok: false,
+        error: `Pesanan "${parsed.data.orderNumber}" tidak ditemukan.`,
+      }
+    }
     orderId = order.id
   }
 

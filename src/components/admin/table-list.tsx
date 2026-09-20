@@ -7,8 +7,15 @@ import { QRPreview } from '@/components/admin/qr-preview'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
-import { Edit2, QrCode, Archive, CheckCircle2, Users, Plus } from 'lucide-react'
-import { archiveTable } from '@/app/admin/(dashboard)/tables/actions'
+import { Edit2, QrCode, EyeOff, CheckCircle2, Users, Plus, Trash2, MoreHorizontal } from 'lucide-react'
+import { setTableActive } from '@/app/admin/(dashboard)/tables/actions'
+import { DeleteTableDialog } from '@/components/admin/delete-table-dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { useToast } from '@/hooks/use-toast'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
@@ -21,6 +28,9 @@ export function TableList({ tables }: { tables: TableWithSession[] }) {
   const [qrOpen, setQrOpen] = useState(false)
   const [selectedTable, setSelectedTable] = useState<TableRow | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
+  // Hapus is destructive, so it lives in an overflow menu rather than beside
+  // the everyday QR and edit controls.
+  const [deleteTarget, setDeleteTarget] = useState<TableRow | null>(null)
 
   const { toast } = useToast()
   const router = useRouter()
@@ -40,9 +50,9 @@ export function TableList({ tables }: { tables: TableWithSession[] }) {
     setQrOpen(true)
   }
 
-  const handleToggleArchive = async (table: TableRow) => {
+  const handleToggleActive = async (table: TableRow) => {
     setIsProcessing(true)
-    const result = await archiveTable(table.id, !table.is_active)
+    const result = await setTableActive(table.id, !table.is_active)
     setIsProcessing(false)
 
     if (result.error) {
@@ -50,7 +60,7 @@ export function TableList({ tables }: { tables: TableWithSession[] }) {
     } else {
       toast({
         title: 'Status Diperbarui',
-        description: `Meja ${table.table_number} sekarang ${!table.is_active ? 'aktif' : 'diarsipkan'}.`,
+        description: `Meja ${table.table_number} sekarang ${!table.is_active ? 'aktif' : 'nonaktif'}.`,
       })
       router.refresh()
     }
@@ -85,7 +95,7 @@ export function TableList({ tables }: { tables: TableWithSession[] }) {
             if (!table.is_active) {
               statusChip = (
                 <Badge variant="outline" className="border-border-custom bg-muted text-muted-text">
-                  Diarsipkan
+                  Nonaktif
                 </Badge>
               )
             } else if (table.has_active_session) {
@@ -133,7 +143,7 @@ export function TableList({ tables }: { tables: TableWithSession[] }) {
                     size="sm"
                     onClick={() => handleShowQR(table)}
                     disabled={!table.is_active}
-                    className="min-h-10 flex-1 gap-1.5"
+                    className="min-h-11 flex-1 gap-1.5"
                   >
                     <QrCode className="h-4 w-4" />
                     QR
@@ -143,24 +153,47 @@ export function TableList({ tables }: { tables: TableWithSession[] }) {
                     size="icon"
                     onClick={() => handleEdit(table)}
                     aria-label={`Edit meja ${table.table_number}`}
-                    className="min-h-10 min-w-10"
+                    className="min-h-11 min-w-11"
                   >
                     <Edit2 className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => handleToggleArchive(table)}
+                    onClick={() => handleToggleActive(table)}
                     disabled={isProcessing}
-                    aria-label={table.is_active ? `Arsipkan meja ${table.table_number}` : `Aktifkan meja ${table.table_number}`}
-                    className="min-h-10 min-w-10"
+                    aria-label={table.is_active ? `Nonaktifkan meja ${table.table_number}` : `Aktifkan meja ${table.table_number}`}
+                    className="min-h-11 min-w-11"
                   >
                     {table.is_active ? (
-                      <Archive className="h-4 w-4" />
+                      <EyeOff className="h-4 w-4" />
                     ) : (
                       <CheckCircle2 className="h-4 w-4" />
                     )}
                   </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      render={
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          aria-label={`Aksi lain meja ${table.table_number}`}
+                          className="min-h-11 min-w-11"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      }
+                    />
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        variant="destructive"
+                        onClick={() => setDeleteTarget(table)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Hapus Meja
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             )
@@ -169,6 +202,22 @@ export function TableList({ tables }: { tables: TableWithSession[] }) {
       )}
 
       <TableFormDialog open={formOpen} onOpenChange={setFormOpen} table={selectedTable} />
+
+      {deleteTarget && (
+        <DeleteTableDialog
+          table={{
+            id: deleteTarget.id,
+            tableNumber: deleteTarget.table_number,
+            name: deleteTarget.name,
+            capacity: deleteTarget.capacity,
+            slug: deleteTarget.slug,
+          }}
+          open
+          onOpenChange={(next) => {
+            if (!next) setDeleteTarget(null)
+          }}
+        />
+      )}
 
       <Dialog open={qrOpen} onOpenChange={setQrOpen}>
         <DialogContent className="sm:max-w-[400px]">

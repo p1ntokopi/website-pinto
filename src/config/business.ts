@@ -2,7 +2,7 @@ export const BUSINESS = {
   name: 'Pinto Kupi',
   tagline: 'Roastery & Kafe — Bogor',
   address: 'Jl. Flamboyan No. 8, Perumahan Bumi Insani, Tajur Halang, Bogor',
-  website: 'www.pintokopi.web.id',
+  website: 'www.pintokupi.my.id',
   wifiName: 'P1NTO',
   wifiPassword: 'terimakasih',
   footerMessage: 'Terima kasih telah berkunjung.',

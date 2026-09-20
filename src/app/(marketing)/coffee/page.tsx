@@ -6,7 +6,7 @@ import { RoasteryStory } from '@/components/marketing/coffee/roastery-story';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'Beli Kopi | Pinto Coffee',
+  title: 'Beli Kopi | Pinto Kupi',
   description:
     'Biji kopi pilihan, disangrai dengan penuh perhatian dari roastery kami. Single origin dan house blend, siap Anda seduh di rumah.',
 };

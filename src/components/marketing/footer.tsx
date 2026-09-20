@@ -19,7 +19,7 @@ export function Footer() {
             <Link href="/" className="mb-6 flex items-center gap-3">
               <Image
                 src="/Pintokupi.webp"
-                alt="Logo Pinto Coffee"
+                alt="Logo Pinto Kupi"
                 width={40}
                 height={40}
                 className="rounded-md object-cover grayscale brightness-200 contrast-125"
@@ -86,7 +86,7 @@ export function Footer() {
           className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 text-[10px] uppercase tracking-widest text-paper/50 md:flex-row"
           style={{ paddingBottom: 'calc(env(safe-area-inset-bottom))' }}
         >
-          <p>© {new Date().getFullYear()} Pinto Coffee. Hak cipta dilindungi.</p>
+          <p>© {new Date().getFullYear()} Pinto Kupi. Hak cipta dilindungi.</p>
           <p>Roastery &amp; Kafe — Bogor</p>
         </div>
       </div>

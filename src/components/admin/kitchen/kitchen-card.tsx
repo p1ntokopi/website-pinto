@@ -71,7 +71,7 @@ export function KitchenCard({
         onClick={() => handleAction('PREPARING')}
         disabled={isUpdating}
         aria-label={`Mulai siapkan pesanan ${order.order_number}`}
-        className="mt-4 flex w-full min-h-14 items-center justify-center gap-2 rounded-sm bg-[#C58B2A] py-4 text-lg font-bold text-[#16140F] transition-colors hover:bg-[#D9A441] disabled:opacity-60 focus-visible:ring-3 focus-visible:ring-[#C58B2A]/50 outline-none"
+        className="mt-4 flex w-full min-h-14 items-center justify-center gap-2 rounded-panel bg-warning py-4 text-lg font-bold text-ink transition-colors hover:bg-warning/90 disabled:opacity-60 focus-visible:ring-3 focus-visible:ring-warning/50 outline-none"
       >
         {isUpdating && <Loader2 className="h-5 w-5 animate-spin" />}
         MULAI SIAPKAN
@@ -84,7 +84,7 @@ export function KitchenCard({
         onClick={() => handleAction('READY')}
         disabled={isUpdating}
         aria-label={`Tandai pesanan ${order.order_number} siap`}
-        className="mt-4 flex w-full min-h-14 items-center justify-center gap-2 rounded-sm bg-[#2E8B57] py-4 text-lg font-bold text-[#F7F5F0] transition-colors hover:bg-[#3A9C68] disabled:opacity-60 focus-visible:ring-3 focus-visible:ring-[#2E8B57]/50 outline-none"
+        className="mt-4 flex w-full min-h-14 items-center justify-center gap-2 rounded-panel bg-success py-4 text-lg font-bold text-kds-text transition-colors hover:bg-success/90 disabled:opacity-60 focus-visible:ring-3 focus-visible:ring-success/50 outline-none"
       >
         {isUpdating && <Loader2 className="h-5 w-5 animate-spin" />}
         TANDAI SIAP
@@ -95,27 +95,27 @@ export function KitchenCard({
   return (
     <div
       className={cn(
-        'flex flex-col rounded-lg border bg-[#201D18] p-5',
+        'flex flex-col rounded-panel border bg-kds-raised p-5',
         isLate && canonicalStatus !== 'READY'
-          ? 'border-[#C94C4C]/50 bg-[#C94C4C]/10'
-          : 'border-[#2C2923]'
+          ? 'border-danger/50 bg-danger/10'
+          : 'border-kds-border'
       )}
     >
-      <div className="mb-4 flex items-start justify-between border-b border-[#2C2923] pb-4">
+      <div className="mb-4 flex items-start justify-between border-b border-kds-border pb-4">
         <div>
-          <h3 className="text-3xl font-black tracking-tight text-[#F7F5F0]">{order.order_number}</h3>
+          <h3 className="text-3xl font-black tracking-tight text-kds-text">{order.order_number}</h3>
           {order.table && (
-            <div className="mt-1 text-xl font-bold text-[#C89B6D]">
+            <div className="mt-1 text-xl font-bold text-kds-accent">
               MEJA {order.table.table_number}
             </div>
           )}
         </div>
         <div
           className={cn(
-            'flex items-center gap-1.5 rounded-sm px-3 py-1 font-mono text-lg font-bold',
+            'flex items-center gap-1.5 rounded-panel px-3 py-1 font-mono text-lg font-bold',
             isLate && canonicalStatus !== 'READY'
-              ? 'bg-[#C94C4C]/20 text-[#E0655F]'
-              : 'bg-[#2C2923] text-[#A19B8F]'
+              ? 'bg-danger/20 text-danger'
+              : 'bg-kds-border text-kds-muted'
           )}
         >
           <Clock className="h-4 w-4" />
@@ -124,29 +124,29 @@ export function KitchenCard({
       </div>
 
       {order.notes && (
-        <div className="mb-4 flex items-start gap-3 rounded-sm border border-[#C58B2A]/30 bg-[#C58B2A]/10 p-3">
-          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-[#C58B2A]" />
-          <p className="text-lg font-medium leading-snug text-[#E7C98F]">{order.notes}</p>
+        <div className="mb-4 flex items-start gap-3 rounded-panel border border-warning/30 bg-warning/10 p-3">
+          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
+          <p className="text-lg font-medium leading-snug text-warm">{order.notes}</p>
         </div>
       )}
 
       <div className="flex-1 space-y-4">
         {order.items?.map((item) => (
           <div key={item.id} className="flex items-start gap-4">
-            <div className="rounded-sm border border-[#2C2923] bg-[#16140F] px-3 py-1 text-2xl font-black text-[#C89B6D]">
+            <div className="rounded-panel border border-kds-border bg-kds-bg px-3 py-1 text-2xl font-black text-kds-accent">
               {item.quantity}×
             </div>
             <div className="pt-1">
-              <h4 className="mb-1.5 text-xl font-bold leading-none text-[#F7F5F0]">
+              <h4 className="mb-1.5 text-xl font-bold leading-none text-kds-text">
                 {item.product_name_snapshot}
               </h4>
-              <div className="space-y-1 text-base font-medium leading-snug text-[#A19B8F]">
+              <div className="space-y-1 text-base font-medium leading-snug text-kds-muted">
                 {item.variant_name_snapshot && <p>{item.variant_name_snapshot}</p>}
                 {item.options?.map((opt, idx) => (
                   <p key={idx}>+ {opt.option_value_snapshot}</p>
                 ))}
                 {item.notes && (
-                  <p className="mt-1 rounded-sm bg-[#C58B2A]/10 px-2 py-1 italic text-[#E7C98F]">
+                  <p className="mt-1 rounded-panel bg-warning/10 px-2 py-1 italic text-warm">
                     Catatan: {item.notes}
                   </p>
                 )}

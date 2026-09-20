@@ -110,7 +110,7 @@ export default async function TableLandingPage({
     <div className="flex min-h-[90vh] flex-col items-center justify-center p-6 text-center max-w-md mx-auto">
       <div className="mb-10">
         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground mb-3">
-          Pinto Coffee
+          Pinto Kupi
         </p>
         <h1 className="font-display text-5xl font-bold tracking-tight text-ink leading-none">
           Pinto

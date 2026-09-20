@@ -96,12 +96,12 @@ export function ProductList({ products }: { products: ProductWithCategory[] }) {
         <Table>
           <TableHeader>
             <TableRow className="border-b border-border-custom/70">
-              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-text">Produk</TableHead>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-text">Kategori</TableHead>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-text">Tipe</TableHead>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-text">Harga Dasar</TableHead>
-              <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-text">Tersedia</TableHead>
-              <TableHead className="text-right text-[11px] font-semibold uppercase tracking-wider text-muted-text">Aksi</TableHead>
+              <TableHead className="text-xs-plus font-semibold uppercase tracking-wider text-muted-text">Produk</TableHead>
+              <TableHead className="text-xs-plus font-semibold uppercase tracking-wider text-muted-text">Kategori</TableHead>
+              <TableHead className="text-xs-plus font-semibold uppercase tracking-wider text-muted-text">Tipe</TableHead>
+              <TableHead className="text-xs-plus font-semibold uppercase tracking-wider text-muted-text">Harga Dasar</TableHead>
+              <TableHead className="text-xs-plus font-semibold uppercase tracking-wider text-muted-text">Tersedia</TableHead>
+              <TableHead className="text-right text-xs-plus font-semibold uppercase tracking-wider text-muted-text">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -126,14 +126,14 @@ export function ProductList({ products }: { products: ProductWithCategory[] }) {
                           className="h-10 w-10 rounded-sm border border-border-custom object-cover"
                         />
                       ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-sm border border-border-custom bg-muted/60 text-[10px] font-semibold uppercase text-muted-text">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-sm border border-border-custom bg-muted/60 text-2xs font-semibold uppercase text-muted-text">
                           Pinto
                         </div>
                       )}
                       <div className="min-w-0">
                         <span className="block truncate font-medium text-ink">{product.name}</span>
                         {product.is_featured && (
-                          <Badge variant="secondary" className="mt-0.5 text-[10px]">
+                          <Badge variant="secondary" className="mt-0.5 text-2xs">
                             Unggulan
                           </Badge>
                         )}
@@ -209,7 +209,7 @@ export function ProductList({ products }: { products: ProductWithCategory[] }) {
                     className="h-14 w-14 shrink-0 rounded-sm border border-border-custom object-cover"
                   />
                 ) : (
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-sm border border-border-custom bg-muted/60 text-[10px] font-semibold uppercase text-muted-text">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-sm border border-border-custom bg-muted/60 text-2xs font-semibold uppercase text-muted-text">
                     Pinto
                   </div>
                 )}

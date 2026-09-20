@@ -53,7 +53,7 @@ export function TopProducts({ products }: { products: TopProduct[] }) {
             aria-pressed={sortKey === key}
             onClick={() => setSortKey(key)}
             className={cn(
-              'inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition-colors focus-visible:ring-3 focus-visible:ring-ring/40 outline-none',
+              'inline-flex min-h-11 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition-colors focus-visible:ring-3 focus-visible:ring-ring/40 outline-none',
               sortKey === key
                 ? 'border-coffee bg-coffee text-paper'
                 : 'border-border-custom bg-paper text-muted-text hover:text-ink',

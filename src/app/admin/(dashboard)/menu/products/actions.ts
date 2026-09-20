@@ -5,18 +5,37 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { deleteObject } from '@/lib/storage/r2'
 import { objectKeyFromUrl } from '@/lib/storage/r2'
+import { toFriendlyError } from '@/lib/ui/errors'
 
 const productSchema = z.object({
-  category_id: z.string().min(1, 'Category is required'),
-  name: z.string().min(1, 'Name is required'),
+  category_id: z.string().min(1, 'Kategori wajib dipilih'),
+  name: z.string().min(1, 'Nama wajib diisi'),
   description: z.string().nullish(),
   product_type: z.enum(['CAFE_DRINK', 'FOOD', 'PASTRY', 'COFFEE_BEAN', 'DESSERT', 'SERVICE']),
-  base_price: z.coerce.number().min(0, 'Price must be 0 or greater'),
+  base_price: z.coerce.number().min(0, 'Harga tidak boleh negatif'),
   is_available: z.boolean().default(true),
   is_featured: z.boolean().default(false),
   sort_order: z.coerce.number().default(0),
   image_url: z.string().optional().nullable(),
 })
+
+const FIELD_LABELS: Record<string, string> = {
+  category_id: 'Kategori',
+  name: 'Nama',
+  description: 'Deskripsi',
+  product_type: 'Tipe produk',
+  base_price: 'Harga',
+  sort_order: 'Urutan',
+  image_url: 'Gambar',
+}
+
+function summarizeFieldErrors(
+  fieldErrors: Record<string, string[] | undefined>
+): string {
+  return Object.entries(fieldErrors)
+    .map(([field, msgs]) => `${FIELD_LABELS[field] ?? field}: ${msgs?.join(', ')}`)
+    .join('; ')
+}
 
 export async function createProduct(prevState: unknown, formData: FormData) {
   const supabase = await createClient()
@@ -38,11 +57,8 @@ export async function createProduct(prevState: unknown, formData: FormData) {
 
     if (!validatedData.success) {
       const fieldErrors = validatedData.error.flatten().fieldErrors
-      const summary = Object.entries(fieldErrors)
-        .map(([field, msgs]) => `${field}: ${msgs?.join(', ')}`)
-        .join('; ')
       return {
-        error: `Validation failed — ${summary}`,
+        error: `Data belum lengkap — ${summarizeFieldErrors(fieldErrors)}`,
         fieldErrors,
       }
     }
@@ -59,15 +75,14 @@ export async function createProduct(prevState: unknown, formData: FormData) {
       .single()
 
     if (error) {
-      if (error.code === '23505') return { error: 'Product with this name already exists' }
+      if (error.code === '23505') return { error: 'Produk dengan nama ini sudah ada.' }
       throw error
     }
 
     revalidatePath('/admin/menu/products')
     return { success: true, data }
   } catch (err: unknown) {
-    console.error('Create product error:', err)
-    return { error: err instanceof Error ? err.message : 'Failed to create product' }
+    return { error: toFriendlyError('create product', err, 'Gagal membuat produk.') }
   }
 }
 
@@ -92,11 +107,8 @@ export async function updateProduct(id: string, prevState: unknown, formData: Fo
 
     if (!validatedData.success) {
       const fieldErrors = validatedData.error.flatten().fieldErrors
-      const summary = Object.entries(fieldErrors)
-        .map(([field, msgs]) => `${field}: ${msgs?.join(', ')}`)
-        .join('; ')
       return {
-        error: `Validation failed — ${summary}`,
+        error: `Data belum lengkap — ${summarizeFieldErrors(fieldErrors)}`,
         fieldErrors,
       }
     }
@@ -115,7 +127,7 @@ export async function updateProduct(id: string, prevState: unknown, formData: Fo
       .single()
 
     if (error) {
-      if (error.code === '23505') return { error: 'Product with this name already exists' }
+      if (error.code === '23505') return { error: 'Produk dengan nama ini sudah ada.' }
       throw error
     }
 
@@ -126,8 +138,7 @@ export async function updateProduct(id: string, prevState: unknown, formData: Fo
     revalidatePath('/admin/menu/products')
     return { success: true, data }
   } catch (err: unknown) {
-    console.error('Update product error:', err)
-    return { error: err instanceof Error ? err.message : 'Failed to update product' }
+    return { error: toFriendlyError('update product', err, 'Gagal memperbarui produk.') }
   }
 }
 
@@ -143,7 +154,13 @@ export async function toggleProductAvailability(id: string, is_available: boolea
     revalidatePath('/admin/menu/products')
     return { success: true }
   } catch (err: unknown) {
-    return { error: err instanceof Error ? err.message : 'Failed to toggle availability' }
+    return {
+      error: toFriendlyError(
+        'toggle product availability',
+        err,
+        'Gagal mengubah ketersediaan produk.'
+      ),
+    }
   }
 }
 
@@ -170,6 +187,6 @@ export async function deleteProduct(id: string) {
     revalidatePath('/admin/menu/products')
     return { success: true }
   } catch (err: unknown) {
-    return { error: err instanceof Error ? err.message : 'Failed to delete product' }
+    return { error: toFriendlyError('delete product', err, 'Gagal menghapus produk.') }
   }
 }

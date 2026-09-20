@@ -12,5 +12,7 @@ export async function loginAsCashier(page: Page, email: string, password: string
   await page.getByLabel('Email').fill(email)
   await page.getByLabel('Kata Sandi').fill(password)
   await page.getByRole('button', { name: 'Masuk', exact: true }).click()
-  await expect(page).not.toHaveURL(/\/admin\/login(?:\?|$)/)
+  // The first login against a cold `next dev` compiles the /admin route on
+  // demand, which can exceed the default 5s expect timeout.
+  await expect(page).not.toHaveURL(/\/admin\/login(?:\?|$)/, { timeout: 30_000 })
 }

@@ -17,11 +17,11 @@ import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
   title: {
-    default: "Pinto Coffee — Roastery & Kafe di Bogor",
-    template: "%s | Pinto Coffee",
+    default: "Pinto Kupi — Roastery & Kafe di Bogor",
+    template: "%s | Pinto Kupi",
   },
   description:
-    "Pinto Coffee — roastery dan kafe di Bogor. Biji kopi Nusantara pilihan, disangrai in-house dalam batch kecil, dan disajikan segar untuk setiap momen.",
+    "Pinto Kupi — roastery dan kafe di Bogor. Biji kopi Nusantara pilihan, disangrai in-house dalam batch kecil, dan disajikan segar untuk setiap momen.",
   icons: {
     icon: "/Pintokupi.webp",
   },

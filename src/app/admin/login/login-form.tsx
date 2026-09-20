@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import { useRouter } from 'next/navigation'
 import { z } from 'zod'
 import { useForm } from 'react-hook-form'
@@ -17,8 +17,20 @@ const formSchema = z.object({
   password: z.string().min(6, { message: 'Kata sandi minimal 6 karakter' }),
 })
 
+// A store that never changes: it only exists to tell the server snapshot
+// (false) apart from the hydrated client snapshot (true).
+const subscribeToNothing = () => () => {}
+
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false)
+  // Keep the submit button inert until React has hydrated. A click that lands
+  // first would fall through to the browser's native form submission and put
+  // the credentials in the query string (and thus in history).
+  const isHydrated = useSyncExternalStore(
+    subscribeToNothing,
+    () => true,
+    () => false
+  )
   const router = useRouter()
   const { toast } = useToast()
 
@@ -61,7 +73,7 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={form.handleSubmit(onSubmit)} method="post" className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input
@@ -93,7 +105,7 @@ export function LoginForm() {
         )}
       </div>
 
-      <Button type="submit" className="w-full mt-4" disabled={isLoading}>
+      <Button type="submit" className="w-full mt-4" disabled={isLoading || !isHydrated}>
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />

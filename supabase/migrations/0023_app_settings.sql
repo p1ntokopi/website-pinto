@@ -5,10 +5,10 @@
 
 create table if not exists public.app_settings (
   id int primary key default 1 check (id = 1),
-  business_name text not null default 'Pinto Coffee',
+  business_name text not null default 'Pinto Kupi',
   tagline text not null default 'Kopi • Makanan • Biji Kopi',
   address text not null default 'Jl. Flamboyan No. 8, Perumahan Bumi Insani, Tajur Halang, Bogor',
-  website text not null default 'www.pintokopi.web.id',
+  website text not null default 'www.pintokupi.my.id',
   wifi_name text not null default 'P1NTO',
   wifi_password text not null default 'terimakasih',
   footer_message text not null default 'Terima kasih telah berkunjung.',

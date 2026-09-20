@@ -25,12 +25,20 @@ export default async function KitchenLayout({
     .eq('id', user.id)
     .single()
 
-  if (!profile || (profile.role !== 'admin' && profile.role !== 'kitchen')) {
+  // Mirrors KITCHEN_ROLES in roles.ts: admin, kitchen, and owner may all view
+  // the kitchen display. Staff may not — which is also why the sidebar no
+  // longer offers the link to staff.
+  if (
+    !profile ||
+    (profile.role !== 'admin' &&
+      profile.role !== 'kitchen' &&
+      profile.role !== 'owner')
+  ) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#16140F] p-4 text-[#F7F5F0]">
+      <div className="flex min-h-screen items-center justify-center bg-kds-bg p-4 text-kds-text">
         <div className="max-w-md space-y-4 text-center">
           <h1 className="font-display text-2xl font-bold">Akses Ditolak</h1>
-          <p className="text-[#A19B8F]">Anda tidak memiliki izin akses dapur.</p>
+          <p className="text-kds-muted">Anda tidak memiliki izin akses dapur.</p>
           <form action={signOutAction}>
             <Button type="submit" variant="outline" size="sm">Keluar</Button>
           </form>
@@ -41,7 +49,7 @@ export default async function KitchenLayout({
 
   // KDS uses a dark, high-contrast theme optimized for operations
   return (
-    <div className="min-h-screen bg-[#16140F] font-sans text-[#F7F5F0] selection:bg-[#C58B2A]/30">
+    <div className="min-h-screen bg-kds-bg font-sans text-kds-text selection:bg-warning/30">
       {children}
     </div>
   )

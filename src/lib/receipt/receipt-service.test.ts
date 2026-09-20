@@ -29,10 +29,10 @@ const latte: ReceiptLineItem = {
 
 const sampleData: ReceiptData = buildReceipt({
   business: {
-    name: 'Pinto Coffee',
+    name: 'Pinto Kupi',
     tagline: 'Kopi • Makanan • Biji Kopi',
     address: 'Jl. Flamboyan No. 8, Tajur Halang, Bogor',
-    website: 'www.pintokopi.web.id',
+    website: 'www.pintokupi.my.id',
     wifiName: 'P1NTO',
     wifiPassword: 'terimakasih',
     footerMessage: 'Terima kasih telah berkunjung.',
@@ -235,6 +235,56 @@ describe('buildReceiptFromSnapshot', () => {
     })
   })
 
+  it('normalizes legacy "Pinto Coffee" business name to "Pinto Kupi"', () => {
+    const record: ReceiptSnapshotRecord = {
+      receipt_number: 'R-260819-000002',
+      snapshot: {
+        schema_version: 1,
+        issued_at: '2026-08-19T10:20:00Z',
+        target: { type: 'ORDER', id: 'order-1' },
+        settings: {
+          business_name: 'Pinto Coffee',
+          tagline: 'Roastery & Kafe',
+          address: 'Bogor',
+          website: 'www.pintokopi.web.id',
+          wifi_name: 'P1NTO',
+          wifi_password: 'pass',
+          footer_message: 'Thanks',
+        },
+        payment: {
+          method: 'CASH',
+          channel: 'CASH',
+          status: 'PAID',
+          paid_at: '2026-08-19T10:19:00Z',
+          cash_received: null,
+          change_amount: null,
+          cashier_id: null,
+          cashier_metadata: null,
+        },
+        orders: [
+          {
+            id: 'order-1',
+            order_number: 'PNT-00001',
+            created_at: '2026-08-19T10:00:00Z',
+            subtotal: 10000,
+            discount: 0,
+            tax: 0,
+            service_fee: 0,
+            shipping_fee: 0,
+            total: 10000,
+            table_number: null,
+            notes: null,
+            items: [],
+          },
+        ],
+      },
+    }
+
+    const data = buildReceiptFromSnapshot(record)
+    expect(data.business.name).toBe('Pinto Kupi')
+    expect(data.business.website).toBe('www.pintokupi.my.id')
+  })
+
   it('rejects unknown or empty snapshot shapes', () => {
     const base: ReceiptSnapshotRecord = {
       receipt_number: 'R-1',
@@ -302,7 +352,8 @@ describe('buildReceiptFromOrder', () => {
     expect(data.bill.reference).toBe('BILL-00001')
     expect(data.bill.sessionReference).toBe('SESI-00003')
     expect(data.sourceOrders[0].label).toBe('PNT-00001')
-    expect(formatReceiptText(data, 58)).toContain('ORDER PNT-00001')
+    expect(formatReceiptText(data, 58)).not.toContain('ORDER PNT-00001')
+    expect(formatReceiptText(data, 58)).toContain('2x Sanger Latte')
     expect(data.tableLabel).toBe('MEJA 03')
     expect(data.items[0].unitPrice).toBe(15000)
     expect(data.items[0].options[0].label).toBe('Oat Milk')
@@ -343,11 +394,13 @@ describe('formatReceiptText', () => {
 
   it('renders bill/session references, grouped orders, totals, and cash details', () => {
     const text = formatReceiptText(sampleData, 58)
-    expect(text).toContain('Pinto Coffee')
+    expect(text).toContain('Pinto Kupi')
     expect(text).toContain('BILL BILL-00001')
     expect(text).toContain('SESI SESI-00003')
-    expect(text).toContain('ORDER PNT-00001')
-    expect(text).toContain('ORDER PNT-00002')
+    expect(text).not.toContain('ORDER PNT-00001')
+    expect(text).not.toContain('ORDER PNT-00002')
+    expect(text).toContain('2x Sanger Latte')
+    expect(text).toContain('1x Americano')
     expect(text).toContain('MEJA 03')
     expect(text).toContain('PAYMENT: CASH')
     // The cashier's name lives on the payment row, not on the customer's copy.
@@ -363,7 +416,7 @@ describe('formatReceiptText', () => {
 
   it('renders the website and wifi footer', () => {
     const text = formatReceiptText(sampleData, 58)
-    expect(text).toContain('www.pintokopi.web.id')
+    expect(text).toContain('www.pintokupi.my.id')
     expect(text).toContain('WiFi: P1NTO / Pass: terimakasih')
   })
 

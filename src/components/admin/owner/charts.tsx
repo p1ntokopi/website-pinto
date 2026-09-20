@@ -43,28 +43,28 @@ export function TrendChart({
     <div className="h-[260px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-          <CartesianGrid vertical={false} stroke="#E5E1DA" strokeDasharray="3 3" />
+          <CartesianGrid vertical={false} stroke="var(--border-custom)" strokeDasharray="3 3" />
           <XAxis
             dataKey="day"
             tickFormatter={(day: string) => formatDateID(day, false)}
-            tick={{ fontSize: 11, fill: '#6E6A63' }}
+            tick={{ fontSize: 11, fill: 'var(--muted-text)' }}
             tickLine={false}
-            axisLine={{ stroke: '#E5E1DA' }}
+            axisLine={{ stroke: 'var(--border-custom)' }}
             interval="preserveStartEnd"
             minTickGap={24}
           />
           <YAxis
             tickFormatter={axisFormatter}
-            tick={{ fontSize: 11, fill: '#6E6A63' }}
+            tick={{ fontSize: 11, fill: 'var(--muted-text)' }}
             tickLine={false}
             axisLine={false}
             width={56}
           />
           <Tooltip
-            cursor={{ fill: 'rgba(139, 94, 60, 0.06)' }}
+            cursor={{ fill: 'color-mix(in srgb, var(--coffee) 6%, transparent)' }}
             content={<TrendTooltip format={valueFormatter} />}
           />
-          <Bar dataKey="value" fill="#8B5E3C" radius={[2, 2, 0, 0]} maxBarSize={36} />
+          <Bar dataKey="value" fill="var(--coffee)" radius={[2, 2, 0, 0]} maxBarSize={36} />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -87,7 +87,7 @@ function TrendTooltip({
   return (
     <div className="rounded-sm border border-border-custom bg-paper px-3 py-2 shadow-sm">
       <p className="text-xs font-semibold text-ink">{format(value)}</p>
-      <p className="text-[11px] text-muted-text">{label ? formatDateID(label) : ''}</p>
+      <p className="text-xs text-muted-text">{label ? formatDateID(label) : ''}</p>
     </div>
   )
 }

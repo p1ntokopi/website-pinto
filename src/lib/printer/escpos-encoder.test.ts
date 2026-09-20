@@ -36,9 +36,9 @@ describe('encodeReceipt', () => {
   })
 
   it('encodes ASCII text verbatim and guarantees a trailing line feed', () => {
-    const bytes = encodeReceipt('Pinto Coffee')
-    const text = Array.from(bytes.slice(2, 2 + 13))
-    expect(text).toEqual([...Array.from('Pinto Coffee').map((c) => c.charCodeAt(0)), 0x0a])
+    const bytes = encodeReceipt('Pinto Kupi')
+    const text = Array.from(bytes.slice(2, 2 + 11))
+    expect(text).toEqual([...Array.from('Pinto Kupi').map((c) => c.charCodeAt(0)), 0x0a])
   })
 
   it('keeps line feeds inside multi-line text', () => {

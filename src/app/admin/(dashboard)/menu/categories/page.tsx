@@ -1,6 +1,8 @@
 import { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { CategoryList } from '@/components/admin/category-list'
+import { TriangleAlert } from 'lucide-react'
+import { toFriendlyError } from '@/lib/ui/errors'
 
 export const metadata: Metadata = {
   title: 'Kategori - Pinto Admin',
@@ -17,8 +19,16 @@ export default async function AdminCategoriesPage() {
 
   if (error) {
     return (
-      <div className="p-8 text-center text-destructive">
-        Gagal memuat kategori: {error.message}
+      <div className="mx-auto flex w-full max-w-[1240px] flex-col items-center justify-center gap-3 px-4 py-16 text-center">
+        <TriangleAlert className="h-8 w-8 text-danger" aria-hidden="true" />
+        <p className="text-sm font-semibold text-ink">Gagal memuat kategori</p>
+        <p className="max-w-sm text-sm text-muted-text">
+          {toFriendlyError(
+            'categories page',
+            error,
+            'Daftar kategori tidak dapat dimuat. Muat ulang halaman lalu coba lagi.'
+          )}
+        </p>
       </div>
     )
   }
@@ -42,7 +52,7 @@ export default async function AdminCategoriesPage() {
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-6">
       <div>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-coffee">Katalog</p>
+        <p className="text-xs-plus font-semibold uppercase tracking-[0.16em] text-coffee">Katalog</p>
         <h1 className="mt-1 font-display text-3xl font-bold tracking-tight text-ink">Kategori</h1>
         <p className="mt-2 text-sm text-muted-text">
           Atur item menu ke dalam kategori yang jelas.

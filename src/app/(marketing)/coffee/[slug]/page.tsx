@@ -13,10 +13,10 @@ export const dynamic = 'force-dynamic';
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const bean = await getCoffeeBeanBySlug(slug);
-  if (!bean) return { title: 'Kopi Tidak Ditemukan | Pinto Coffee' };
+  if (!bean) return { title: 'Kopi Tidak Ditemukan | Pinto Kupi' };
 
   return {
-    title: `${bean.name} | Pinto Coffee`,
+    title: `${bean.name} | Pinto Kupi`,
     description: bean.description ?? `Single origin dari ${bean.origin?.country ?? 'roastery kami'}.`,
   };
 }

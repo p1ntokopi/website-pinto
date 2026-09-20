@@ -48,8 +48,9 @@ export function OrderQueue({ initialOrders, role }: OrderQueueProps) {
       const { data } = await supabase
         .from("orders")
         .select(SELECT_QUERY)
+        .is("deleted_at", null)
         .eq("id", id)
-        .single();
+        .maybeSingle();
       if (!data) return null;
       const raw = data as unknown as OrderQueueOrder & {
         table: OrderQueueOrder["table"] | OrderQueueOrder["table"][] | null;
@@ -129,7 +130,7 @@ export function OrderQueue({ initialOrders, role }: OrderQueueProps) {
         </p>
         <Link
           href="/admin/tables/live"
-          className="mt-4 inline-flex min-h-10 items-center justify-center gap-1.5 rounded-sm border border-coffee/30 bg-coffee/5 px-4 py-2 text-xs font-bold uppercase tracking-wide text-coffee transition-colors hover:bg-coffee/10 focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
+          className="mt-4 inline-flex min-h-11 items-center justify-center gap-1.5 rounded-sm border border-coffee/30 bg-coffee/5 px-4 py-2 text-xs font-bold uppercase tracking-wide text-coffee transition-colors hover:bg-coffee/10 focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
         >
           <Users className="h-3.5 w-3.5" />
           Lihat Meja Langsung
@@ -172,7 +173,7 @@ export function OrderQueue({ initialOrders, role }: OrderQueueProps) {
                 </Link>
                 <span
                   className={cn(
-                    "inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                    "inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide",
                     config.color
                   )}
                 >

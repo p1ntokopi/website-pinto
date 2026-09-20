@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 560" width="100%" height="100%" style="background:#F7F5F0; font-family:'Plus Jakarta Sans', system-ui, sans-serif;">
+  <defs>
+    <filter id="shadow5" x="-5%" y="-5%" width="110%" height="115%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#171513" flood-opacity="0.06"/>
+    </filter>
+    <marker id="arrow5" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#8B5E3C" />
+    </marker>
+  </defs>
+
+  <!-- Header -->
+  <rect x="0" y="0" width="940" height="60" fill="#171513" />
+  <text x="30" y="38" fill="#F7F5F0" font-size="18" font-weight="700" letter-spacing="0.5">ARSITEKTUR SISTEM &amp; ALUR DATA P1NTO KOPI</text>
+
+  <!-- Layer 1: Client Interfaces -->
+  <g transform="translate(40, 80)">
+    <rect width="260" height="340" rx="8" fill="#FFFFFF" stroke="#E5E1DA" stroke-width="2" filter="url(#shadow5)"/>
+    <rect x="0" y="0" width="260" height="32" rx="6" fill="#171513"/>
+    <text x="130" y="22" font-size="12" font-weight="700" fill="#F7F5F0" text-anchor="middle">CLIENT INTERFACES (BROWSER)</text>
+
+    <!-- Client Cards -->
+    <rect x="15" y="48" width="230" height="55" rx="6" fill="#F7F5F0" stroke="#E5E1DA"/>
+    <text x="25" y="70" font-size="12" font-weight="700" fill="#171513">Customer Mobile QR</text>
+    <text x="25" y="88" font-size="10" fill="#6E6A63">/t/[slug] · Scoped Session Polling (10s)</text>
+
+    <rect x="15" y="115" width="230" height="55" rx="6" fill="#F7F5F0" stroke="#E5E1DA"/>
+    <text x="25" y="137" font-size="12" font-weight="700" fill="#171513">Admin / Cashier POS</text>
+    <text x="25" y="155" font-size="10" fill="#6E6A63">/admin/orders/new · /admin/sessions</text>
+
+    <rect x="15" y="182" width="230" height="55" rx="6" fill="#F7F5F0" stroke="#E5E1DA"/>
+    <text x="25" y="204" font-size="12" font-weight="700" fill="#171513">Kitchen Display (KDS)</text>
+    <text x="25" y="222" font-size="10" fill="#6E6A63">/admin/kitchen · PREPARING / READY</text>
+
+    <rect x="15" y="249" width="230" height="55" rx="6" fill="#F7F5F0" stroke="#E5E1DA"/>
+    <text x="25" y="271" font-size="12" font-weight="700" fill="#171513">Owner Financial Portal</text>
+    <text x="25" y="289" font-size="10" fill="#6E6A63">/admin/owner/* · Laporan &amp; Pengeluaran</text>
+  </g>
+
+  <!-- Arrow Client -> App -->
+  <path d="M 300 250 L 350 250" fill="none" stroke="#8B5E3C" stroke-width="2" marker-end="url(#arrow5)"/>
+
+  <!-- Layer 2: Next.js App Router -->
+  <g transform="translate(350, 80)">
+    <rect width="260" height="340" rx="8" fill="#FFFFFF" stroke="#E5E1DA" stroke-width="2" filter="url(#shadow5)"/>
+    <rect x="0" y="0" width="260" height="32" rx="6" fill="#8B5E3C"/>
+    <text x="130" y="22" font-size="12" font-weight="700" fill="#FFFFFF" text-anchor="middle">APPLICATION TIER (NEXT.JS 16)</text>
+
+    <rect x="15" y="48" width="230" height="55" rx="6" fill="#F7F5F0" stroke="#E5E1DA"/>
+    <text x="25" y="70" font-size="12" font-weight="700" fill="#171513">Middleware / Proxy</text>
+    <text x="25" y="88" font-size="10" fill="#6E6A63">Session Cookie Refresh &amp; Admin Guard</text>
+
+    <rect x="15" y="115" width="230" height="55" rx="6" fill="#F7F5F0" stroke="#E5E1DA"/>
+    <text x="25" y="137" font-size="12" font-weight="700" fill="#171513">Server Actions</text>
+    <text x="25" y="155" font-size="10" fill="#6E6A63">createPosOrder · confirmCashierPayment</text>
+
+    <rect x="15" y="182" width="230" height="55" rx="6" fill="#F7F5F0" stroke="#E5E1DA"/>
+    <text x="25" y="204" font-size="12" font-weight="700" fill="#171513">Layout Gating</text>
+    <text x="25" y="222" font-size="10" fill="#6E6A63">AdminShell vs OwnerLayout RBAC</text>
+
+    <rect x="15" y="249" width="230" height="55" rx="6" fill="#F7F5F0" stroke="#E5E1DA"/>
+    <text x="25" y="271" font-size="12" font-weight="700" fill="#171513">Receipt Service &amp; Formatter</text>
+    <text x="25" y="289" font-size="10" fill="#6E6A63">58mm / 32-col Word-wrap &amp; Snapshot</text>
+  </g>
+
+  <!-- Arrow App -> DB -->
+  <path d="M 610 250 L 660 250" fill="none" stroke="#8B5E3C" stroke-width="2" marker-end="url(#arrow5)"/>
+
+  <!-- Layer 3: Database & Security Tier -->
+  <g transform="translate(660, 80)">
+    <rect width="240" height="340" rx="8" fill="#FFFFFF" stroke="#E5E1DA" stroke-width="2" filter="url(#shadow5)"/>
+    <rect x="0" y="0" width="240" height="32" rx="6" fill="#171513"/>
+    <text x="120" y="22" font-size="12" font-weight="700" fill="#F7F5F0" text-anchor="middle">SUPABASE / POSTGRESQL</text>
+
+    <rect x="15" y="48" width="210" height="55" rx="6" fill="#F7F5F0" stroke="#E5E1DA"/>
+    <text x="25" y="70" font-size="12" font-weight="700" fill="#171513">Row Level Security (RLS)</text>
+    <text x="25" y="88" font-size="10" fill="#6E6A63">Tabel finansial khusus role 'owner'</text>
+
+    <rect x="15" y="115" width="210" height="55" rx="6" fill="#F7F5F0" stroke="#E5E1DA"/>
+    <text x="25" y="137" font-size="12" font-weight="700" fill="#171513">Security Definer RPCs</text>
+    <text x="25" y="155" font-size="10" fill="#6E6A63">create_cashier_order · confirm_payment</text>
+
+    <rect x="15" y="182" width="210" height="55" rx="6" fill="#F7F5F0" stroke="#E5E1DA"/>
+    <text x="25" y="204" font-size="12" font-weight="700" fill="#171513">Transaction Locking</text>
+    <text x="25" y="222" font-size="10" fill="#6E6A63">pg_advisory_xact_lock (anti-race)</text>
+
+    <rect x="15" y="249" width="210" height="55" rx="6" fill="#F7F5F0" stroke="#E5E1DA"/>
+    <text x="25" y="271" font-size="12" font-weight="700" fill="#171513">Immutable Snapshots</text>
+    <text x="25" y="289" font-size="10" fill="#6E6A63">receipts.snapshot &amp; audit_logs</text>
+  </g>
+
+  <!-- Hardware Layer (Bottom) -->
+  <g transform="translate(40, 445)">
+    <rect width="860" height="85" rx="8" fill="#FFFFFF" stroke="#E5E1DA" stroke-width="1.5" filter="url(#shadow5)"/>
+    <text x="20" y="26" font-size="12" font-weight="700" fill="#8B5E3C">SUBSISTEM PERANGKAT KERAS (PRINTER STRUK THERMAL 58 MM):</text>
+    <text x="20" y="48" font-size="11" fill="#171513">• Target Perangkat: PandaPrinter PRJ-58D (Pengujian &amp; konfigurasi lokal kasir).</text>
+    <text x="20" y="66" font-size="11" fill="#6E6A63">• Metode Cetak: 1) Browser / System Print Dialog (Utama &amp; Stabil), 2) ESC/POS Web Serial (Bluetooth Classic SPP), 3) Web Bluetooth BLE, 4) RawBT Android Bridge.</text>
+  </g>
+</svg>

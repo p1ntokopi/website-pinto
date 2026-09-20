@@ -479,7 +479,7 @@ toast({
                   )}
                   <input
                     type="file"
-                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    className="absolute inset-0 min-h-11 cursor-pointer opacity-0"
                     accept="image/*"
                     onChange={handleImageUpload}
                     disabled={uploadingImage}

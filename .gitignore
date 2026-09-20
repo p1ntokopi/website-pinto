@@ -10,8 +10,15 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
+# testing & reports
+/coverage/
+/test-results/
+/playwright-report/
+/blob-report/
+.playwright/
+
+# supabase local temp
+supabase/.temp/
 
 # next.js
 /.next/
@@ -20,21 +27,36 @@
 # production
 /build
 
-# misc
+# misc & OS artifacts
 .DS_Store
 *.pem
+Thumbs.db
+ehthumbs.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
 
-# debug
+# debug & logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
+
+# IDEs & editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
 # AI tooling artifacts (Command Code & skill outputs)
 .commandcode/
@@ -47,3 +69,4 @@ CLAUDE.md
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+

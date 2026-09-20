@@ -1,8 +1,9 @@
 import { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { TableList } from '@/components/admin/table-list'
-import { Printer } from 'lucide-react'
+import { Printer, TriangleAlert } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { toFriendlyError } from '@/lib/ui/errors'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
@@ -20,8 +21,16 @@ export default async function AdminTablesPage() {
 
   if (tablesError) {
     return (
-      <div className="p-8 text-center text-destructive">
-        Gagal memuat meja: {tablesError.message}
+      <div className="mx-auto flex w-full max-w-[1240px] flex-col items-center justify-center gap-3 px-4 py-16 text-center">
+        <TriangleAlert className="h-8 w-8 text-danger" aria-hidden="true" />
+        <p className="text-sm font-semibold text-ink">Gagal memuat meja</p>
+        <p className="max-w-sm text-sm text-muted-text">
+          {toFriendlyError(
+            'tables page',
+            tablesError,
+            'Data meja tidak dapat dimuat. Muat ulang halaman lalu coba lagi.'
+          )}
+        </p>
       </div>
     )
   }
@@ -44,7 +53,7 @@ export default async function AdminTablesPage() {
     <div className="mx-auto w-full max-w-[1240px] space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-coffee">
+          <p className="text-xs-plus font-semibold uppercase tracking-[0.16em] text-coffee">
             Operasional
           </p>
           <h1 className="mt-1 font-display text-3xl font-bold tracking-tight text-ink">

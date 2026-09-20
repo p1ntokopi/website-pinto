@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import { LoginForm } from './login-form'
 
 export const metadata: Metadata = {
-  title: 'Masuk Admin - Pinto Coffee',
+  title: 'Masuk Admin - Pinto Kupi',
 }
 
 export default async function AdminLoginPage() {

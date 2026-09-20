@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { LiveTablesClient } from "@/components/admin/tables/live-tables-client";
-import { Users, Receipt } from "lucide-react";
+import { Users, Receipt, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -12,13 +12,13 @@ export default async function LiveTablesPage() {
   const supabase = await createClient();
 
   // Fetch all tables
-  const { data: tables } = await supabase
+  const { data: tables, error: tablesError } = await supabase
     .from("tables")
     .select("id, table_number, capacity, is_active")
     .order("table_number", { ascending: true });
 
   // Fetch active sessions
-  const { data: sessions } = await supabase
+  const { data: sessions, error: sessionsError } = await supabase
     .from("dining_sessions")
     .select("id, table_id, created_at")
     .eq("status", "open");
@@ -36,6 +36,7 @@ export default async function LiveTablesPage() {
     const { data: activeOrders } = await supabase
       .from("orders")
       .select("id, order_number, dining_session_id, total, status")
+      .is("deleted_at", null)
       .in("dining_session_id", sessionIds)
       .in("status", [
         "NEW",
@@ -75,7 +76,7 @@ export default async function LiveTablesPage() {
     <div className="mx-auto w-full max-w-[1240px] space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-coffee">
+          <p className="text-xs-plus font-semibold uppercase tracking-[0.16em] text-coffee">
             Operasional
           </p>
           <h1 className="mt-1 font-display text-3xl font-bold tracking-tight text-ink">
@@ -100,6 +101,16 @@ export default async function LiveTablesPage() {
           </div>
         </div>
       </div>
+
+      {(tablesError || sessionsError) && (
+        <div
+          role="status"
+          className="flex items-center gap-2 rounded-sm border border-warning/30 bg-warning/10 px-4 py-3 text-sm font-medium text-warning"
+        >
+          <TriangleAlert className="h-4 w-4 shrink-0" aria-hidden="true" />
+          Gagal memuat status meja. Muat ulang halaman lalu coba lagi.
+        </div>
+      )}
 
       <LiveTablesClient initialTables={tablesData} />
 

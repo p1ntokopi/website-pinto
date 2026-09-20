@@ -96,6 +96,7 @@ export default async function OrderDetailPage({
       )
     `
     )
+    .is("deleted_at", null)
     .eq("id", resolvedParams.id)
     .single();
 
@@ -115,7 +116,7 @@ export default async function OrderDetailPage({
         </p>
         <Link
           href="/admin/orders"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-coffee hover:text-ink"
+          className="inline-flex items-center gap-2 inline-flex min-h-11 items-center text-sm font-semibold text-coffee hover:text-ink"
         >
           ← Kembali ke Pesanan
         </Link>
@@ -297,7 +298,7 @@ export default async function OrderDetailPage({
       <div className="flex flex-wrap items-center gap-3">
         <Link
           href="/admin/orders"
-          className="-ml-2 flex h-9 w-9 items-center justify-center rounded-sm text-muted-text transition-colors hover:bg-muted hover:text-ink focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
+          className="-ml-2 flex h-11 w-11 items-center justify-center rounded-sm text-muted-text transition-colors hover:bg-muted hover:text-ink focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
           aria-label="Kembali ke pesanan"
         >
           <ChevronLeft className="h-5 w-5" />
@@ -333,6 +334,20 @@ export default async function OrderDetailPage({
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {/* Workflow status leads; payment and session follow it as secondary. */}
+          <OrderActions
+            orderId={order.id}
+            currentStatus={order.status as OrderStatus}
+            userRole={userRole}
+            order={{
+              orderNumber: order.order_number,
+              customerName: order.customer_name,
+              tableLabel: order.table
+                ? `Meja ${order.table.table_number}`
+                : null,
+              totalLabel: formatPrice(Number(order.total)),
+            }}
+          />
           {canonicalStatus !== "CANCELLED" &&
             payment?.status !== "PAID" &&
             !order.dining_session_id && (
@@ -343,6 +358,7 @@ export default async function OrderDetailPage({
             Boolean(order.dining_session_id) && (
               <Button
                 variant="outline"
+                className="min-h-11"
                 render={
                   <Link href={`/admin/sessions/${order.dining_session_id}`} />
                 }
@@ -353,6 +369,7 @@ export default async function OrderDetailPage({
           {order.dining_session_id && (
             <Button
               variant="outline"
+              className="min-h-11"
               render={
                 <Link href={`/admin/sessions/${order.dining_session_id}`} />
               }
@@ -360,11 +377,6 @@ export default async function OrderDetailPage({
               Kelola Sesi Meja
             </Button>
           )}
-          <OrderActions
-            orderId={order.id}
-            currentStatus={order.status as OrderStatus}
-            userRole={userRole}
-          />
         </div>
       </div>
 
@@ -440,7 +452,7 @@ export default async function OrderDetailPage({
 
             <div className="space-y-5">
               <div>
-                <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-text">
+                <span className="mb-1 block text-xs-plus font-semibold uppercase tracking-wider text-muted-text">
                   Meja
                 </span>
                 {order.table ? (
@@ -457,12 +469,12 @@ export default async function OrderDetailPage({
 
               {order.dining_session_id && (
                 <div>
-                  <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-text">
+                  <span className="mb-1 block text-xs-plus font-semibold uppercase tracking-wider text-muted-text">
                     Sesi meja
                   </span>
                   <Link
                     href={`/admin/sessions/${order.dining_session_id}`}
-                    className="text-sm font-semibold text-coffee hover:text-ink"
+                    className="inline-flex min-h-11 items-center text-sm font-semibold text-coffee hover:text-ink"
                   >
                     Buka checkout sesi
                   </Link>
@@ -470,7 +482,7 @@ export default async function OrderDetailPage({
               )}
 
               <div>
-                <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-text">
+                <span className="mb-1 block text-xs-plus font-semibold uppercase tracking-wider text-muted-text">
                   Catatan Pesanan
                 </span>
                 {order.notes ? (
@@ -483,7 +495,7 @@ export default async function OrderDetailPage({
               </div>
 
               <div>
-                <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-text">
+                <span className="mb-1 block text-xs-plus font-semibold uppercase tracking-wider text-muted-text">
                   Dibuat Pada
                 </span>
                 <span className="text-sm font-medium text-ink">
@@ -514,7 +526,7 @@ export default async function OrderDetailPage({
                   </p>
                 )}
                 <div>
-                  <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-text">
+                  <span className="mb-1 block text-xs-plus font-semibold uppercase tracking-wider text-muted-text">
                     Status
                   </span>
                   {(() => {
@@ -534,7 +546,7 @@ export default async function OrderDetailPage({
                 </div>
 
                 <div>
-                  <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-text">
+                  <span className="mb-1 block text-xs-plus font-semibold uppercase tracking-wider text-muted-text">
                     Metode
                   </span>
                   <span className="text-sm font-medium text-ink">
@@ -543,7 +555,7 @@ export default async function OrderDetailPage({
                 </div>
 
                 <div>
-                  <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-text">
+                  <span className="mb-1 block text-xs-plus font-semibold uppercase tracking-wider text-muted-text">
                     Nominal
                   </span>
                   <span className="text-sm font-semibold text-ink">
@@ -553,7 +565,7 @@ export default async function OrderDetailPage({
 
                 {payment.paid_at && (
                   <div>
-                    <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-muted-text">
+                    <span className="mb-1 block text-xs-plus font-semibold uppercase tracking-wider text-muted-text">
                       Dibayar Pada
                     </span>
                     <span className="text-sm font-medium text-ink">
@@ -603,7 +615,7 @@ export default async function OrderDetailPage({
                         Ditandai{" "}
                         <span
                           className={cn(
-                            "inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                            "inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-2xs font-semibold uppercase tracking-wide",
                             eventConfig.color
                           )}
                         >

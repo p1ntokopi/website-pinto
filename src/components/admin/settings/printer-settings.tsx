@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { PrinterService } from '@/lib/printer/printer-service'
 import type { PrinterStatus } from '@/lib/printer/printer-types'
 import type { ThermalPaperWidth } from '@/lib/receipt/receipt-types'
+import { toFriendlyError } from '@/lib/ui/errors'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -49,7 +50,7 @@ const STATUS_META: Record<PrinterStatus, { label: string; className: string }> =
     label: 'Tidak tersambung',
     className: 'border-border-custom bg-muted text-muted-text',
   },
-  error: { label: 'Error', className: 'border-danger/30 bg-danger/10 text-danger' },
+  error: { label: 'Bermasalah', className: 'border-danger/30 bg-danger/10 text-danger' },
 }
 
 type BusyAction = 'connect' | 'disconnect' | 'test' | null
@@ -107,7 +108,9 @@ export function PrinterSettings() {
     try {
       await PrinterService.connect()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Gagal menyambungkan printer.')
+      setError(
+        toFriendlyError('printer connect', err, 'Gagal menyambungkan printer.')
+      )
     } finally {
       setBusy(null)
       await refreshStatus()
@@ -120,7 +123,9 @@ export function PrinterSettings() {
     try {
       await PrinterService.disconnect()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Gagal memutus koneksi printer.')
+      setError(
+        toFriendlyError('printer disconnect', err, 'Gagal memutus koneksi printer.')
+      )
     } finally {
       setBusy(null)
       await refreshStatus()
@@ -133,7 +138,7 @@ export function PrinterSettings() {
     try {
       await PrinterService.testPrint()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Test print gagal.')
+      setError(toFriendlyError('printer test print', err, 'Test print gagal.'))
     } finally {
       setBusy(null)
       await refreshStatus()
@@ -155,7 +160,9 @@ export function PrinterSettings() {
           <CardDescription>Pilih bagaimana struk dikirim ke printer.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="inline-flex rounded-sm border border-border-custom bg-muted/40 p-0.5">
+          {/* Wraps instead of overflowing: four provider labels do not fit on a
+              320px screen in one row. */}
+          <div className="flex flex-wrap gap-0.5 rounded-sm border border-border-custom bg-muted/40 p-0.5">
             {PROVIDER_OPTIONS.map((provider) => (
               <button
                 key={provider.id}
@@ -163,7 +170,7 @@ export function PrinterSettings() {
                 onClick={() => handleSelectProvider(provider.id)}
                 aria-pressed={providerId === provider.id}
                 className={cn(
-                  'rounded-sm px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:ring-3 focus-visible:ring-ring/40 outline-none',
+                  'min-h-11 rounded-sm px-3 text-xs font-semibold transition-colors focus-visible:ring-3 focus-visible:ring-ring/40 outline-none',
                   providerId === provider.id
                     ? 'bg-ink text-paper'
                     : 'text-muted-text hover:text-ink'
@@ -301,7 +308,7 @@ export function PrinterSettings() {
                 onClick={() => handlePaperWidth(option.value)}
                 aria-pressed={paperWidth === option.value}
                 className={cn(
-                  'rounded-sm px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:ring-3 focus-visible:ring-ring/40 outline-none',
+                  'rounded-sm min-h-11 px-3 py-1.5 text-xs font-semibold md:min-h-0 transition-colors focus-visible:ring-3 focus-visible:ring-ring/40 outline-none',
                   paperWidth === option.value
                     ? 'bg-ink text-paper'
                     : 'text-muted-text hover:text-ink'

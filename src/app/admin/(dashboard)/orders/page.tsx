@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { OrdersClient } from '@/components/admin/orders/orders-client'
+import type { UserRole } from '@/lib/auth/roles'
 import { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -8,6 +9,16 @@ export const metadata: Metadata = {
 
 export default async function OrdersPage() {
   const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  const { data: currentProfile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user?.id ?? '')
+    .single()
+  const currentRole = (currentProfile?.role ?? 'staff') as UserRole
 
   // Initial fetch for today's orders (or recent active orders)
   // We'll fetch orders from the last 24 hours to keep the initial payload reasonable
@@ -22,6 +33,7 @@ export default async function OrdersPage() {
       payments:payments(order_id, status, amount, payment_method, payment_channel),
       items:order_items(id)
     `)
+    .is("deleted_at", null)
     .gte("created_at", oneDayAgo)
     .order("created_at", { ascending: false })
 
@@ -90,7 +102,7 @@ export default async function OrdersPage() {
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-6">
       <div>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-coffee">
+        <p className="text-xs-plus font-semibold uppercase tracking-[0.16em] text-coffee">
           Operasional
         </p>
         <h1 className="mt-1 font-display text-3xl font-bold tracking-tight text-ink">
@@ -106,6 +118,7 @@ export default async function OrdersPage() {
         initialError={
           ordersError ? "Gagal memuat pesanan. Muat ulang halaman." : null
         }
+        currentRole={currentRole}
       />
     </div>
   )

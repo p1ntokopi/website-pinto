@@ -101,7 +101,7 @@ export function TransactionTable({ rows }: { rows: TransactionRow[] }) {
           value={methodFilter}
           onChange={(event) => setMethodFilter(event.target.value)}
           aria-label="Filter metode pembayaran"
-          className="h-9 rounded-sm border border-border-custom bg-paper px-2.5 text-sm text-ink focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
+          className="h-11 rounded-sm border border-border-custom bg-paper px-2.5 md:h-9 text-sm text-ink focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
         >
           <option value="ALL">Semua Metode</option>
           {methods.map((method) => (
@@ -114,7 +114,7 @@ export function TransactionTable({ rows }: { rows: TransactionRow[] }) {
           value={statusFilter}
           onChange={(event) => setStatusFilter(event.target.value)}
           aria-label="Filter status pembayaran"
-          className="h-9 rounded-sm border border-border-custom bg-paper px-2.5 text-sm text-ink focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
+          className="h-11 rounded-sm border border-border-custom bg-paper px-2.5 md:h-9 text-sm text-ink focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
         >
           <option value="ALL">Semua Status</option>
           <option value="UNPAID">Belum Bayar</option>
@@ -128,7 +128,7 @@ export function TransactionTable({ rows }: { rows: TransactionRow[] }) {
           value={sortKey}
           onChange={(event) => setSortKey(event.target.value as SortKey)}
           aria-label="Urutkan"
-          className="h-9 rounded-sm border border-border-custom bg-paper px-2.5 text-sm text-ink focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
+          className="h-11 rounded-sm border border-border-custom bg-paper px-2.5 md:h-9 text-sm text-ink focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
         >
           <option value="NEWEST">Terbaru</option>
           <option value="OLDEST">Terlama</option>
@@ -137,7 +137,7 @@ export function TransactionTable({ rows }: { rows: TransactionRow[] }) {
         <button
           type="button"
           onClick={exportCsv}
-          className="inline-flex min-h-9 items-center gap-1.5 rounded-sm border border-border-custom bg-paper px-3 text-xs font-semibold text-ink transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-border-custom bg-paper px-3 text-xs font-semibold text-ink transition-colors hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
         >
           <Download className="h-3.5 w-3.5" aria-hidden="true" />
           CSV
@@ -155,7 +155,7 @@ export function TransactionTable({ rows }: { rows: TransactionRow[] }) {
           <div className="hidden overflow-x-auto rounded-sm border border-border-custom bg-card lg:block">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border-custom/60 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-text">
+                <tr className="border-b border-border-custom/60 text-left text-xs-plus font-semibold uppercase tracking-wider text-muted-text">
                   <th className="px-3 py-2.5 font-semibold">Tanggal</th>
                   <th className="px-3 py-2.5 font-semibold">No Order</th>
                   <th className="px-3 py-2.5 font-semibold">Meja</th>
@@ -258,7 +258,7 @@ function PaymentStatusBadge({ status }: { status: string | null }) {
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium',
+        'inline-flex items-center rounded-full border px-2 py-0.5 text-xs-plus font-medium',
         tone,
       )}
     >

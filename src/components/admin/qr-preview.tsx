@@ -109,10 +109,10 @@ export function QRPreview({ slug, tableNumber }: QRPreviewProps) {
   }
 
   return (
-    <div className="flex flex-col items-center gap-6">
+    <div className="flex w-full flex-col items-center gap-6">
       <div 
         ref={qrRef} 
-        className="bg-white p-6 rounded-xl shadow-sm border border-border/50 flex flex-col items-center"
+        className="flex w-full max-w-[230px] flex-col items-center rounded-xl border border-border/50 bg-white p-4 shadow-sm sm:p-6"
       >
         <div className="font-display font-bold text-xl text-primary tracking-widest mb-1">Pinto</div>
         <div className="text-xs text-muted-foreground uppercase tracking-widest mb-4">Coffee</div>

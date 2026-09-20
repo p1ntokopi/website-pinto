@@ -3,7 +3,8 @@ export type CanonicalOrderStatus =
 export type LegacyOrderStatus =
   "PENDING_PAYMENT" | "PENDING" | "CONFIRMED" | "COMPLETED";
 export type OrderStatus = CanonicalOrderStatus | LegacyOrderStatus;
-export type UserRole = "admin" | "staff" | "kitchen" | "owner";
+export type { UserRole } from "@/lib/auth/roles";
+import type { UserRole } from "@/lib/auth/roles";
 
 const LEGACY_STATUS_MAP: Record<LegacyOrderStatus, CanonicalOrderStatus> = {
   PENDING_PAYMENT: "NEW",

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { TriangleAlert } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { resolvePeriod, formatRangeLabel } from '@/lib/finance/period'
 import { PeriodFilter } from '@/components/admin/owner/period-filter'
@@ -21,7 +22,9 @@ export default async function OwnerAuditPage({
   const period = resolvePeriod(params)
   const supabase = await createClient()
 
-  const { data: logs } = await supabase
+  // A failed read must not look like "no activity"; the banner below keeps the
+  // two distinguishable.
+  const { data: logs, error: logsError } = await supabase
     .from('audit_logs')
     .select(
       `id, action, entity_type, entity_id, metadata, created_at,
@@ -53,7 +56,7 @@ export default async function OwnerAuditPage({
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-8">
       <div className="space-y-2">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-coffee">
+        <p className="text-xs-plus font-semibold uppercase tracking-[0.16em] text-coffee">
           Laporan
         </p>
         <h1 className="font-display text-3xl font-bold tracking-tight text-ink">Audit Log</h1>
@@ -63,6 +66,18 @@ export default async function OwnerAuditPage({
       </div>
 
       <PeriodFilter currentKey={period.key} />
+
+      {logsError && (
+        <div
+          role="alert"
+          className="flex items-start gap-2 rounded-sm border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger"
+        >
+          <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <span>
+            Gagal memuat audit log. Daftar di bawah mungkin tidak lengkap.
+          </span>
+        </div>
+      )}
 
       <AuditClient rows={rows} />
 

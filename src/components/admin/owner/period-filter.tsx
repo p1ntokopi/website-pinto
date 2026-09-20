@@ -55,7 +55,7 @@ export function PeriodFilter({ currentKey }: { currentKey: PeriodKey }) {
               disabled={pending}
               onClick={() => navigate({ p: option.key })}
               className={cn(
-                'min-h-9 shrink-0 rounded-full border px-3.5 text-xs font-semibold transition-colors focus-visible:ring-3 focus-visible:ring-ring/40 outline-none disabled:opacity-60',
+                'min-h-11 shrink-0 rounded-full border px-3.5 text-xs font-semibold transition-colors focus-visible:ring-3 focus-visible:ring-ring/40 outline-none disabled:opacity-60',
                 isActive
                   ? 'border-coffee bg-coffee text-paper'
                   : 'border-border-custom bg-paper text-muted-text hover:border-coffee/40 hover:text-ink',
@@ -72,7 +72,7 @@ export function PeriodFilter({ currentKey }: { currentKey: PeriodKey }) {
           disabled={pending}
           onClick={() => setCustomOpen((open) => !open)}
           className={cn(
-            'min-h-9 shrink-0 rounded-full border px-3.5 text-xs font-semibold transition-colors focus-visible:ring-3 focus-visible:ring-ring/40 outline-none disabled:opacity-60',
+            'min-h-11 shrink-0 rounded-full border px-3.5 text-xs font-semibold transition-colors focus-visible:ring-3 focus-visible:ring-ring/40 outline-none disabled:opacity-60',
             currentKey === 'CUSTOM'
               ? 'border-coffee bg-coffee text-paper'
               : 'border-border-custom bg-paper text-muted-text hover:border-coffee/40 hover:text-ink',
@@ -91,7 +91,7 @@ export function PeriodFilter({ currentKey }: { currentKey: PeriodKey }) {
               value={from}
               max={to || undefined}
               onChange={(event) => setFrom(event.target.value)}
-              className="h-9 rounded-sm border border-border-custom bg-paper px-2.5 text-sm text-ink focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
+              className="h-11 rounded-sm border border-border-custom bg-paper px-2.5 text-sm text-ink focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
             />
           </label>
           <label className="flex flex-col gap-1 text-xs font-medium text-muted-text">
@@ -101,14 +101,14 @@ export function PeriodFilter({ currentKey }: { currentKey: PeriodKey }) {
               value={to}
               min={from || undefined}
               onChange={(event) => setTo(event.target.value)}
-              className="h-9 rounded-sm border border-border-custom bg-paper px-2.5 text-sm text-ink focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
+              className="h-11 rounded-sm border border-border-custom bg-paper px-2.5 text-sm text-ink focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
             />
           </label>
           <button
             type="button"
             onClick={applyCustomRange}
             disabled={!from || !to || pending}
-            className="min-h-9 rounded-sm bg-ink px-4 text-sm font-semibold text-paper transition-colors hover:bg-ink/90 focus-visible:ring-3 focus-visible:ring-ring/40 outline-none disabled:opacity-60"
+            className="min-h-11 rounded-sm bg-ink px-4 text-sm font-semibold text-paper transition-colors hover:bg-ink/90 focus-visible:ring-3 focus-visible:ring-ring/40 outline-none disabled:opacity-60"
           >
             Terapkan
           </button>

@@ -50,6 +50,7 @@ export async function getTransactions(
        table:tables(table_number),
        payments(id, payment_method, payment_channel, provider, status, paid_at, created_at)`,
     )
+    .is('deleted_at', null)
     // Inclusive Jakarta calendar dates; the next day's 00:00 start is the
     // exclusive upper bound so sub-second rows at day end are not dropped.
     .gte('created_at', `${start}T00:00:00+07:00`)

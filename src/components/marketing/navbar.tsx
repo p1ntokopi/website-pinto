@@ -50,7 +50,7 @@ export function Navbar() {
         <Link href="/" className="group flex shrink-0 items-center gap-2.5">
           <Image
             src="/Pintokupi.webp"
-            alt="Logo Pinto Coffee"
+            alt="Logo Pinto Kupi"
             width={34}
             height={34}
             className="rounded-md object-cover grayscale opacity-90 transition-opacity group-hover:opacity-100"

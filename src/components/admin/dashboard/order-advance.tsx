@@ -63,7 +63,7 @@ export function OrderAdvance({
       onClick={handleClick}
       disabled={isUpdating}
       className={cn(
-        "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-sm bg-coffee px-3.5 py-2 text-xs font-bold uppercase tracking-wide text-paper transition-colors hover:bg-ink disabled:opacity-60 focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
+        "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-sm bg-coffee px-3.5 py-2 text-xs font-bold uppercase tracking-wide text-paper transition-colors hover:bg-ink disabled:opacity-60 focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
       )}
     >
       {isUpdating ? (

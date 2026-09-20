@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { requireAdminRole } from '@/lib/auth/authorization'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 
@@ -111,13 +112,19 @@ export async function updateTable(id: string, prevState: unknown, formData: Form
   }
 }
 
-export async function archiveTable(id: string, is_active: boolean) {
-  const supabase = await createClient()
+/**
+ * Soft toggles a table on or off. This is not deletion: the row, its number,
+ * and its slug stay occupied, which is what you want for a table that is merely
+ * out of service for a while. Use `deleteTable` to retire one for good.
+ */
+export async function setTableActive(id: string, isActive: boolean) {
+  const guard = await requireAdminRole()
+  if (!guard.ok) return { error: guard.error }
 
   try {
-    const { error } = await supabase
+    const { error } = await guard.context.supabase
       .from('tables')
-      .update({ is_active, updated_at: new Date().toISOString() })
+      .update({ is_active: isActive, updated_at: new Date().toISOString() })
       .eq('id', id)
 
     if (error) throw error
@@ -125,7 +132,52 @@ export async function archiveTable(id: string, is_active: boolean) {
     revalidatePath('/admin/tables')
     return { success: true }
   } catch (err: unknown) {
-    console.error('Archive table error:', err)
-    return { error: err instanceof Error ? err.message : 'Failed to archive table.' }
+    console.error('Set table active error:', err)
+    return { error: 'Gagal mengubah status meja. Coba lagi.' }
   }
+}
+
+/**
+ * Permanently removes a table, freeing its number and slug for reuse.
+ *
+ * The RPC is the enforcement point: it re-checks the admin/owner role, refuses
+ * a table with an open dining session (deleting mid-service would strand the
+ * guest and the checkout), and snapshots the row into `audit_logs` before the
+ * delete. Past sessions and orders survive with a null table pointer.
+ */
+export async function deleteTable(id: string) {
+  const guard = await requireAdminRole()
+  if (!guard.ok) return { error: guard.error }
+
+  if (!id?.trim()) return { error: 'Meja tidak valid.' }
+
+  const { data, error } = await guard.context.supabase.rpc('admin_delete_table', {
+    p_table_id: id,
+  })
+
+  if (error) {
+    console.error('admin_delete_table error:', error.message)
+    if (/open dining session/i.test(error.message)) {
+      return {
+        error: 'Meja masih memiliki sesi yang terbuka. Tutup sesi tamu terlebih dahulu.',
+      }
+    }
+    if (/admin access required/i.test(error.message)) {
+      return { error: 'Hanya Admin atau Owner yang dapat menghapus meja.' }
+    }
+    if (/table not found/i.test(error.message)) {
+      return { error: 'Meja tidak ditemukan. Muat ulang halaman.' }
+    }
+    return { error: 'Gagal menghapus meja. Coba lagi.' }
+  }
+
+  const result = data as { success?: boolean } | null
+  if (!result?.success) {
+    return { error: 'Penghapusan meja ditolak.' }
+  }
+
+  revalidatePath('/admin/tables')
+  revalidatePath('/admin/tables/live')
+  revalidatePath('/admin/tables/print')
+  return { success: true }
 }

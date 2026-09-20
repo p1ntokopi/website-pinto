@@ -3,24 +3,18 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, ShoppingBag, Armchair, Coffee, MoreHorizontal, X } from 'lucide-react'
+import { MoreHorizontal, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { AdminSidebar } from '@/components/admin/admin-sidebar'
 import { AdminHeader } from '@/components/admin/admin-header'
+import { isNavItemActive, visibleBottomNav } from '@/lib/ui/navigation'
 import { useOrderNotifications } from '@/hooks/use-order-notifications'
 
 interface AdminShellProps {
   user: { full_name: string; role: string }
-  role: 'admin' | 'staff' | 'owner'
+  role: 'admin' | 'staff' | 'owner' | 'kitchen'
   children: React.ReactNode
 }
-
-const BOTTOM_NAV = [
-  { href: '/admin', label: 'Ringkasan', icon: LayoutDashboard },
-  { href: '/admin/orders', label: 'Pesanan', icon: ShoppingBag },
-  { href: '/admin/tables/live', label: 'Meja', icon: Armchair },
-  { href: '/admin/menu/products', label: 'Menu', icon: Coffee },
-]
 
 export function AdminShell({ user, role, children }: AdminShellProps) {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -29,6 +23,11 @@ export function AdminShell({ user, role, children }: AdminShellProps) {
   // Realtime new-order notifications for the whole admin dashboard.
   // Mounted here (once) so subscriptions are never duplicated across pages.
   const { unreadCount, markAllRead, isConnected } = useOrderNotifications()
+
+  // The bottom bar is role-filtered, so the grid must size to what is left
+  // plus the "Lainnya" button rather than assuming a fixed four links.
+  const bottomItems = visibleBottomNav(role)
+  const bottomColumns = bottomItems.length + 1
 
   // Lock body scroll and close on Escape while the drawer is open
   useEffect(() => {
@@ -64,13 +63,11 @@ export function AdminShell({ user, role, children }: AdminShellProps) {
       {/* Mobile bottom navigation */}
       <nav
         aria-label="Navigasi utama"
-        className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-border-custom bg-paper/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 grid border-t border-border-custom bg-paper/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+        style={{ gridTemplateColumns: `repeat(${bottomColumns}, minmax(0, 1fr))` }}
       >
-        {BOTTOM_NAV.map((item) => {
-          const isActive =
-            item.href === '/admin'
-              ? pathname === '/admin'
-              : pathname.startsWith(item.href)
+        {bottomItems.map((item) => {
+          const isActive = isNavItemActive(pathname, item.href)
           const Icon = item.icon
           return (
             <Link
@@ -78,17 +75,17 @@ export function AdminShell({ user, role, children }: AdminShellProps) {
               href={item.href}
               aria-current={isActive ? 'page' : undefined}
               className={cn(
-                'relative flex min-h-14 flex-col items-center justify-center gap-1 text-[10px] font-medium transition-colors',
+                'relative flex min-h-14 flex-col items-center justify-center gap-1 text-2xs font-medium transition-colors',
                 isActive ? 'text-coffee' : 'text-muted-text'
               )}
             >
               {item.href === '/admin/orders' && unreadCount > 0 && (
-                <span className="absolute right-[calc(50%-26px)] top-1.5 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-danger px-1 text-[9px] font-bold leading-none text-paper">
+                <span className="absolute right-[calc(50%-26px)] top-1.5 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-danger px-1 text-2xs font-bold leading-none text-paper">
                   {unreadCount > 99 ? '99+' : unreadCount}
                 </span>
               )}
               <Icon className={cn('h-5 w-5', isActive && 'stroke-[2.5]')} />
-              {item.label}
+              {item.title}
             </Link>
           )
         })}
@@ -96,7 +93,7 @@ export function AdminShell({ user, role, children }: AdminShellProps) {
           type="button"
           onClick={() => setMenuOpen(true)}
           aria-label="Buka menu lainnya"
-          className="flex min-h-14 flex-col items-center justify-center gap-1 text-[10px] font-medium text-muted-text transition-colors hover:text-ink"
+          className="flex min-h-14 flex-col items-center justify-center gap-1 text-2xs font-medium text-muted-text transition-colors hover:text-ink"
         >
           <MoreHorizontal className="h-5 w-5" />
           Lainnya
@@ -117,7 +114,7 @@ export function AdminShell({ user, role, children }: AdminShellProps) {
         />
         <div
           className={cn(
-            'absolute left-0 top-0 h-full w-72 max-w-[85vw] bg-paper shadow-[2px_0_20px_rgba(23,21,19,0.08)] transition-transform duration-200',
+            'absolute left-0 top-0 h-full w-72 max-w-[85vw] bg-paper shadow-raised transition-transform duration-200',
             menuOpen ? 'translate-x-0' : '-translate-x-full'
           )}
         >
@@ -125,7 +122,7 @@ export function AdminShell({ user, role, children }: AdminShellProps) {
             type="button"
             onClick={() => setMenuOpen(false)}
             aria-label="Tutup menu"
-            className="absolute right-3 top-5 z-10 flex h-8 w-8 items-center justify-center rounded-sm text-muted-text transition-colors hover:bg-muted hover:text-ink focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
+            className="absolute right-3 top-5 z-10 flex h-11 w-11 items-center justify-center rounded-panel text-muted-text transition-colors hover:bg-muted hover:text-ink focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
           >
             <X className="h-5 w-5" />
           </button>

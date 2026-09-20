@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 500" width="100%" height="100%" style="background:#F7F5F0; font-family:'Plus Jakarta Sans', system-ui, sans-serif;">
+  <defs>
+    <filter id="shadow3" x="-5%" y="-5%" width="110%" height="115%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#171513" flood-opacity="0.06"/>
+    </filter>
+    <marker id="arrow3" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#8B5E3C" />
+    </marker>
+  </defs>
+
+  <!-- Header -->
+  <rect x="0" y="0" width="880" height="60" fill="#171513" />
+  <text x="30" y="38" fill="#F7F5F0" font-size="18" font-weight="700" letter-spacing="0.5">ARSITEKTUR MULTI-PESANAN DALAM SATU SESI MEJA (ONE BILL BOUNDARY)</text>
+
+  <!-- Orders Column -->
+  <text x="60" y="95" font-size="13" font-weight="700" fill="#8B5E3C">PESANAN-PESANAN (ORDERS)</text>
+
+  <!-- Order 1 -->
+  <g transform="translate(60, 110)">
+    <rect width="220" height="75" rx="6" fill="#FFFFFF" stroke="#E5E1DA" stroke-width="1.5" filter="url(#shadow3)"/>
+    <text x="14" y="26" font-size="13" font-weight="700" fill="#171513">Pesanan #1 (Kasir Awal)</text>
+    <text x="14" y="44" font-size="11" fill="#6E6A63">• 2x Sanger Latte (Rp30.000)</text>
+    <text x="14" y="60" font-size="11" fill="#6E6A63">• 1x Kentang Goreng (Rp15.000)</text>
+  </g>
+
+  <!-- Order 2 -->
+  <g transform="translate(60, 200)">
+    <rect width="220" height="75" rx="6" fill="#FFFFFF" stroke="#E5E1DA" stroke-width="1.5" filter="url(#shadow3)"/>
+    <text x="14" y="26" font-size="13" font-weight="700" fill="#171513">Pesanan #2 (QR Tambah)</text>
+    <text x="14" y="44" font-size="11" fill="#6E6A63">• 1x Americano Hot (Rp10.000)</text>
+    <text x="14" y="60" font-size="11" fill="#6E6A63">• 1x Roti Bakar (Rp15.000)</text>
+  </g>
+
+  <!-- Order 3 -->
+  <g transform="translate(60, 290)">
+    <rect width="220" height="75" rx="6" fill="#FFFFFF" stroke="#E5E1DA" stroke-width="1.5" filter="url(#shadow3)"/>
+    <text x="14" y="26" font-size="13" font-weight="700" fill="#171513">Pesanan #3 (QR Tambah)</text>
+    <text x="14" y="44" font-size="11" fill="#6E6A63">• 1x Mix Platter (Rp25.000)</text>
+    <text x="14" y="60" font-size="11" fill="#6E6A63">• 1x Telang Tea (Rp10.000)</text>
+  </g>
+
+  <!-- Lines converging to Session -->
+  <path d="M 280 147 L 360 237" fill="none" stroke="#8B5E3C" stroke-width="1.8" marker-end="url(#arrow3)"/>
+  <path d="M 280 237 L 360 237" fill="none" stroke="#8B5E3C" stroke-width="1.8" marker-end="url(#arrow3)"/>
+  <path d="M 280 327 L 360 237" fill="none" stroke="#8B5E3C" stroke-width="1.8" marker-end="url(#arrow3)"/>
+
+  <!-- Dining Session Box -->
+  <g transform="translate(360, 160)">
+    <rect width="220" height="155" rx="8" fill="#FFFFFF" stroke="#8B5E3C" stroke-width="2.5" filter="url(#shadow3)"/>
+    <rect x="0" y="0" width="220" height="30" rx="6" fill="#8B5E3C"/>
+    <text x="110" y="20" font-size="13" font-weight="700" fill="#FFFFFF" text-anchor="middle">MEJA 04 · SESI AKTIF</text>
+    <text x="16" y="55" font-size="12" font-weight="600" fill="#171513">Status: open</text>
+    <text x="16" y="75" font-size="12" fill="#6E6A63">Pesanan: 3 Transaksi</text>
+    <text x="16" y="95" font-size="12" fill="#6E6A63">Dikecualikan: CANCELLED</text>
+    <line x1="16" y1="110" x2="204" y2="110" stroke="#E5E1DA" stroke-width="1"/>
+    <text x="16" y="132" font-size="14" font-weight="800" fill="#171513">Total Tagihan:</text>
+    <text x="204" y="132" font-size="14" font-weight="800" fill="#8B5E3C" text-anchor="end">Rp105.000</text>
+  </g>
+
+  <!-- Arrow Session -> Payment -->
+  <path d="M 580 237 L 640 237" fill="none" stroke="#8B5E3C" stroke-width="2" marker-end="url(#arrow3)"/>
+
+  <!-- Settlement & Receipt Column -->
+  <g transform="translate(640, 110)">
+    <!-- Payment Box -->
+    <rect width="200" height="110" rx="8" fill="#FFFFFF" stroke="#E5E1DA" stroke-width="2" filter="url(#shadow3)"/>
+    <rect x="0" y="0" width="200" height="8" rx="4" fill="#171513"/>
+    <text x="16" y="30" font-size="11" font-weight="700" fill="#8B5E3C">SATU PEMBAYARAN</text>
+    <text x="16" y="50" font-size="14" font-weight="800" fill="#171513">Kasir Settle</text>
+    <text x="16" y="68" font-size="11" fill="#6E6A63">• Metode: CASH / QRIS</text>
+    <text x="16" y="84" font-size="11" fill="#6E6A63">• Verifikasi Server-side</text>
+    <text x="16" y="100" font-size="11" font-weight="700" fill="#10B981">• Status: PAID</text>
+
+    <!-- Arrow to Receipt -->
+    <path d="M 100 110 L 100 145" fill="none" stroke="#8B5E3C" stroke-width="2" marker-end="url(#arrow3)"/>
+
+    <!-- Receipt Box -->
+    <g transform="translate(0, 145)">
+      <rect width="200" height="110" rx="8" fill="#FFFFFF" stroke="#E5E1DA" stroke-width="2" filter="url(#shadow3)"/>
+      <rect x="0" y="0" width="200" height="8" rx="4" fill="#2E7D32"/>
+      <text x="16" y="30" font-size="11" font-weight="700" fill="#2E7D32">STRUK &amp; PENUTUPAN</text>
+      <text x="16" y="50" font-size="14" font-weight="800" fill="#171513">Snapshot Kekal</text>
+      <text x="16" y="68" font-size="11" fill="#6E6A63">• 1 Struk Resmi</text>
+      <text x="16" y="84" font-size="11" fill="#6E6A63">• complete_dining_session</text>
+      <text x="16" y="100" font-size="11" font-weight="700" fill="#171513">• Meja Kembali TERSEDIA</text>
+    </g>
+  </g>
+
+  <!-- Bottom Rules Note -->
+  <rect x="60" y="400" width="780" height="70" rx="6" fill="#FFFFFF" stroke="#E5E1DA" stroke-width="1.5"/>
+  <text x="80" y="426" font-size="12" font-weight="700" fill="#8B5E3C">RINGKASAN ATURAN KEUANGAN:</text>
+  <text x="80" y="446" font-size="11" fill="#171513">Pesanan yang dibatalkan (CANCELLED) secara otomatis tidak dimasukkan dalam penghitungan total sesi.</text>
+  <text x="80" y="460" font-size="11" fill="#171513">Pelanggan tidak dapat membayar per masing-masing pesanan secara parsial untuk pesanan dalam sesi makan di tempat.</text>
+</svg>

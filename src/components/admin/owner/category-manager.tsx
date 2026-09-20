@@ -147,7 +147,7 @@ export function CategoryManager({
                       setEditingId(category.id)
                       setEditingName(category.name)
                     }}
-                    className="inline-flex min-h-9 items-center gap-1.5 rounded-sm px-2.5 text-xs font-semibold text-muted-text transition-colors hover:bg-muted hover:text-ink focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
+                    className="inline-flex min-h-11 items-center gap-1.5 rounded-sm px-2.5 text-xs font-semibold text-muted-text transition-colors hover:bg-muted hover:text-ink focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
                   >
                     <Tags className="h-3.5 w-3.5" aria-hidden="true" />
                     Ubah
@@ -157,7 +157,7 @@ export function CategoryManager({
                     onClick={() => run(() => setExpenseCategoryActive(category.id, !category.is_active))}
                     disabled={pending}
                     className={cn(
-                      'inline-flex min-h-9 items-center rounded-sm px-2.5 text-xs font-semibold transition-colors focus-visible:ring-3 focus-visible:ring-ring/40 outline-none disabled:opacity-50',
+                      'inline-flex min-h-11 items-center rounded-sm px-2.5 text-xs font-semibold transition-colors focus-visible:ring-3 focus-visible:ring-ring/40 outline-none disabled:opacity-50',
                       category.is_active
                         ? 'text-danger hover:bg-danger/10'
                         : 'text-success hover:bg-success/10',

@@ -118,25 +118,25 @@ export function ExpensesClient({
 
       <div className="grid grid-cols-2 divide-y divide-border-custom/60 rounded-sm border border-border-custom bg-card sm:grid-cols-4 sm:divide-x sm:divide-y-0">
         <div className="px-4 py-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-text">
+          <p className="text-xs-plus font-semibold uppercase tracking-[0.16em] text-muted-text">
             Total Periode
           </p>
           <p className="mt-1.5 text-xl font-bold text-ink">{formatIDR(strip.total)}</p>
         </div>
         <div className="px-4 py-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-text">
+          <p className="text-xs-plus font-semibold uppercase tracking-[0.16em] text-muted-text">
             Transaksi
           </p>
           <p className="mt-1.5 text-xl font-bold text-ink">{formatNumberID(strip.count)}</p>
         </div>
         <div className="px-4 py-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-text">
+          <p className="text-xs-plus font-semibold uppercase tracking-[0.16em] text-muted-text">
             Rata-rata Harian
           </p>
           <p className="mt-1.5 text-xl font-bold text-ink">{formatIDR(strip.avgDaily)}</p>
         </div>
         <div className="px-4 py-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-text">
+          <p className="text-xs-plus font-semibold uppercase tracking-[0.16em] text-muted-text">
             Kategori Terbesar
           </p>
           <p className="mt-1.5 truncate text-xl font-bold text-ink">
@@ -163,7 +163,7 @@ export function ExpensesClient({
           value={categoryFilter}
           onChange={(event) => setCategoryFilter(event.target.value)}
           aria-label="Filter kategori"
-          className="h-9 rounded-sm border border-border-custom bg-paper px-2.5 text-sm text-ink focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
+          className="h-11 rounded-sm border border-border-custom bg-paper px-2.5 md:h-9 text-sm text-ink focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
         >
           <option value="ALL">Semua Kategori</option>
           {categories.map((category) => (
@@ -179,7 +179,7 @@ export function ExpensesClient({
             aria-pressed={statusFilter === status}
             onClick={() => setStatusFilter(status)}
             className={cn(
-              'min-h-9 rounded-full border px-3.5 text-xs font-semibold transition-colors focus-visible:ring-3 focus-visible:ring-ring/40 outline-none',
+              'min-h-11 rounded-full border px-3.5 text-xs font-semibold transition-colors focus-visible:ring-3 focus-visible:ring-ring/40 outline-none',
               statusFilter === status
                 ? 'border-coffee bg-coffee text-paper'
                 : 'border-border-custom bg-paper text-muted-text hover:text-ink',
@@ -208,7 +208,7 @@ export function ExpensesClient({
           <div className="hidden overflow-x-auto rounded-sm border border-border-custom bg-card md:block">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border-custom/60 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-text">
+                <tr className="border-b border-border-custom/60 text-left text-xs-plus font-semibold uppercase tracking-wider text-muted-text">
                   <th className="px-4 py-2.5 font-semibold">Tanggal</th>
                   <th className="px-4 py-2.5 font-semibold">Kategori</th>
                   <th className="px-4 py-2.5 font-semibold">Deskripsi</th>
@@ -250,7 +250,7 @@ export function ExpensesClient({
                               type="button"
                               onClick={() => openEdit(row)}
                               aria-label={`Ubah ${row.title}`}
-                              className="inline-flex min-h-9 items-center gap-1.5 rounded-sm px-2.5 text-xs font-semibold text-muted-text transition-colors hover:bg-muted hover:text-ink focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
+                              className="inline-flex min-h-11 items-center gap-1.5 rounded-sm px-2.5 text-xs font-semibold text-muted-text transition-colors hover:bg-muted hover:text-ink focus-visible:ring-3 focus-visible:ring-ring/40 outline-none"
                             >
                               <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
                               Ubah
@@ -259,7 +259,7 @@ export function ExpensesClient({
                               type="button"
                               onClick={() => handleVoid(row)}
                               disabled={pending}
-                              className="inline-flex min-h-9 items-center gap-1.5 rounded-sm px-2.5 text-xs font-semibold text-danger transition-colors hover:bg-danger/10 focus-visible:ring-3 focus-visible:ring-ring/40 outline-none disabled:opacity-50"
+                              className="inline-flex min-h-11 items-center gap-1.5 rounded-sm px-2.5 text-xs font-semibold text-danger transition-colors hover:bg-danger/10 focus-visible:ring-3 focus-visible:ring-ring/40 outline-none disabled:opacity-50"
                             >
                               <Undo2 className="h-3.5 w-3.5" aria-hidden="true" />
                               Void

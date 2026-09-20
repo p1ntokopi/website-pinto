@@ -16,6 +16,7 @@ export default async function KitchenPage() {
         options:order_item_options(option_value_snapshot)
       )
     `)
+    .is('deleted_at', null)
     .in('status', ['NEW', 'PENDING_PAYMENT', 'PENDING', 'CONFIRMED', 'PREPARING', 'READY'])
     .order('created_at', { ascending: true })
 
@@ -30,7 +31,7 @@ export default async function KitchenPage() {
   }))
 
   return (
-    <main className="h-screen flex flex-col overflow-hidden">
+    <main className="flex min-h-screen flex-col md:h-screen md:overflow-hidden">
       <KitchenClient
         initialOrders={orders}
         initialError={ordersError ? 'Gagal memuat antrean dapur. Coba muat ulang.' : null}

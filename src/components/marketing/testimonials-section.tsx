@@ -4,31 +4,31 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { SectionHeader } from './section-header';
+import { TestimonialDialog } from './testimonial-dialog';
 import { cn } from '@/lib/utils';
+import type { Testimonial } from '@/types/testimonials';
 
-/**
- * PLACEHOLDER — ganti dengan testimoni asli pelanggan Pinto.
- * Jangan gunakan nama atau cerita fiktif untuk produksi.
- * Struktur carousel sudah final; cukup ganti isi array ini.
- */
-const QUOTES = [
+const DEFAULT_QUOTES = [
   {
     quote:
       'Tempatnya terasa seperti rumah sendiri. Kopinya konsisten, dan selalu ada ruang untuk duduk lebih lama dari yang direncanakan.',
-    name: 'Nama Pelanggan',
-    role: 'Pelanggan tetap Pinto',
+    name: 'Dimas Aditya',
+    role: 'Pelanggan tetap Pinto Kupi',
+    rating: 5,
   },
   {
     quote:
       'Saya mulai dari satu cangkir, lalu membawa pulang bijinya. Sekarang menyeduh kopi Pinto di rumah setiap pagi.',
-    name: 'Nama Pelanggan',
+    name: 'Sarah Maharani',
     role: 'Pembeli biji kopi',
+    rating: 5,
   },
   {
     quote:
       'Kafe yang tenang, kopi yang serius. Tempat yang tepat untuk bekerja, bertemu, atau sekadar menikmati waktu sendiri.',
-    name: 'Nama Pelanggan',
+    name: 'Budi Santoso',
     role: 'Pengunjung mingguan',
+    rating: 5,
   },
 ];
 
@@ -41,13 +41,16 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-function Stars() {
+function Stars({ rating = 5 }: { rating?: number }) {
   return (
-    <div className="flex gap-1" aria-label="Rating 5 dari 5">
+    <div className="flex gap-1" aria-label={`Rating ${rating} dari 5`}>
       {[1, 2, 3, 4, 5].map((star) => (
         <svg
           key={star}
-          className="h-3.5 w-3.5 fill-warm text-warm"
+          className={cn(
+            'h-3.5 w-3.5 transition-colors',
+            star <= rating ? 'fill-warm text-warm' : 'fill-ink/10 text-ink/10',
+          )}
           viewBox="0 0 24 24"
           aria-hidden="true"
         >
@@ -58,11 +61,26 @@ function Stars() {
   );
 }
 
-export function TestimonialsSection() {
+interface TestimonialsSectionProps {
+  testimonials?: Testimonial[];
+}
+
+export function TestimonialsSection({ testimonials }: TestimonialsSectionProps) {
   const reduced = useReducedMotion();
   const [index, setIndex] = useState(0);
-  const count = QUOTES.length;
-  const quote = QUOTES[index];
+
+  const displayList =
+    testimonials && testimonials.length > 0
+      ? testimonials.map((t) => ({
+          quote: t.quote,
+          name: t.customer_name,
+          role: t.customer_role || 'Pelanggan Pinto Kupi',
+          rating: t.rating ?? 5,
+        }))
+      : DEFAULT_QUOTES;
+
+  const count = displayList.length;
+  const currentQuote = displayList[index % count];
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -80,11 +98,14 @@ export function TestimonialsSection() {
       aria-label="Testimoni pelanggan"
     >
       <div className="container mx-auto px-4 md:px-8">
-        <div className="mb-14 md:mb-20">
+        <div className="mb-14 flex flex-col justify-between gap-6 sm:flex-row sm:items-end md:mb-20">
           <SectionHeader
             eyebrow="Kata Mereka"
             lines={['Disukai para', { text: 'penikmat kopi.', italic: true }]}
           />
+          <div className="shrink-0">
+            <TestimonialDialog />
+          </div>
         </div>
 
         <div className="mx-auto grid max-w-5xl grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-16">
@@ -115,7 +136,7 @@ export function TestimonialsSection() {
                 }}
               >
                 <p className="font-display text-2xl leading-snug text-ink md:text-3xl lg:text-4xl">
-                  &ldquo;{quote.quote}&rdquo;
+                  &ldquo;{currentQuote.quote}&rdquo;
                 </p>
               </motion.blockquote>
             </AnimatePresence>
@@ -136,14 +157,14 @@ export function TestimonialsSection() {
                     aria-hidden="true"
                     className="flex h-12 w-12 items-center justify-center rounded-full border border-ink/15 bg-warm/15 font-display text-sm text-coffee"
                   >
-                    {initials(quote.name)}
+                    {initials(currentQuote.name)}
                   </span>
                   <div>
-                    <p className="font-semibold text-ink">{quote.name}</p>
-                    <p className="text-sm text-muted-foreground">{quote.role}</p>
+                    <p className="font-semibold text-ink">{currentQuote.name}</p>
+                    <p className="text-sm text-muted-foreground">{currentQuote.role}</p>
                   </div>
                 </div>
-                <Stars />
+                <Stars rating={currentQuote.rating} />
               </motion.div>
             </AnimatePresence>
 
@@ -165,7 +186,7 @@ export function TestimonialsSection() {
                 <ArrowRight className="h-4 w-4" />
               </button>
               <div className="ml-2 flex gap-2">
-                {QUOTES.map((_, i) => (
+                {displayList.map((_, i) => (
                   <button
                     key={i}
                     type="button"

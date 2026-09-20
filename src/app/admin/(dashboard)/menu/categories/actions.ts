@@ -3,9 +3,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
+import { toFriendlyError } from '@/lib/ui/errors'
 
 const categorySchema = z.object({
-  name: z.string().min(1, 'Name is required'),
+  name: z.string().min(1, 'Nama wajib diisi'),
   description: z.string().optional(),
   sort_order: z.coerce.number().default(0),
   is_active: z.boolean().default(true),
@@ -26,7 +27,7 @@ export async function createCategory(prevState: unknown, formData: FormData) {
 
     if (!validatedData.success) {
       return {
-        error: 'Validation failed',
+        error: 'Data belum lengkap. Periksa kembali isian Anda.',
         fieldErrors: validatedData.error.flatten().fieldErrors,
       }
     }
@@ -43,15 +44,14 @@ export async function createCategory(prevState: unknown, formData: FormData) {
       .single()
 
     if (error) {
-      if (error.code === '23505') return { error: 'Category with this name already exists' }
+      if (error.code === '23505') return { error: 'Kategori dengan nama ini sudah ada.' }
       throw error
     }
 
     revalidatePath('/admin/menu/categories')
     return { success: true, data }
   } catch (err: unknown) {
-    console.error('Create category error:', err)
-    return { error: err instanceof Error ? err.message : 'Failed to create category' }
+    return { error: toFriendlyError('create category', err, 'Gagal membuat kategori.') }
   }
 }
 
@@ -70,7 +70,7 @@ export async function updateCategory(id: string, prevState: unknown, formData: F
 
     if (!validatedData.success) {
       return {
-        error: 'Validation failed',
+        error: 'Data belum lengkap. Periksa kembali isian Anda.',
         fieldErrors: validatedData.error.flatten().fieldErrors,
       }
     }
@@ -89,15 +89,14 @@ export async function updateCategory(id: string, prevState: unknown, formData: F
       .single()
 
     if (error) {
-      if (error.code === '23505') return { error: 'Category with this name already exists' }
+      if (error.code === '23505') return { error: 'Kategori dengan nama ini sudah ada.' }
       throw error
     }
 
     revalidatePath('/admin/menu/categories')
     return { success: true, data }
   } catch (err: unknown) {
-    console.error('Update category error:', err)
-    return { error: err instanceof Error ? err.message : 'Failed to update category' }
+    return { error: toFriendlyError('update category', err, 'Gagal memperbarui kategori.') }
   }
 }
 
@@ -105,15 +104,16 @@ export async function deleteCategory(id: string) {
   const supabase = await createClient()
 
   try {
-    // Check if category has products
+    // A category that still holds products cannot be removed: the products
+    // would be left pointing at a deleted row.
     const { count, error: countError } = await supabase
       .from('products')
       .select('*', { count: 'exact', head: true })
       .eq('category_id', id)
-      
+
     if (countError) throw countError
     if (count && count > 0) {
-      return { error: 'Cannot delete category that contains products' }
+      return { error: 'Kategori tidak dapat dihapus karena masih berisi produk.' }
     }
 
     const { error } = await supabase
@@ -126,7 +126,6 @@ export async function deleteCategory(id: string) {
     revalidatePath('/admin/menu/categories')
     return { success: true }
   } catch (err: unknown) {
-    console.error('Delete category error:', err)
-    return { error: err instanceof Error ? err.message : 'Failed to delete category' }
+    return { error: toFriendlyError('delete category', err, 'Gagal menghapus kategori.') }
   }
 }

@@ -40,22 +40,22 @@ export const STATUS_CONFIG: Record<
     icon: XCircle,
   },
   PENDING_PAYMENT: {
-    label: "Baru (legacy: menunggu bayar)",
-    color: "bg-warning/10 text-warning border-warning/25",
+    label: "Baru",
+    color: "bg-info/10 text-info border-info/25",
     icon: CreditCard,
   },
   PENDING: {
-    label: "Baru (legacy)",
-    color: "bg-warning/10 text-warning border-warning/25",
+    label: "Baru",
+    color: "bg-info/10 text-info border-info/25",
     icon: Clock,
   },
   CONFIRMED: {
-    label: "Baru (legacy: dikonfirmasi)",
+    label: "Baru",
     color: "bg-info/10 text-info border-info/25",
     icon: CheckCircle2,
   },
   COMPLETED: {
-    label: "Disajikan (legacy)",
+    label: "Disajikan",
     color: "bg-muted text-muted-foreground border-border",
     icon: Check,
   },

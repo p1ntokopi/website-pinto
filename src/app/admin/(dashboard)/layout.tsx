@@ -58,6 +58,13 @@ export default async function AdminLayout({
     )
   }
 
+  // Kitchen staff belong on the KDS, not the admin dashboard. Redirect them
+  // instead of showing an "Akses Ditolak" wall for a page they were never
+  // meant to open.
+  if (profile.role === 'kitchen') {
+    redirect('/admin/kitchen')
+  }
+
   // Strictly enforce dashboard access: staff/admin for operations, owner for
   // everything (financial pages additionally gated by the owner layout + RLS).
   if (

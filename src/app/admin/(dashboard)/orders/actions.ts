@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
 import {
   canTransition,
   normalizeOrderStatus,
@@ -9,6 +8,7 @@ import {
   type OrderStatus,
   type UserRole,
 } from "@/lib/orders/status-machine";
+import { requireOperational, requireOwner } from "@/lib/auth/authorization";
 import { STATUS_CONFIG } from "@/lib/orders/status-config";
 
 type RpcResult = {
@@ -42,38 +42,25 @@ export type CashierPaymentResult = {
 type OperationalContext = Awaited<ReturnType<typeof getOperationalClient>>;
 
 async function getOperationalClient() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
+  const result = await requireOperational({
+    forbidden: "Akun tidak memiliki akses operasional.",
+  });
 
-  if (authError || !user) {
+  if (!result.ok) {
     return {
-      supabase,
+      supabase: result.supabase,
       user: null,
-      role: null,
-      error: "Sesi berakhir. Silakan login ulang.",
+      role: null as UserRole | null,
+      error: result.error,
     };
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-  const role = profile?.role as UserRole | undefined;
-
-  if (!role || !["admin", "owner", "staff", "kitchen"].includes(role)) {
-    return {
-      supabase,
-      user: null,
-      role: null,
-      error: "Akun tidak memiliki akses operasional.",
-    };
-  }
-
-  return { supabase, user, role, error: null };
+  return {
+    supabase: result.context.supabase,
+    user: { id: result.context.profile.id },
+    role: result.context.profile.role,
+    error: null,
+  };
 }
 
 function revalidateOperations(orderId?: string, sessionId?: string) {
@@ -187,6 +174,61 @@ export async function updateOrderStatus(
 
   revalidateOperations(orderId);
   return { success: true };
+}
+
+/**
+ * PostgreSQL raises these reasons from `admin_delete_order`. They are curated
+ * for staff, so they are surfaced instead of the generic fallback.
+ */
+function friendlyOrderArchiveError(message: string): string {
+  if (/open dining session/i.test(message)) {
+    return "Pesanan masih terhubung ke sesi meja yang belum ditutup.";
+  }
+  if (/already archived/i.test(message)) {
+    return "Pesanan ini sudah dihapus dari daftar operasional.";
+  }
+  return message;
+}
+
+/**
+ * Owner-only archival of a single order. The order keeps its items, payments,
+ * and receipt; it only leaves the operational list. `admin_delete_order` is the
+ * real gate — this guard only turns the rejection into a readable message.
+ */
+export async function deleteOrder(
+  orderId: string,
+  reason: string
+): Promise<{ ok?: boolean; error?: string }> {
+  const result = await requireOwner({
+    unauthenticated: "Sesi berakhir. Silakan login ulang.",
+    forbidden: "Hanya Owner yang dapat menghapus pesanan.",
+  });
+  if (!result.ok) return { error: result.error };
+
+  if (!orderId?.trim()) return { error: "Pesanan tidak valid." };
+  const trimmedReason = reason?.trim();
+  if (!trimmedReason) return { error: "Alasan penghapusan wajib diisi." };
+
+  const { data, error: rpcError } = await result.context.supabase.rpc(
+    "admin_delete_order",
+    { p_order_id: orderId, p_reason: trimmedReason }
+  );
+
+  if (rpcError) {
+    console.error("admin_delete_order error:", rpcError);
+    const actionable = actionableRpcError(rpcError);
+    return {
+      error: actionable
+        ? friendlyOrderArchiveError(actionable)
+        : "Gagal menghapus pesanan. Coba lagi.",
+    };
+  }
+
+  const failure = rpcFailure(data, "Penghapusan pesanan ditolak.");
+  if (failure) return { error: friendlyOrderArchiveError(failure) };
+
+  revalidateOperations(orderId);
+  return { ok: true };
 }
 
 export type ManualPaymentMethod = "CASH" | "QRIS";

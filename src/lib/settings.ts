@@ -29,6 +29,26 @@ function text(value: unknown, fallback: string): string {
   return typeof value === 'string' && value.trim().length > 0 ? value : fallback
 }
 
+function businessNameText(value: unknown, fallback: string): string {
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (trimmed && !/^pinto\s+coffe{1,2}$/i.test(trimmed)) {
+      return trimmed
+    }
+  }
+  return fallback
+}
+
+function websiteText(value: unknown, fallback: string): string {
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (trimmed && !/^www\.pintokopi\.web\.id$/i.test(trimmed)) {
+      return trimmed
+    }
+  }
+  return fallback
+}
+
 /**
  * Server-side accessor for the singleton app_settings row. Falls back to the
  * compiled-in BUSINESS config if the table/row is unavailable, so the site
@@ -48,10 +68,10 @@ export async function getAppSettings(): Promise<AppSettings> {
     if (!data) return defaults()
     const row = data as Record<string, unknown>
     return {
-      businessName: text(row.business_name, BUSINESS.name),
+      businessName: businessNameText(row.business_name, BUSINESS.name),
       tagline: text(row.tagline, BUSINESS.tagline),
       address: text(row.address, BUSINESS.address),
-      website: text(row.website, BUSINESS.website),
+      website: websiteText(row.website, BUSINESS.website),
       wifiName: text(row.wifi_name, BUSINESS.wifiName),
       wifiPassword: text(row.wifi_password, BUSINESS.wifiPassword),
       footerMessage: text(row.footer_message, BUSINESS.footerMessage),

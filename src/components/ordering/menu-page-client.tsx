@@ -212,7 +212,7 @@ export function MenuPageClient({
 
           <footer className="mt-20 border-t border-ink/10 py-8 text-center">
             <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
-              Pinto Coffee
+              Pinto Kupi
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
               Dipanggang & diseduh dengan penuh perhatian.

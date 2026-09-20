@@ -87,11 +87,11 @@ export function CategoryList({ categories }: { categories: CategoryWithCount[] }
             <Table>
               <TableHeader>
                 <TableRow className="border-b border-border-custom/70">
-                  <TableHead className="w-16 text-[11px] font-semibold uppercase tracking-wider text-muted-text">Urutan</TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-text">Kategori</TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-text">Produk</TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-text">Status</TableHead>
-                  <TableHead className="text-right text-[11px] font-semibold uppercase tracking-wider text-muted-text">Aksi</TableHead>
+                  <TableHead className="w-16 text-xs-plus font-semibold uppercase tracking-wider text-muted-text">Urutan</TableHead>
+                  <TableHead className="text-xs-plus font-semibold uppercase tracking-wider text-muted-text">Kategori</TableHead>
+                  <TableHead className="text-xs-plus font-semibold uppercase tracking-wider text-muted-text">Produk</TableHead>
+                  <TableHead className="text-xs-plus font-semibold uppercase tracking-wider text-muted-text">Status</TableHead>
+                  <TableHead className="text-right text-xs-plus font-semibold uppercase tracking-wider text-muted-text">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

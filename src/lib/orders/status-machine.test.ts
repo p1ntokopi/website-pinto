@@ -4,6 +4,7 @@ import {
   getAvailableTransitions,
   normalizeOrderStatus,
 } from "@/lib/orders/status-machine";
+import { canDeleteOrder } from "@/lib/auth/roles";
 
 describe("status-machine", () => {
   it("follows NEW -> PREPARING -> READY -> SERVED without skipping", () => {
@@ -56,5 +57,16 @@ describe("status-machine", () => {
       "SERVED",
       "CANCELLED",
     ]);
+  });
+});
+
+describe("order archival authorization", () => {
+  // The RPC `admin_delete_order` re-checks the owner role; this mirrors it so
+  // the UI never offers the action to an admin or cashier.
+  it("allows archival for owner only", () => {
+    expect(canDeleteOrder("owner")).toBe(true);
+    for (const role of ["admin", "staff", "kitchen", null, undefined]) {
+      expect(canDeleteOrder(role)).toBe(false);
+    }
   });
 });
