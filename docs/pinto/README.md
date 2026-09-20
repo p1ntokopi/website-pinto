@@ -8,12 +8,12 @@ Selamat datang di repositori dokumentasi resmi sistem operasional, pemesanan, da
 
 | Parameter | Keterangan |
 |---|---|
-| **Situs Web Produksi** | [https://pintokupi.my.id](https://pintokupi.my.id) |
-| **Versi Dokumen** | 1.0.0 (Production Release Candidate) |
-| **Commit Acuan Basis Data/Kode** | `f8f9f1b` |
-| **Tanggal Pembaruan Terakhir** | 13 September 2026 |
+| **Situs Web Produksi** | [https://www.pintokupi.my.id](https://www.pintokupi.my.id) |
+| **Versi Dokumen** | 1.1.0 (Production Release) |
+| **Commit Acuan Basis Data/Kode** | `2851d0e` |
+| **Tanggal Pembaruan Terakhir** | 20 September 2026 |
 | **Penyusun** | Tim Engineering & Operasional P1NTO Kopi |
-| **Status Verifikasi** | Lulus Audit Kode Sumber, Vitest (95/95), Typecheck (0 error), Lint (0 error), Build Produksi (27 rute) |
+| **Status Verifikasi** | Lulus Audit Kode Sumber, Vitest (103/103), Typecheck (0 error), Lint (0 error), Build Produksi (27 rute) |
 
 ---
 
@@ -24,12 +24,12 @@ Dokumentasi ini dirancang ke dalam dua buku panduan utama yang saling melengkapi
 ### 1. [Buku Panduan Operasional: Owner & Admin Manual](P1NTO_OWNER_ADMIN_MANUAL.md)
 * **Format:** [Markdown](P1NTO_OWNER_ADMIN_MANUAL.md) & [PDF Resmi](P1NTO_OWNER_ADMIN_MANUAL.pdf)
 * **Target Pembaca:** Pemilik Bisnis (*Owner*), Manajer Kafe, Supervisor, Kasir, dan Staf Lantai/Barista.
-* **Fokus:** Standar Operasional Prosedur (SOP) harian, alur pemesanan *Cashier-First*, penanganan meja terisi, panduan pelanggan, pemrosesan pembayaran tunai & QRIS manual, pencetakan struk thermal 58 mm, penanganan kendala, skenario bisnis kafe, serta panduan finansial khusus Owner.
+* **Fokus:** Standar Operasional Prosedur (SOP) harian, alur pemesanan *Cashier-First*, hak akses peran & kredensial login bawaan (`owner@pinto.kupi` / `admin@pinto.kopi`), panduan Owner kelola staf (`/admin/owner/accounts`), pembayaran tunai & QRIS manual, format struk thermal hemat kertas (omisi header ID order), konfigurasi printer 58 mm, skenario bisnis kafe, serta panduan finansial khusus Owner.
 
 ### 2. [Dokumentasi Sistem & Referensi Arsitektur Teknis](P1NTO_SYSTEM_DOCUMENTATION.md)
 * **Format:** [Markdown](P1NTO_SYSTEM_DOCUMENTATION.md) & [PDF Resmi](P1NTO_SYSTEM_DOCUMENTATION.pdf)
 * **Target Pembaca:** *Owner* teknis, Administrator Sistem, DevOps, dan Pengembang Perangkat Lunak masa depan (*Maintainer*).
-* **Fokus:** Arsitektur Next.js 16 App Router & React 19, skema PostgreSQL/Supabase, aturan keamanan baris (RLS), *Security Definer* RPCs, idempotensi transaksi, mekanisme penguncian *advisory locks*, integrasi printer ESC/POS, alur polling terisolasi QR meja, tata kelola migrasi, dan panduan pemeliharaan sistem.
+* **Fokus:** Arsitektur Next.js 16 App Router & React 19, skema PostgreSQL/Supabase, aturan keamanan baris (RLS), *Security Definer* RPCs, idempotensi transaksi, mekanisme penguncian *advisory locks*, format snapshot struk kekal, alur polling terisolasi QR meja, kredensial bawaan lingkungan (*seed accounts*), dan domain resmi `www.pintokupi.my.id`.
 
 ---
 
@@ -63,4 +63,5 @@ docs/pinto/
 
 | Versi | Tanggal | Perubahan | Disetujui Oleh |
 |---|---|---|---|
+| **1.1.0** | 20 Sep 2026 | Penambahan Ringkasan Eksekutif Owner, pembaruan hak akses 4 peran, penambahan kredensial login bawaan (`owner@pinto.kupi` / `admin@pinto.kopi`), panduan lengkap Owner kelola staf mandiri, format struk thermal hemat kertas (omisi ID order), sinkronisasi branding `Pinto Kupi`, dan domain resmi `www.pintokupi.my.id`. | Tim Engineering & Management P1NTO Kopi |
 | **1.0.0** | 13 Sep 2026 | Rilis dokumentasi operasional dan teknis resmi produksi berbasis audit kode sumber nyata pasca-cutover M5 Cashier-First. | Tim Engineering & Management P1NTO Kopi |

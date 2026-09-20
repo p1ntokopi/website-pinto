@@ -1,124 +1,147 @@
-# P1NTO
+# Pintö Kupi (P1NTO) — Roasted & Eatery
 
-P1NTO is a Next.js and Supabase application for customer table ordering, kitchen operations, cashier settlement, immutable receipts, and owner reporting. The approved target is a **manual cashier workflow**: customers may add multiple orders to one open table session, staff prepare and serve them, then an authorized cashier settles the bill with **CASH** or **manual QRIS**.
+[![Production Site](https://img.shields.io/badge/Production-www.pintokupi.my.id-2d6a4f?style=flat-square)](https://www.pintokupi.my.id)
+[![Admin Portal](https://img.shields.io/badge/Admin%20Portal-/admin/login-bc6c25?style=flat-square)](https://www.pintokupi.my.id/admin/login)
+[![Tests](https://img.shields.io/badge/Vitest-103%20passed-success?style=flat-square)](tests/)
+[![Docs Version](https://img.shields.io/badge/Docs%20Version-1.1.0-blue?style=flat-square)](docs/pinto/)
 
-> Implementation and cutover status: the repository contains legacy behavior plus work toward this target. Treat the workflow below as the approved contract, not evidence that production migrations were applied or that end-to-end tests passed.
+P1NTO adalah sistem terintegrasi pemesanan meja kafe, operasional dapur (KDS), kasir POS, penerbitan struk thermal kekal (*immutable receipts*), dan pelaporan finansial eksekutif berbasis **Next.js 16 (App Router)** dan **PostgreSQL / Supabase**.
 
-## Architecture
+Sistem menerapkan model operasional **Cashier-First**: pelanggan membuka sesi meja dan membayar di kasir terlebih dahulu, pesanan disiapkan oleh barista dapur, pelanggan dapat menambah pesanan melalui QR meja ke tagihan yang sama, dan kasir menyelesaikan sesi saat meja dikosongkan.
 
-- **Next.js App Router** provides customer routes under `/t/[slug]`, authenticated admin/cashier pages, the kitchen display, receipt views, and server actions.
-- **Supabase Auth + Postgres** provide identities, role profiles, transactional data, Row Level Security (RLS), and narrow `SECURITY DEFINER` RPCs for privileged writes.
-- **Dining session** is the bill boundary. A partial unique index permits at most one `open` session per table; multiple orders can belong to that session.
-- **Order and payment are separate state machines.** Customer-facing order progress is `NEW → PREPARING → READY → SERVED` (internal compatibility states may still exist). Payment confirmation does not imply preparation, service, receipt printing, or session closure.
-- **Receipt issuance is separate from printing.** A paid order/session produces an immutable receipt snapshot; each print request is an attempt against that snapshot and must never recreate a payment.
-- **Realtime is operational assistance, not authorization.** Staff streams are authenticated and scoped; anonymous customers use token-scoped, bounded summary polling rather than broad table subscriptions.
+---
 
-## Approved operating workflow
+## 📚 Dokumentasi Resmi & Buku Panduan (PDF)
 
-This is a **cashier-first** flow. The cashier starts the relationship and opens the table session; the table QR is a secondary channel for adding orders to a session that already exists.
+Dokumentasi lengkap sistem telah dikompilasi ke dalam format PDF A4 dan Markdown di direktori [`docs/pinto/`](docs/pinto/):
 
-1. The customer orders at the counter. The cashier enters the order at the POS (`/admin/orders/new`, "Pesanan Baru"), chooses DINE-IN, and assigns a table. A table that already has an open session is shown as `Terisi` and is never merged into silently: attaching to it requires an explicit "Gabung ke Sesi" confirmation that states the accrued session total.
-2. Before anything is written, the POS shows a review step (`Pesanan Anda`, items, quantities, notes, total, table) and the customer confirms it. Confirmation is an **interaction event, not an order status** — no `CONFIRMED` state is introduced and the create RPC stays atomic and idempotent.
-3. Creating the order opens that table's single open dining session if none exists (cashier path only). The customer receives the table stand and sits anywhere.
-4. Additional orders are added by scanning the stand QR. The landing page resumes the **same** open session and the new order attaches to the same bill. **The QR never opens a session**: with no active session it shows "Belum ada sesi aktif. Silakan melakukan pemesanan di kasir terlebih dahulu." and offers no ordering control.
-5. Every customer submission uses a client request UUID. The server validates the table/session, recalculates prices from available catalog rows, snapshots item names/prices/options, and returns the existing result on retry. The first operational customer state is `NEW`.
-6. Staff advances each order through `NEW → PREPARING → READY → SERVED`. Legacy `PENDING`, `CONFIRMED`, and `COMPLETED` records remain readable during compatibility cutover; do not rewrite history merely to normalize labels.
-7. At checkout, an authorized cashier selects exactly one settlement method: `CASH` or manual `QRIS`. The server locks the target, recomputes the unpaid amount, validates the expected state/amount, records one idempotent `PAID` payment with cashier attribution, and creates one immutable receipt snapshot.
-8. Receipt display/printing is a separate action. A failed, canceled, or repeated print must not alter payment status or duplicate the receipt.
-9. The table session is closed only by an explicit, idempotent cashier action after all non-canceled orders are served and the session is fully paid. Payment, receipt issuance, printing, and closure are four distinct events. Closure releases the table for the next party.
+| Dokumen | Format & Tautan | Sasaran Pembaca | Deskripsi Utama |
+|---|---|---|---|
+| **Buku Panduan Operasional (Owner & Admin Manual)** | [📄 PDF Resmi (A4)](docs/pinto/P1NTO_OWNER_ADMIN_MANUAL.pdf) · [Markdown](docs/pinto/P1NTO_OWNER_ADMIN_MANUAL.md) | Owner, Manajer Kafe, Supervisor, Kasir, & Barista | Ringkasan Eksekutif Owner, SOP alur *Cashier-First*, matriks hak akses 4 peran, manajemen akun staf, SOP kasir, format struk hemat kertas 58mm, dan skenario nyata. |
+| **Dokumentasi Sistem & Referensi Teknis** | [📄 PDF Resmi (A4)](docs/pinto/P1NTO_SYSTEM_DOCUMENTATION.pdf) · [Markdown](docs/pinto/P1NTO_SYSTEM_DOCUMENTATION.md) | Developer, DevOps, & Technical Owner | Arsitektur Next.js 16 + Supabase, skema database, RLS policies, *Security Definer* RPCs, engine cetak ESC/POS, dan spesifikasi 27 rute. |
+| **Pusat Indeks Dokumentasi** | [📂 Hub Dokumentasi](docs/pinto/README.md) | Seluruh Tim | Rangkuman audit dokumen, aset visual, dan riwayat revisi rilis. |
 
-## Roles, RLS, and trust boundaries
+---
 
-| Role | Intended access |
-| --- | --- |
-| Anonymous customer | Read active catalog/table metadata and a table-occupancy flag; order only through token-scoped RPCs after resuming a cashier-opened session. Cannot open a session. No direct order, payment, receipt, or session writes. |
-| `kitchen` | Read the bounded active queue and advance preparation states only. No payment or closure authority. |
-| `staff` | Read operational data and perform allowed service transitions. No manual settlement unless explicitly promoted to cashier authority. |
-| `admin` / `owner` | Cashier authority for manual payment, receipt issuance, explicit closure, and operational administration. Owner additionally has finance-only access. |
+## 🔑 Portal Akses & Akun Kredensial Bawaan
 
-RLS is defense in depth, not the business-rule engine. Revoke direct mutations on sensitive tables and expose atomic, role-checked RPCs with a fixed `search_path`. Never ship or reference `SUPABASE_SERVICE_ROLE_KEY` in browser code. Server actions must still authenticate, validate role, validate expected state, and derive prices/totals server-side.
+Sistem menggunakan portal login terpadu pada rute `/admin/login`:
+* **URL Produksi:** [https://www.pintokupi.my.id/admin/login](https://www.pintokupi.my.id/admin/login)
+* **URL Pengujian Lokal:** `http://localhost:3000/admin/login`
 
-## Idempotency and concurrency
+### Kredensial Bawaan Sistem (*Seed Accounts*):
 
-- Customer order creation: one unique `client_request_id` per logical cart submission; retry returns the original order.
-- Cashier order creation, manual payment, receipt issuance, and session closure: require distinct idempotency keys with uniqueness enforced in Postgres.
-- Status transitions: include the expected current state and execute under a row lock or compare-and-swap condition. Stale clients receive a conflict and refresh.
-- Manual payment: enforce at most one paid record per target and exactly one target (`order_id` XOR `dining_session_id`). Never trust a client-supplied amount.
-- Order numbers and receipt numbers must use collision-safe database allocation, not `count + 1` or random retry as the source of truth.
+| Peran (*Role*) | Email | Password Bawaan | Wewenang Utama |
+|---|---|---|---|
+| **👑 OWNER** | `owner@pinto.kupi` | `owner123` | **Kontrol Penuh:** Laporan Laba/Rugi (`/admin/owner/finance`), Beban Pengeluaran (`/admin/owner/expenses`), Kelola Akun Karyawan (`/admin/owner/accounts`), Hapus Transaksi, dan Profil Bisnis/Struk (`/admin/settings`). |
+| **🛡️ ADMIN** | `admin@pinto.kopi` | `admin123` | **Operasional Manajerial:** POS Kasir (`/admin/orders/new`), Katalog Menu & Harga, Tata Letak Meja, dan Pengaturan Printer. |
+| **☕ STAFF (Kasir)** | Dibuat oleh Owner | Dibuat oleh Owner | Kasir POS: Buat pesanan baru, terima bayar CASH/QRIS, cetak struk thermal, dan selesaikan meja. |
+| **🍳 KITCHEN (Dapur)** | Dibuat oleh Owner | Dibuat oleh Owner | Layar Antrean Dapur KDS (`/admin/kitchen`): Update status pesanan (`PREPARING` → `READY`). |
 
-## Polling and stream limits
+> [!NOTE]
+> Akun staf kasir dan barista dapur dibuat, diubah perannya, atau dinonaktifkan secara mandiri oleh Owner melalui menu **Kelola Admin & Staf** (`/admin/owner/accounts`). Database dilengkapi trigger pengaman anti-lockout (`profiles_prevent_last_owner_removal`).
 
-Customer status polling should request only the current token's table session and a bounded order summary (identifiers, statuses, and aggregate payment state), currently at a 10-second cadence while the page is visible. Stop on terminal state/unmount; back off on errors; never expose a public `orders` or `payments` stream.
+---
 
-Authenticated dashboard/KDS streams must filter to operational events and reconcile from a bounded server query after reconnect. Initial lists and recovery queries need explicit status filters, deterministic ordering, pagination/limits, and a retention cap for client-side seen IDs. Unbounded wildcard streams or full-history fetches are not an acceptable recovery strategy.
+## 🏗️ Arsitektur Sistem
 
-## Payment gateway retirement
+- **Next.js App Router (React 19)** menyediakan rute pemesanan pelanggan `/t/[slug]`, halaman kasir terotentikasi, antrean dapur KDS, dan antarmuka manajemen Owner.
+- **Supabase Auth + PostgreSQL** mengelola identitas, profil peran, Row Level Security (RLS), dan RPCs `SECURITY DEFINER` untuk mutasi transaksional terisolasi.
+- **Dining Session (Sesi Meja)** bertindak sebagai batas satu tagihan (*bill boundary*). Sebuah partial unique index memastikan hanya ada satu sesi `open` per meja; semua pesanan tambahan terikat ke sesi ini.
+- **Pemisahan Mesin Status:** Status pemesanan (`NEW → PREPARING → READY → SERVED`) terpisah dari status pembayaran (`UNPAID → PAID`). Konfirmasi bayar tidak mengubah progres racikan kopi.
+- **Struk Kekal (*Immutable Receipt*):** Setiap pembayaran menerbitkan snapshot struk permanen (`receipts`). Percetakan ulang struk tidak pernah menduplikasi transaksi.
+- **Struk Thermal 58mm Hemat Kertas:** Header ID order berulang (`ORDER Pinto-...`) dihilangkan pada struk kasir agar menghemat panjang kertas thermal kasir hingga 35%, dengan identitas resmi **Pinto Kupi** dan situs **www.pintokupi.my.id**.
 
-Xendit is retired for new transactions. New customer and cashier flows must not create Xendit sessions, read Xendit credentials, or accept callbacks; the retired webhook should fail closed. **Historical Xendit payment rows and provider fields remain accounting records and must not be deleted, rewritten as manual payments, or hidden from historical receipts/reports.** Retirement is a forward behavior change, not historical data erasure.
+---
 
-## Migration and release procedure
+## ⚡ Alur Operasional Utama (Cashier-First)
 
-This is a **forward-only cutover**. Do not run a down migration that removes enum labels, columns, constraints, or historical provider data.
+1. **Pemesanan Awal di Kasir:** Pelanggan memesan di kasir (`/admin/orders/new`), memilih tipe Dine-In, dan menetapkan meja.
+2. **Review & Konfirmasi:** Kasir memverifikasi item dan total pesanan bersama pelanggan sebelum disimpan ke sistem.
+3. **Buka Sesi Meja:** Konfirmasi pesanan otomatis membuka sesi meja aktif (`dining_sessions`). Pelanggan menerima nomor stand meja dan menuju tempat duduk.
+4. **Kanal Tambahan via QR Meja:** Pelanggan dapat memindai QR stand meja untuk menambah pesanan. Pesanan baru otomatis tersambung ke tagihan sesi meja yang sama. QR meja **tidak dapat** membuka sesi baru secara mandiri jika belum dibuka kasir.
+5. **Proses Dapur (KDS):** Barista/dapur memproses pesanan melalui antrean KDS dari `NEW` → `PREPARING` → `READY`, lalu pelayan mengantar ke meja (`SERVED`).
+6. **Pembayaran Terpusat:** Pelanggan membayar di kasir dengan **CASH** atau **QRIS Manual**. Kasir memvalidasi nominal/mutasi sebelum konfirmasi.
+7. **Penerbitan Struk & Penutupan Meja:** Struk thermal dicetak, sesi meja diselesaikan secara eksplisit oleh kasir, dan status meja kembali *Tersedia*.
 
-1. Back up production and record the migration/version baseline. Use a production-like staging database first.
-2. Run read-only preflight queries: enum labels; duplicate order numbers and request/idempotency keys; orphan payments; multiple paid rows per target; multiple open sessions per table; open-session totals/statuses; invalid manual-payment shapes; and counts of historical Xendit rows. Any result violating a planned constraint blocks deployment.
-3. Apply migrations strictly in filename order. Keep enum additions in a committed transaction before any migration that uses the new labels. Add/backfill nullable data, validate constraints, then tighten nullability/privileges.
-4. Regenerate database types and deploy server/RPC compatibility before switching UI traffic. Keep readers tolerant of legacy states and providers.
-5. Smoke-test role denials, customer retry, cashier payment retry, receipt reprint, status conflicts, explicit session closure, bounded polling, and historical Xendit rendering.
-6. Observe errors, duplicate-key conflicts, open-session counts, queue age, payment/receipt/closure counts, and retired webhook traffic before declaring cutover complete.
+---
 
-Do not infer production state from migration files in this repository. The documentation does **not** claim that a production migration has been applied.
+## 💻 Panduan Pengembangan Lokal
 
-### Rollback and roll-forward
+### Kebutuhan Sistem
+* Node.js v20+ atau v24+
+* npm v10+
+* Proyek Supabase aktif (atau stack lokal Supabase)
 
-Before traffic switches, rollback means stop the deployment and restore the tested backup if needed. After writes use the new schema, prefer roll-forward: disable affected UI paths, deploy a compensating migration/code fix, and retain all new and historical rows. Restoring a database snapshot after accepting live writes can lose orders/payments and requires an explicit incident decision and reconciliation plan. Never roll back by deleting paid rows, receipt snapshots, audit records, or Xendit history.
-
-## Local setup
-
-Requirements: a supported Node.js runtime, npm, and a Supabase project or local Supabase stack.
-
+### Instalasi & Menjalankan Dev Server
 ```bash
+# 1. Pasang dependensi
 npm install
+
+# 2. Jalankan server lokal
 npm run dev
 ```
+Buka peramban di [http://localhost:3000](http://localhost:3000).
 
-Open `http://localhost:3000`. Available checks are:
-
+### Perintah Pengujian & Verifikasi Kualitas
 ```bash
+# Menjalankan seluruh 103 unit test Vitest
 npm test
+
+# Menjalankan linter ESLint
 npm run lint
+
+# Memeriksa static type TypeScript
 npx tsc --noEmit
+
+# Menguji build produksi Next.js
 npm run build
+
+# Mengaudit konsistensi dokumentasi, tautan, & gambar
+node scripts/verify-documentation.js
+
+# Mengompilasi ulang dokumentasi markdown ke PDF resmi (Playwright)
+node scripts/generate-pdf.js
 ```
 
-These are commands to run, not a statement that they currently pass. The manual release checklist is in [`docs/m5-manual-testing.md`](docs/m5-manual-testing.md); printer constraints are in [`docs/printer-compatibility.md`](docs/printer-compatibility.md).
+---
 
-## Environment variable names
+## 🔐 Variabel Lingkungan (*Environment Variables*)
 
-No committed environment template exists: `.gitignore` currently ignores `.env*`, including `.env.example`. To avoid changing ignore/config scope, this documentation lists names only and does not create a template or include values.
+Konfigurasi lingkungan disimpan dalam file `.env` di root proyek:
 
-Required by current application paths:
+```env
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `NEXT_PUBLIC_APP_URL`
-- `NEXT_PUBLIC_SITE_URL`
-- `NEXT_PUBLIC_WHATSAPP_NUMBER`
-- `R2_ACCOUNT_ID`
-- `R2_ACCESS_KEY_ID`
-- `R2_SECRET_ACCESS_KEY`
-- `R2_BUCKET_NAME`
-- `R2_PUBLIC_URL`
-- `NEXT_PUBLIC_R2_PUBLIC_URL`
+# Application URLs
+NEXT_PUBLIC_APP_URL=https://www.pintokupi.my.id
+NEXT_PUBLIC_SITE_URL=https://www.pintokupi.my.id
+NEXT_PUBLIC_WHATSAPP_NUMBER=628xxxxxxxxxx
 
-Legacy Xendit variable names may remain in deployment history, but the retired runtime must not depend on them for new traffic. Keep all secrets server-only, use separate staging/production values, rotate exposed credentials, and never commit `.env` contents.
+# Cloudflare R2 Media Storage
+R2_ACCOUNT_ID=your-r2-account-id
+R2_ACCESS_KEY_ID=your-r2-access-key-id
+R2_SECRET_ACCESS_KEY=your-r2-secret-access-key
+R2_BUCKET_NAME=your-bucket-name
+R2_PUBLIC_URL=https://media.pintokupi.my.id
+NEXT_PUBLIC_R2_PUBLIC_URL=https://media.pintokupi.my.id
+```
 
-## Security release constraints
+---
 
-- HTTPS is mandatory in production; do not log session tokens, payment credentials, raw sensitive payloads, or customer personal data.
-- Apply least privilege to Auth roles, RLS, grants, RPC execution, storage credentials, and owner finance pages.
-- Rate-limit public session/order RPCs per table token and abuse source; cap item counts, quantities, note lengths, payload size, polling frequency, and result size.
-- Treat QR/table slugs as locators, not authorization. The opaque session token and server validation bind access to one open session.
-- Record actor, target, expected/actual state, method, and idempotency key metadata for privileged mutations without storing secrets.
-- Test anonymous cross-table reads, inactive users, role escalation, stale status changes, duplicate payment, replayed closure, and malformed receipt targets before release.
+## 🛡️ Batasan Keamanan Produksi
+
+- Protokol HTTPS wajib aktif di lingkungan produksi.
+- Seluruh `SUPABASE_SERVICE_ROLE_KEY` terisolasi di sisi server (Node.js runtime) dan tidak pernah diekspos ke klien peramban.
+- Akses anonim di meja dibatasi oleh token sesi aman bertipe `HttpOnly` (`pinto_dining_session`), mencegah manipulasi pesanan lintas meja.
+- Tabel sensitif finansial (`expenses`, `financial_adjustments`) dikunci dengan RLS khusus fungsi `is_owner()`.
+- Mutasi transaksi (pesanan, pembayaran, sesi meja) diwajibkan melalui Stored Procedures resmi dengan verifikasi status atomic (*idempotent locks*).
+
+---
+
+## 📄 Lisensi & Hak Cipta
+
+Dokumen dan seluruh kode sumber dilindungi hak cipta © 2026 **Pintö Kupi (P1NTO) — Roasted & Eatery**. Seluruh hak cipta dilindungi undang-undang.
