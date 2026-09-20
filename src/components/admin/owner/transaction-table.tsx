@@ -10,6 +10,7 @@ import type { OrderStatus } from '@/lib/orders/status-machine'
 import type { TransactionRow } from '@/lib/finance/transactions'
 import { Input } from '@/components/ui/input'
 import { EmptyState } from '@/components/admin/owner/empty-state'
+import { DeleteOrderDialog } from '@/components/admin/orders/delete-order-dialog'
 
 const PAYMENT_STATUS_LABELS: Record<string, string> = {
   PAID: 'Lunas',
@@ -166,6 +167,7 @@ export function TransactionTable({ rows }: { rows: TransactionRow[] }) {
                   <th className="px-3 py-2.5 font-semibold">Metode</th>
                   <th className="px-3 py-2.5 font-semibold">Status Bayar</th>
                   <th className="px-3 py-2.5 font-semibold">Status Order</th>
+                  <th className="px-3 py-2.5 text-right font-semibold">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border-custom/60">
@@ -203,6 +205,17 @@ export function TransactionTable({ rows }: { rows: TransactionRow[] }) {
                     <td className="whitespace-nowrap px-3 py-2.5 text-muted-text">
                       {STATUS_CONFIG[row.status as OrderStatus]?.label ?? row.status}
                     </td>
+                    <td className="whitespace-nowrap px-3 py-2 text-right">
+                      <DeleteOrderDialog
+                        order={{
+                          id: row.id,
+                          orderNumber: row.order_number,
+                          customerName: row.customer_name,
+                          tableLabel: row.table_number ? `Meja ${row.table_number}` : null,
+                          totalLabel: formatIDR(row.total),
+                        }}
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -232,11 +245,22 @@ export function TransactionTable({ rows }: { rows: TransactionRow[] }) {
                     {formatIDR(row.total)}
                   </span>
                 </div>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  <PaymentStatusBadge status={row.payment_status} />
-                  <span className="text-xs text-muted-text">
-                    {STATUS_CONFIG[row.status as OrderStatus]?.label ?? row.status}
-                  </span>
+                <div className="mt-3 flex items-center justify-between border-t border-border-custom/60 pt-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <PaymentStatusBadge status={row.payment_status} />
+                    <span className="text-xs text-muted-text">
+                      {STATUS_CONFIG[row.status as OrderStatus]?.label ?? row.status}
+                    </span>
+                  </div>
+                  <DeleteOrderDialog
+                    order={{
+                      id: row.id,
+                      orderNumber: row.order_number,
+                      customerName: row.customer_name,
+                      tableLabel: row.table_number ? `Meja ${row.table_number}` : null,
+                      totalLabel: formatIDR(row.total),
+                    }}
+                  />
                 </div>
               </li>
             ))}

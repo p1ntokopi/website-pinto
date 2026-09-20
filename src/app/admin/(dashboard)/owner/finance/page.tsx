@@ -8,6 +8,7 @@ import { PeriodFilter } from '@/components/admin/owner/period-filter'
 import { SecondaryMetric } from '@/components/admin/owner/metric-card'
 import { EmptyState } from '@/components/admin/owner/empty-state'
 import { SectionHeader } from '@/components/admin/owner/section-header'
+import { ClearFinanceDialog } from '@/components/admin/owner/clear-finance-dialog'
 import { cn } from '@/lib/utils'
 
 export const metadata: Metadata = {
@@ -73,16 +74,22 @@ export default async function OwnerFinancePage({
 
   return (
     <div className="mx-auto w-full max-w-[1240px] space-y-8">
-      <div className="space-y-2">
-        <p className="text-xs-plus font-semibold uppercase tracking-[0.16em] text-coffee">
-          Keuangan
-        </p>
-        <h1 className="font-display text-3xl font-bold tracking-tight text-ink">
-          Ikhtisar Keuangan
-        </h1>
-        <p className="text-sm text-muted-text">
-          Periode {formatRangeLabel(period.range)}
-        </p>
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div className="space-y-2">
+          <p className="text-xs-plus font-semibold uppercase tracking-[0.16em] text-coffee">
+            Keuangan
+          </p>
+          <h1 className="font-display text-3xl font-bold tracking-tight text-ink">
+            Ikhtisar Keuangan
+          </h1>
+          <p className="text-sm text-muted-text">
+            Periode {formatRangeLabel(period.range)}
+          </p>
+        </div>
+        <ClearFinanceDialog
+          currentRange={period.range}
+          rangeLabel={formatRangeLabel(period.range)}
+        />
       </div>
 
       <PeriodFilter currentKey={period.key} />
