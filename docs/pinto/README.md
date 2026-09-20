@@ -24,7 +24,7 @@ Dokumentasi ini dirancang ke dalam dua buku panduan utama yang saling melengkapi
 ### 1. [Buku Panduan Operasional: Owner & Admin Manual](P1NTO_OWNER_ADMIN_MANUAL.md)
 * **Format:** [Markdown](P1NTO_OWNER_ADMIN_MANUAL.md) & [PDF Resmi](P1NTO_OWNER_ADMIN_MANUAL.pdf)
 * **Target Pembaca:** Pemilik Bisnis (*Owner*), Manajer Kafe, Supervisor, Kasir, dan Staf Lantai/Barista.
-* **Fokus:** Standar Operasional Prosedur (SOP) harian, alur pemesanan *Cashier-First*, hak akses peran & kredensial login bawaan (`owner@pinto.kupi` / `admin@pinto.kopi`), panduan Owner kelola staf (`/admin/owner/accounts`), pembayaran tunai & QRIS manual, format struk thermal hemat kertas (omisi header ID order), konfigurasi printer 58 mm, skenario bisnis kafe, serta panduan finansial khusus Owner.
+* **Fokus:** Standar Operasional Prosedur (SOP) harian, alur pemesanan *Cashier-First*, struktur hak akses 4 peran (Owner, Admin, Staff, Kitchen), panduan Owner kelola staf (`/admin/owner/accounts`), pembayaran tunai & QRIS manual, format struk thermal hemat kertas (omisi header ID order), konfigurasi printer 58 mm, skenario bisnis kafe, serta panduan finansial khusus Owner.
 
 ### 2. [Dokumentasi Sistem & Referensi Arsitektur Teknis](P1NTO_SYSTEM_DOCUMENTATION.md)
 * **Format:** [Markdown](P1NTO_SYSTEM_DOCUMENTATION.md) & [PDF Resmi](P1NTO_SYSTEM_DOCUMENTATION.pdf)
@@ -63,5 +63,5 @@ docs/pinto/
 
 | Versi | Tanggal | Perubahan | Disetujui Oleh |
 |---|---|---|---|
-| **1.1.0** | 20 Sep 2026 | Penambahan Ringkasan Eksekutif Owner, pembaruan hak akses 4 peran, penambahan kredensial login bawaan (`owner@pinto.kupi` / `admin@pinto.kopi`), panduan lengkap Owner kelola staf mandiri, format struk thermal hemat kertas (omisi ID order), sinkronisasi branding `Pinto Kupi`, dan domain resmi `www.pintokupi.my.id`. | Tim Engineering & Management P1NTO Kopi |
+| **1.1.0** | 20 Sep 2026 | Penambahan Ringkasan Eksekutif Owner, pembaruan hak akses 4 peran, SOP login internal, panduan lengkap Owner kelola staf mandiri, format struk thermal hemat kertas (omisi ID order), sinkronisasi branding `Pinto Kupi`, dan domain resmi `www.pintokupi.my.id`. | Tim Engineering & Management P1NTO Kopi |
 | **1.0.0** | 13 Sep 2026 | Rilis dokumentasi operasional dan teknis resmi produksi berbasis audit kode sumber nyata pasca-cutover M5 Cashier-First. | Tim Engineering & Management P1NTO Kopi |

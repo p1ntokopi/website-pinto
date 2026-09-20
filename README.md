@@ -23,23 +23,16 @@ Dokumentasi lengkap sistem telah dikompilasi ke dalam format PDF A4 dan Markdown
 
 ---
 
-## 🔑 Portal Akses & Akun Kredensial Bawaan
+## 👥 Struktur Peran & Hak Akses Pengguna
 
-Sistem menggunakan portal login terpadu pada rute `/admin/login`:
-* **URL Produksi:** [https://www.pintokupi.my.id/admin/login](https://www.pintokupi.my.id/admin/login)
-* **URL Pengujian Lokal:** `http://localhost:3000/admin/login`
-
-### Kredensial Bawaan Sistem (*Seed Accounts*):
-
-| Peran (*Role*) | Email | Password Bawaan | Wewenang Utama |
-|---|---|---|---|
-| **👑 OWNER** | `owner@pinto.kupi` | `owner123` | **Kontrol Penuh:** Laporan Laba/Rugi (`/admin/owner/finance`), Beban Pengeluaran (`/admin/owner/expenses`), Kelola Akun Karyawan (`/admin/owner/accounts`), Hapus Transaksi, dan Profil Bisnis/Struk (`/admin/settings`). |
-| **🛡️ ADMIN** | `admin@pinto.kopi` | `admin123` | **Operasional Manajerial:** POS Kasir (`/admin/orders/new`), Katalog Menu & Harga, Tata Letak Meja, dan Pengaturan Printer. |
-| **☕ STAFF (Kasir)** | Dibuat oleh Owner | Dibuat oleh Owner | Kasir POS: Buat pesanan baru, terima bayar CASH/QRIS, cetak struk thermal, dan selesaikan meja. |
-| **🍳 KITCHEN (Dapur)** | Dibuat oleh Owner | Dibuat oleh Owner | Layar Antrean Dapur KDS (`/admin/kitchen`): Update status pesanan (`PREPARING` → `READY`). |
+Sistem membagi wewenang ke dalam 4 peran (*Role-Based Access Control*):
+* **👑 Owner (Pemilik Kafe):** Akses penuh mencakup laporan finansial laba/rugi, beban pengeluaran, manajemen akun staf, pembatalan/penghapusan transaksi, dan profil bisnis kafe.
+* **🛡️ Admin (Supervisor / Manajer):** Akses manajerial operasional, manajemen katalog produk, kategori menu, tata letak meja, dan konfigurasi printer kasir.
+* **☕ Staff (Kasir):** Operasional POS kasir (buat pesanan baru, terima pembayaran tunai/QRIS, cetak struk thermal, dan selesaikan sesi meja).
+* **🍳 Kitchen (Barista & Dapur):** Layar antrean pesanan dapur (KDS) untuk pembaruan status racikan kopi/makanan (`PREPARING` → `READY`).
 
 > [!NOTE]
-> Akun staf kasir dan barista dapur dibuat, diubah perannya, atau dinonaktifkan secara mandiri oleh Owner melalui menu **Kelola Admin & Staf** (`/admin/owner/accounts`). Database dilengkapi trigger pengaman anti-lockout (`profiles_prevent_last_owner_removal`).
+> Prosedur login operasional, panduan kredensial, dan manajemen akun karyawan terdokumentasi secara terperinci pada dokumen [Buku Panduan Operasional Owner & Admin (`docs/pinto/P1NTO_OWNER_ADMIN_MANUAL.pdf`)](docs/pinto/P1NTO_OWNER_ADMIN_MANUAL.pdf).
 
 ---
 
