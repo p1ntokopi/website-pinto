@@ -318,8 +318,9 @@ begin
 
     with updated_sessions as (
       update public.dining_sessions
-      set status = 'completed',
+      set status = 'closed',
           closed_at = clock_timestamp(),
+          completed_at = clock_timestamp(),
           updated_at = clock_timestamp()
       where status = 'open'
         and (p_start is null or (created_at at time zone 'Asia/Jakarta')::date >= p_start)
