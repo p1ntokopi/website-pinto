@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getSessionToken } from "@/lib/ordering/session";
-import { redirect, notFound } from "next/navigation";
+import { notFound } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { Metadata } from "next";
@@ -30,13 +30,14 @@ export default async function OrderTrackingPage({
     .eq("slug", resolvedParams.slug)
     .single();
 
-  if (!table || !sessionToken) {
-    redirect(`/t/${resolvedParams.slug}`);
+  if (!table) {
+    notFound();
   }
 
+  // Resilient order tracking: works with active session token OR direct order number on this table.
   const { data: result } = await supabase.rpc("get_order_tracking", {
     p_table_slug: resolvedParams.slug,
-    p_session_token: sessionToken,
+    p_session_token: sessionToken || "",
     p_order_number: resolvedParams.orderNumber,
   });
 
@@ -55,7 +56,7 @@ export default async function OrderTrackingPage({
   return (
     <div className="min-h-dvh bg-background pb-24 sm:pb-12">
       <OrderingHeader
-        backHref={`/t/${resolvedParams.slug}/menu`}
+        backHref={`/t/${resolvedParams.slug}`}
         title={`Pesanan #${order.order_number}`}
       />
 

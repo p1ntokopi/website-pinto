@@ -15,9 +15,13 @@ type LandingState = { error?: string } | null
 export function TableLandingForm({
   tableSlug,
   hasActiveSession,
+  buttonLabel = "Tambah Pesanan",
+  buttonVariant = "default",
 }: {
   tableSlug: string
   hasActiveSession: boolean
+  buttonLabel?: string
+  buttonVariant?: "default" | "outline" | "secondary"
 }) {
   const [state, formAction, isPending] = useActionState(
     async (prev: LandingState, formData: FormData): Promise<LandingState> => {
@@ -37,6 +41,7 @@ export function TableLandingForm({
       <input type="hidden" name="table_slug" value={tableSlug} />
       <Button
         type="submit"
+        variant={buttonVariant}
         disabled={isPending}
         className="w-full h-14 text-base font-semibold shadow-card transition-transform active:scale-[0.99]"
       >
@@ -46,7 +51,7 @@ export function TableLandingForm({
             Membuka menu...
           </>
         ) : (
-          "Tambah Pesanan"
+          buttonLabel
         )}
       </Button>
       {state?.error && (

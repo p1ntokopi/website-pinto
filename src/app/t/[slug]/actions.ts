@@ -214,16 +214,10 @@ export async function getDiningSessionSummary(
 ): Promise<{ summary?: DiningSessionSummary; error?: string }> {
   const sessionToken = await getSessionToken();
 
-  if (!sessionToken) {
-    return {
-      error: "Sesi Anda telah berakhir. Silakan pindai ulang kode QR meja.",
-    };
-  }
-
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("get_dining_session_summary", {
     p_table_slug: tableSlug,
-    p_session_token: sessionToken,
+    p_session_token: sessionToken || "",
   });
 
   if (error) {
@@ -231,9 +225,19 @@ export async function getDiningSessionSummary(
     return { error: "Status terbaru belum dapat dimuat." };
   }
 
-  const result = data as DiningSessionSummaryRpcResult | null;
+  const result = data as (DiningSessionSummaryRpcResult & {
+    session_token?: string;
+  }) | null;
   if (!result || result.success === false) {
     return { error: result?.error || "Sesi meja tidak ditemukan." };
+  }
+
+  if (!sessionToken && result.session_token) {
+    try {
+      await setSessionToken(result.session_token);
+    } catch {
+      // Safe fallback if called in a context where cookies cannot be written
+    }
   }
 
   const paymentCandidate = result.payment ?? result.session?.payment;
