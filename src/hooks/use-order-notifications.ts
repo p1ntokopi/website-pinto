@@ -8,6 +8,7 @@ import { playNewOrderSound, primeAudioContext } from '@/lib/notifications/sound'
 import {
   getBrowserNotificationsEnabled,
   getNotificationsEnabled,
+  getSoundEnabled,
 } from '@/lib/notifications/preferences'
 
 export type NewOrderInfo = {
@@ -35,11 +36,11 @@ type UseOrderNotificationsOptions = {
  *
  * - One Supabase Realtime channel (INSERT on orders).
  * - One notification per order id (in-memory seen-set).
- * - Cross-tab: Web Locks pick a single "notifying" tab (no duplicate sound /
- *   toast); BroadcastChannel syncs the unread badge to every open tab.
- * - Master toggle OFF still keeps visual feedback (toast + badge) but silences
- *   sound and browser notifications.
- * - Cleanup on unmount (channel removed, listeners closed).
+ * - Mobile-resilient: Foreground tab always plays sound; background tabs use Web Locks.
+ * - Tab visibility catch-up: If orders arrive while the mobile tab was in the background
+ *   or screen was off, notifies immediately when the cashier returns to the tab.
+ * - Mobile Touch Priming: AudioContext and HTMLAudio are primed on any user touch/tap.
+ * - Screen Wake Lock: Keeps the mobile cashier screen awake when supported.
  */
 export function useOrderNotifications({ enabled = true, onNewOrder }: UseOrderNotificationsOptions = {}) {
   const [unreadCount, setUnreadCount] = useState(0)
@@ -49,6 +50,7 @@ export function useOrderNotifications({ enabled = true, onNewOrder }: UseOrderNo
   const seenIdsRef = useRef<Set<string>>(new Set())
   const channelRef = useRef<BroadcastChannel | null>(null)
   const onNewOrderRef = useRef(onNewOrder)
+  const isInitialMountRef = useRef(true)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -87,6 +89,21 @@ export function useOrderNotifications({ enabled = true, onNewOrder }: UseOrderNo
     [addSeen]
   )
 
+  const performNotification = useCallback(
+    (order: NewOrderInfo) => {
+      onNewOrderRef.current?.(order)
+      toast({
+        title: 'Pesanan Baru',
+        description: `#${order.order_number} masuk antrean.`,
+      })
+      if (getNotificationsEnabled() && getSoundEnabled()) {
+        playNewOrderSound().catch(() => {})
+      }
+      showBrowserNotification(order)
+    },
+    [showBrowserNotification, toast]
+  )
+
   const notify = useCallback(
     (order: NewOrderInfo) => {
       if (!order?.id) return
@@ -95,18 +112,6 @@ export function useOrderNotifications({ enabled = true, onNewOrder }: UseOrderNo
 
       setLastOrder(order)
       setUnreadCount((count) => count + 1)
-
-      const perform = () => {
-        onNewOrderRef.current?.(order)
-        toast({
-          title: 'Pesanan Baru',
-          description: `#${order.order_number} masuk antrean.`,
-        })
-        if (getNotificationsEnabled()) {
-          playNewOrderSound().catch(() => {})
-        }
-        showBrowserNotification(order)
-      }
 
       const broadcast = () => {
         channelRef.current?.postMessage({
@@ -117,22 +122,33 @@ export function useOrderNotifications({ enabled = true, onNewOrder }: UseOrderNo
         } satisfies BroadcastMessage)
       }
 
-      const locks = typeof navigator !== 'undefined' ? navigator.locks : undefined
-      if (locks?.request) {
-        // Only one tab becomes the notifier; the rest update their badge only.
-        void locks.request(NOTIFY_LOCK_NAME, { ifAvailable: true }, async (lock) => {
-          if (!lock) return
-          perform()
-          broadcast()
-          // Keep the lock briefly so a concurrently-open tab skips the sound.
-          await new Promise((resolve) => setTimeout(resolve, NOTIFY_LOCK_HOLD_MS))
-        })
-      } else {
-        perform()
+      // Check if current tab is actively visible to user
+      const isVisible =
+        typeof document !== 'undefined'
+          ? document.visibilityState === 'visible'
+          : true
+
+      if (isVisible) {
+        // Visible tab ALWAYS triggers notification immediately (no lock drop on mobile)
+        performNotification(order)
         broadcast()
+      } else {
+        // Background tab uses Web Locks to coordinate with other tabs
+        const locks = typeof navigator !== 'undefined' ? navigator.locks : undefined
+        if (locks?.request) {
+          void locks.request(NOTIFY_LOCK_NAME, { ifAvailable: true }, async (lock) => {
+            if (!lock) return
+            performNotification(order)
+            broadcast()
+            await new Promise((resolve) => setTimeout(resolve, NOTIFY_LOCK_HOLD_MS))
+          })
+        } else {
+          performNotification(order)
+          broadcast()
+        }
       }
     },
-    [addSeen, showBrowserNotification, toast]
+    [addSeen, performNotification]
   )
 
   const markAllRead = useCallback(() => {
@@ -140,8 +156,8 @@ export function useOrderNotifications({ enabled = true, onNewOrder }: UseOrderNo
     channelRef.current?.postMessage({ type: 'read' } satisfies BroadcastMessage)
   }, [])
 
-  // Prime and unlock audio from the first user interaction (touch, click, key).
-  // Essential on mobile devices (iOS Safari, Android Chrome) due to autoplay policy.
+  // Prime and unlock audio from user gestures.
+  // Critical for mobile browsers (iOS Safari, Android Chrome).
   useEffect(() => {
     const prime = () => {
       primeAudioContext().catch(() => {})
@@ -183,6 +199,64 @@ export function useOrderNotifications({ enabled = true, onNewOrder }: UseOrderNo
       }
     })
 
+    // Reconcile orders that arrived while tab was hidden/asleep
+    const reconcileMissedOrders = async (isInitial = false) => {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') {
+        return
+      }
+
+      try {
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+        const { data: recentOrders } = await supabase
+          .from('orders')
+          .select('id, order_number, status, created_at')
+          .gte('created_at', fiveMinutesAgo)
+          .is('deleted_at', null)
+          .order('created_at', { ascending: false })
+          .limit(10)
+
+        const rawOrders = (recentOrders ?? []) as unknown as Array<{
+          id: string
+          order_number: string
+          status: string
+        }>
+
+        if (rawOrders.length === 0) return
+
+        if (isInitial) {
+          // On first page load, mark existing recent orders as already seen so we don't chime for old orders
+          rawOrders.forEach((ord) => seenIdsRef.current.add(ord.id))
+          return
+        }
+
+        // On tab wakeup / return from background, find genuinely unnotified orders
+        const unnotified = rawOrders.filter((ord) => !seenIdsRef.current.has(ord.id))
+        if (unnotified.length > 0) {
+          unnotified.forEach((o) => addSeen(o.id))
+          const newest = unnotified[0]
+          setLastOrder({
+            id: newest.id,
+            order_number: newest.order_number,
+            status: newest.status,
+          })
+          setUnreadCount((count) => count + unnotified.length)
+          performNotification({
+            id: newest.id,
+            order_number: newest.order_number,
+            status: newest.status,
+          })
+        }
+      } catch (err) {
+        console.error('Failed to reconcile missed orders:', err)
+      }
+    }
+
+    // Seed seen list with existing recent orders on mount
+    if (isInitialMountRef.current) {
+      isInitialMountRef.current = false
+      void reconcileMissedOrders(true)
+    }
+
     const channel = supabase
       .channel('admin_order_notifications')
       .on(
@@ -197,12 +271,49 @@ export function useOrderNotifications({ enabled = true, onNewOrder }: UseOrderNo
         setIsConnected(status === 'SUBSCRIBED')
       })
 
+    // Catch-up when returning to tab from background or screen wake
+    const handleVisibilityOrFocus = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        void primeAudioContext().catch(() => {})
+        void reconcileMissedOrders(false)
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityOrFocus)
+    window.addEventListener('focus', handleVisibilityOrFocus)
+
+    // Keep mobile screen awake if WakeLock API is available
+    let wakeLockSentinel: { release: () => Promise<void> } | null = null
+    const requestWakeLock = async () => {
+      if (
+        typeof navigator !== 'undefined' &&
+        'wakeLock' in navigator &&
+        typeof document !== 'undefined' &&
+        document.visibilityState === 'visible'
+      ) {
+        try {
+          const navWithWake = navigator as unknown as {
+            wakeLock: { request: (type: string) => Promise<{ release: () => Promise<void> }> }
+          }
+          wakeLockSentinel = await navWithWake.wakeLock.request('screen')
+        } catch {
+          // Wake lock not permitted or unsupported
+        }
+      }
+    }
+    void requestWakeLock()
+
     return () => {
       supabase.removeChannel(channel)
       bc?.close()
       channelRef.current = null
+      document.removeEventListener('visibilitychange', handleVisibilityOrFocus)
+      window.removeEventListener('focus', handleVisibilityOrFocus)
+      if (wakeLockSentinel) {
+        wakeLockSentinel.release().catch(() => {})
+      }
     }
-  }, [enabled, handleRemoteOrder, notify])
+  }, [enabled, handleRemoteOrder, notify, addSeen, performNotification])
 
   return {
     unreadCount,
