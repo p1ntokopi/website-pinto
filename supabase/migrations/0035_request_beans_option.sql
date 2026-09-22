@@ -7,6 +7,17 @@
 -- 4. Longblack (slug: 'longblack')
 -- 5. Espresso (slug: 'espresso')
 
+-- Bersihkan duplikat Pilihan Biji jika sebelumnya sempat ter-insert lebih dari sekali
+delete from public.product_options
+where id in (
+  select id from (
+    select id, row_number() over (partition by product_id, name order by created_at asc) as rn
+    from public.product_options
+    where name = 'Pilihan Biji'
+  ) t
+  where t.rn > 1
+);
+
 do $$
 declare
   v_prod record;
