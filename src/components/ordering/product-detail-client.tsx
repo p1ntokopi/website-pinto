@@ -64,9 +64,31 @@ export function ProductDetailClient({
   const [selectedVariantId, setSelectedVariantId] = useState<string | undefined>(
     defaultVariant?.id
   )
-  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({})
+  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {}
+    for (const opt of options) {
+      if (opt.is_required && opt.values.length > 0) {
+        const defaultVal = opt.values.find((v) => v.price_adjustment === 0) || opt.values[0]
+        if (defaultVal) {
+          initial[opt.id] = defaultVal.id
+        }
+      }
+    }
+    return initial
+  })
   const [quantity, setQuantity] = useState(1)
   const [notes, setNotes] = useState("")
+
+  const isRequestBeansSelected = useMemo(() => {
+    return Object.entries(selectedOptions).some(([optId, valId]) => {
+      const opt = options.find((o) => o.id === optId)
+      const val = opt?.values.find((v) => v.id === valId)
+      return (
+        (opt?.name.toLowerCase().includes("biji") || opt?.name.toLowerCase().includes("bean")) &&
+        (val?.name.toLowerCase().includes("request") || (val?.price_adjustment ?? 0) > 0)
+      )
+    })
+  }, [selectedOptions, options])
 
   const selectedVariant = variants.find((v) => v.id === selectedVariantId)
   const currentBasePrice = selectedVariant ? selectedVariant.price : product.base_price
@@ -262,29 +284,40 @@ export function ProductDetailClient({
 
                   {option.values.map((val) => {
                     const isSelected = selectedOptions[option.id] === val.id
+                    const isRequestBeanValue =
+                      isSelected &&
+                      (option.name.toLowerCase().includes("biji") || option.name.toLowerCase().includes("bean")) &&
+                      (val.name.toLowerCase().includes("request") || val.price_adjustment > 0)
+
                     return (
-                      <Label
-                        key={val.id}
-                        onClick={() =>
-                          setSelectedOptions((prev) => ({ ...prev, [option.id]: val.id }))
-                        }
-                        className={cn(
-                          "flex cursor-pointer items-center justify-between border p-4 transition-colors",
-                          isSelected
-                            ? "border-primary bg-primary/5"
-                            : "border-border hover:bg-muted/40"
-                        )}
-                      >
-                        <span className="flex items-center gap-3">
-                          <RadioGroupItem value={val.id} />
-                          <span className="font-medium">{val.name}</span>
-                        </span>
-                        {val.price_adjustment > 0 && (
-                          <span className="text-muted-foreground">
-                            +{formatPrice(val.price_adjustment)}
+                      <div key={val.id} className="space-y-2">
+                        <Label
+                          onClick={() =>
+                            setSelectedOptions((prev) => ({ ...prev, [option.id]: val.id }))
+                          }
+                          className={cn(
+                            "flex cursor-pointer items-center justify-between border p-4 transition-colors",
+                            isSelected
+                              ? "border-primary bg-primary/5"
+                              : "border-border hover:bg-muted/40"
+                          )}
+                        >
+                          <span className="flex items-center gap-3">
+                            <RadioGroupItem value={val.id} />
+                            <span className="font-medium">{val.name}</span>
                           </span>
+                          {val.price_adjustment > 0 && (
+                            <span className="text-muted-foreground">
+                              +{formatPrice(val.price_adjustment)}
+                            </span>
+                          )}
+                        </Label>
+                        {isRequestBeanValue && (
+                          <div className="rounded-lg border border-amber-200/80 bg-amber-50/70 p-3 text-xs leading-relaxed text-amber-900">
+                            <span className="font-semibold">💡 Tips Request Beans:</span> Silakan tuliskan jenis biji kopi pilihan Anda (mis. <em>Gayo Winey, Toraja, Flores</em>) pada kolom <strong>Instruksi Khusus</strong> di bawah, atau tanyakan ketersediaan beans hari ini ke barista.
+                          </div>
                         )}
-                      </Label>
+                      </div>
                     )
                   })}
                 </div>
@@ -294,15 +327,29 @@ export function ProductDetailClient({
 
           {/* Notes */}
           <section>
-            <Label htmlFor="product-notes" className="mb-3 block font-semibold">
-              Instruksi Khusus
-            </Label>
+            <div className="mb-3 flex items-center justify-between">
+              <Label htmlFor="product-notes" className="block font-semibold">
+                Instruksi Khusus
+              </Label>
+              {isRequestBeansSelected && (
+                <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
+                  Tuliskan jenis beans di sini
+                </span>
+              )}
+            </div>
             <Textarea
               id="product-notes"
-              placeholder="mis. Kurang manis, ekstra panas..."
+              placeholder={
+                isRequestBeansSelected
+                  ? "Tuliskan biji kopi pilihan Anda (mis. Gayo Winey) & instruksi lainnya..."
+                  : "mis. Kurang manis, ekstra panas..."
+              }
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="h-24 resize-none"
+              className={cn(
+                "h-24 resize-none",
+                isRequestBeansSelected && "border-amber-300 focus-visible:ring-amber-400"
+              )}
               maxLength={200}
             />
           </section>

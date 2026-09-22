@@ -191,6 +191,26 @@ begin
     (v_opt, 'Robusta', 0, 2);
 end $$;
 
+-- 4b-2. Opsi kopi hitam: Request Beans (+5k) untuk V-60, Japanese, Americano, Longblack, Espresso
+do $$
+declare
+  v_prod_id uuid;
+  v_opt uuid;
+begin
+  for v_prod_id in
+    select id from public.products where slug in ('v-60', 'japanese', 'americano', 'longblack', 'espresso')
+  loop
+    insert into public.product_options (product_id, name, is_required, sort_order)
+    values (v_prod_id, 'Pilihan Biji', true, 2)
+    returning id into v_opt;
+
+    insert into public.product_option_values (product_option_id, name, price_adjustment, sort_order)
+    values
+      (v_opt, 'House Blend (Standar)', 0, 1),
+      (v_opt, 'Request Beans', 5000, 2);
+  end loop;
+end $$;
+
 -- 4c. Opsi es krim: pilihan rasa
 do $$
 declare

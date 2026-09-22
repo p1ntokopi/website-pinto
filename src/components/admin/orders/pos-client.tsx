@@ -123,14 +123,24 @@ function selectionLabels(
 
 /**
  * A required group with a single choice — a drink served only iced, say — poses
- * no question, so it is pre-answered rather than blocking the cashier. Optional
- * groups are left untouched, matching the customer flow.
+ * no question, so it is pre-answered rather than blocking the cashier.
+ * For coffee bean choices, the standard zero-adjustment option (House Blend)
+ * is preselected so the cashier can confirm or switch to Request Beans quickly.
+ * Optional groups are left untouched, matching the customer flow.
  */
 function defaultSelections(item: PosItem): Record<string, string> {
   const selections: Record<string, string> = {};
   for (const option of item.options) {
     if (option.isRequired && option.values.length === 1) {
       selections[option.id] = option.values[0].id;
+    } else if (
+      option.isRequired &&
+      (option.name.toLowerCase().includes("biji") || option.name.toLowerCase().includes("bean"))
+    ) {
+      const zeroVal = option.values.find((v) => v.priceAdjustment === 0);
+      if (zeroVal) {
+        selections[option.id] = zeroVal.id;
+      }
     }
   }
   return selections;
