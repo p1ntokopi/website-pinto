@@ -4,9 +4,18 @@ import Link from 'next/link';
 import { getAppSettings } from '@/lib/settings';
 
 export const metadata = {
-  title: 'Lokasi | Pinto Kupi',
+  title: 'Lokasi & Jam Buka',
   description:
-    'Temukan PINTO Kupi di Jl. Flamboyan No. 8, Perumahan Bumi Insani, Tajur Halang, Kabupaten Bogor. Buka setiap hari.',
+    'Temukan Pinto Kupi di Jl. Flamboyan No. 8, Perumahan Bumi Insani, Tajur Halang, Kabupaten Bogor. Buka setiap hari 13.00 — 24.00.',
+  alternates: {
+    canonical: '/locations',
+  },
+  openGraph: {
+    title: 'Lokasi & Jam Buka | Pinto Kupi',
+    description:
+      'Temukan Pinto Kupi di Jl. Flamboyan No. 8, Perumahan Bumi Insani, Tajur Halang, Kabupaten Bogor. Buka setiap hari 13.00 — 24.00.',
+    url: '/locations',
+  },
 };
 
 const MAP_EMBED = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3964.2932843233516!2d106.75314430941077!3d-6.48449349348037!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e69c365b46d2d93%3A0x46dac8252d2c88ed!2sPINTO%20Kupi!5e0!3m2!1sid!2sid!4v1786768303490!5m2!1sid!2sid';

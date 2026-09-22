@@ -11,9 +11,18 @@ import { MenuRoastery } from '@/components/marketing/menu/menu-roastery';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'Menu | Pinto Kupi',
+  title: 'Menu Kafe & Roastery',
   description:
-    'Jelajahi menu kopi, minuman, dan pastry kami — diracik dengan cermat dan disajikan satu cangkir demi satu cangkir.',
+    'Jelajahi menu kopi espresso, manual brew, minuman non-kopi, dan pastry segar di Pinto Kupi Bogor.',
+  alternates: {
+    canonical: '/menu',
+  },
+  openGraph: {
+    title: 'Menu Kafe & Roastery | Pinto Kupi',
+    description:
+      'Jelajahi menu kopi espresso, manual brew, minuman non-kopi, dan pastry segar di Pinto Kupi Bogor.',
+    url: '/menu',
+  },
 };
 
 const CAFE_TYPES = new Set(['CAFE_DRINK', 'DESSERT', 'FOOD']);

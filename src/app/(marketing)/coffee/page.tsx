@@ -6,9 +6,18 @@ import { RoasteryStory } from '@/components/marketing/coffee/roastery-story';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'Beli Kopi | Pinto Kupi',
+  title: 'Beli Biji Kopi Sangrai Segar',
   description:
-    'Biji kopi pilihan, disangrai dengan penuh perhatian dari roastery kami. Single origin dan house blend, siap Anda seduh di rumah.',
+    'Biji kopi pilihan Nusantara, disangrai in-house dari roastery Pinto Kupi Bogor. Single origin dan house blend segar siap seduh di rumah.',
+  alternates: {
+    canonical: '/coffee',
+  },
+  openGraph: {
+    title: 'Beli Biji Kopi Sangrai Segar | Pinto Kupi',
+    description:
+      'Biji kopi pilihan Nusantara, disangrai in-house dari roastery Pinto Kupi Bogor. Single origin dan house blend segar siap seduh di rumah.',
+    url: '/coffee',
+  },
 };
 
 export default async function CoffeePage() {

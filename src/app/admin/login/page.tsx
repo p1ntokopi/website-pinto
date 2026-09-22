@@ -6,6 +6,10 @@ import { LoginForm } from './login-form'
 
 export const metadata: Metadata = {
   title: 'Masuk Admin - Pinto Kupi',
+  robots: {
+    index: false,
+    follow: false,
+  },
 }
 
 export default async function AdminLoginPage() {

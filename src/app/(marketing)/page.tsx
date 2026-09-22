@@ -15,9 +15,20 @@ import { getApprovedTestimonials } from '@/lib/testimonials';
 export const revalidate = 60;
 
 export const metadata = {
-  title: 'Roastery & Kafe di Bogor — Pinto Kupi',
+  title: {
+    absolute: 'Pinto Kupi — Roastery & Kafe di Bogor',
+  },
   description:
     'Pinto Kupi — kafe dan roastery di Bogor. Biji kopi Nusantara pilihan, disangrai in-house, dan disajikan untuk setiap momen. Kunjungi kafe atau bawa pulang bijinya.',
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: 'Pinto Kupi — Roastery & Kafe di Bogor',
+    description:
+      'Pinto Kupi — kafe dan roastery di Bogor. Biji kopi Nusantara pilihan, disangrai in-house, dan disajikan untuk setiap momen.',
+    url: '/',
+  },
 };
 
 export default async function MarketingPage() {

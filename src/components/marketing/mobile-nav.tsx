@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -10,6 +10,8 @@ import { Menu, X, ArrowUpRight, MessageCircle } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
 import { waLink } from '@/config/whatsapp';
 import { cn } from '@/lib/utils';
+
+const emptySubscribe = () => () => {};
 
 const LINKS = [
   { href: '/', label: 'Beranda', en: 'Home' },
@@ -29,18 +31,16 @@ function isActive(href: string, pathname: string) {
 export function MobileNav() {
   const reduced = useReducedMotion();
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const pathname = usePathname();
+  const [prevPathname, setPrevPathname] = useState(pathname);
   const closeRef = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   // Close on route navigation
-  useEffect(() => {
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
     setOpen(false);
-  }, [pathname]);
+  }
 
   // Lock scroll and handle escape
   useEffect(() => {

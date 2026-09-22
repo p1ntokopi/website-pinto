@@ -5,9 +5,9 @@ import { ReactNode } from "react"
 export const metadata: Metadata = {
   title: "Pinto Ordering",
   description: "Tambah pesanan untuk sesi meja Anda.",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
+  robots: {
+    index: false,
+    follow: false,
   },
 }
 

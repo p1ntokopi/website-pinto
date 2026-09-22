@@ -6,9 +6,18 @@ import { getAppSettings } from '@/lib/settings';
 import { images } from '@/config/images';
 
 export const metadata = {
-  title: 'Kafe Kami | Pinto Kupi',
+  title: 'Kafe Kami',
   description:
-    'Masuki Pinto — ruang untuk kopi hebat, pastry segar, dan momen indah. Buka setiap hari 13.00 — 24.00.',
+    'Masuki Pinto — ruang untuk kopi hebat, pastry segar, dan momen indah. Buka setiap hari 13.00 — 24.00 di Bogor.',
+  alternates: {
+    canonical: '/cafe',
+  },
+  openGraph: {
+    title: 'Kafe Kami | Pinto Kupi',
+    description:
+      'Masuki Pinto — ruang untuk kopi hebat, pastry segar, dan momen indah. Buka setiap hari 13.00 — 24.00 di Bogor.',
+    url: '/cafe',
+  },
 };
 
 const amenities = [

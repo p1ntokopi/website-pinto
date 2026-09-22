@@ -13,11 +13,22 @@ export const dynamic = 'force-dynamic';
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const bean = await getCoffeeBeanBySlug(slug);
-  if (!bean) return { title: 'Kopi Tidak Ditemukan | Pinto Kupi' };
+  if (!bean) return { title: 'Kopi Tidak Ditemukan' };
+
+  const description =
+    bean.description ?? `Single origin ${bean.name} dari ${bean.origin?.country ?? 'roastery kami'}.`;
 
   return {
-    title: `${bean.name} | Pinto Kupi`,
-    description: bean.description ?? `Single origin dari ${bean.origin?.country ?? 'roastery kami'}.`,
+    title: bean.name,
+    description,
+    alternates: {
+      canonical: `/coffee/${slug}`,
+    },
+    openGraph: {
+      title: `${bean.name} | Pinto Kupi`,
+      description,
+      url: `/coffee/${slug}`,
+    },
   };
 }
 

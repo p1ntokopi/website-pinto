@@ -1,13 +1,14 @@
 import type { MetadataRoute } from 'next';
+import { getSiteUrl } from '@/config/site';
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://www.pintokupi.my.id';
+  const baseUrl = getSiteUrl();
 
   return {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/admin/', '/api/', '/auth/'],
+      disallow: ['/admin/', '/api/', '/auth/', '/t/'],
     },
     sitemap: `${baseUrl}/sitemap.xml`,
   };

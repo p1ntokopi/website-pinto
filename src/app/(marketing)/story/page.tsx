@@ -8,9 +8,18 @@ import { StoryFaq } from '@/components/marketing/story/story-faq';
 import { StoryClosing } from '@/components/marketing/story/story-closing';
 
 export const metadata = {
-  title: 'Kisah Kami | Pinto Kupi',
+  title: 'Kisah Kami',
   description:
-    'Pinto lahir dari hasrat sederhana akan kopi hebat dan koneksi yang bermakna. Temukan bagaimana kami mencari, menyangrai, dan menyajikan.',
+    'Pinto lahir dari hasrat sederhana akan kopi hebat Nusantara dan ruang berkumpul yang bermakna di Bogor.',
+  alternates: {
+    canonical: '/story',
+  },
+  openGraph: {
+    title: 'Kisah Kami | Pinto Kupi',
+    description:
+      'Pinto lahir dari hasrat sederhana akan kopi hebat Nusantara dan ruang berkumpul yang bermakna di Bogor.',
+    url: '/story',
+  },
 };
 
 export default function StoryPage() {
