@@ -10,12 +10,31 @@ export default async function TableOrderIndexPage({
   const resolvedParams = await params;
   const supabase = await createClient();
 
-  // 1. Verify table exists
-  const { data: table } = await supabase
+  // 1. Verify table exists (with slug fallback)
+  let { data: table } = await supabase
     .from("tables")
     .select("id, slug, table_number")
     .eq("slug", resolvedParams.slug)
     .single();
+
+  if (!table) {
+    const alternateSlug = resolvedParams.slug.match(/^table-(\d)$/)
+      ? `table-0${resolvedParams.slug.split("-")[1]}`
+      : resolvedParams.slug.match(/^table-0(\d)$/)
+        ? `table-${resolvedParams.slug.replace(/^table-0/, "")}`
+        : null;
+
+    if (alternateSlug) {
+      const fallback = await supabase
+        .from("tables")
+        .select("id, slug, table_number")
+        .eq("slug", alternateSlug)
+        .single();
+      if (fallback.data) {
+        table = fallback.data;
+      }
+    }
+  }
 
   if (!table) {
     notFound();
@@ -33,17 +52,11 @@ export default async function TableOrderIndexPage({
     redirect(`/t/${table.slug}`);
   }
 
-  // 3. Check customer session token
+  // 3. Fetch session summary to get orders (works even without sessionToken cookie)
   const sessionToken = await getSessionToken();
-  if (!sessionToken) {
-    // Session is open on table but device does not have token yet
-    redirect(`/t/${table.slug}`);
-  }
-
-  // 4. Fetch session summary to get orders
   const { data: summaryData } = await supabase.rpc("get_dining_session_summary", {
     p_table_slug: table.slug,
-    p_session_token: sessionToken,
+    p_session_token: sessionToken || "",
   });
 
   const orders = (

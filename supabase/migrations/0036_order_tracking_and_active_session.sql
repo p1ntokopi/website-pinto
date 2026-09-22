@@ -1,8 +1,10 @@
 -- 0036_order_tracking_and_active_session.sql
 -- Makes order tracking and table session summary accessible to customers
--- even if session token cookie is absent or from an earlier session,
+-- even if session token cookie is absent, stale, or from an earlier session,
 -- allowing direct links (e.g. /t/table-01/order/Pinto-260922-0034) and
 -- table QR scans to display active table orders seamlessly.
+
+drop function if exists public.get_order_tracking(text, text, text);
 
 -- 1. Resilient Order Tracking
 create or replace function public.get_order_tracking(
@@ -20,26 +22,9 @@ declare
   v_session_token text;
   v_order jsonb;
 begin
-  -- 1. First priority: if session_token matches an open or recent session on this table
-  if p_session_token is not null and btrim(p_session_token) <> '' and p_session_token <> 'undefined' then
-    select ds.id, ds.status, ds.session_token into v_session_id, v_session_status, v_session_token
-    from public.dining_sessions ds join public.tables t on t.id = ds.table_id
-    where (
-      t.slug = p_table_slug
-      or (p_table_slug ~ '^table-[0-9]$' and t.slug = 'table-0' || substr(p_table_slug, 7))
-      or (p_table_slug ~ '^table-0[0-9]$' and t.slug = 'table-' || substr(p_table_slug, 8))
-    )
-      and ds.session_token = p_session_token
-      and (
-        ds.status = 'open'
-        or coalesce(ds.closed_at, ds.completed_at) >= clock_timestamp() - interval '24 hours'
-      )
-    order by ds.started_at desc limit 1;
-  end if;
-
-  -- 2. Second priority: find session directly from order_number on this table
-  -- Enables direct links (e.g. Pinto-260922-0034) to work without pre-existing cookies
-  if v_session_id is null and p_order_number is not null and btrim(p_order_number) <> '' then
+  -- 1. First priority: if p_order_number is provided, find the session directly from that order
+  -- This ensures stale or expired cookies NEVER block viewing a legitimate order on this table.
+  if p_order_number is not null and btrim(p_order_number) <> '' then
     select ds.id, ds.status, ds.session_token into v_session_id, v_session_status, v_session_token
     from public.orders o
     join public.dining_sessions ds on ds.id = o.dining_session_id
@@ -48,13 +33,30 @@ begin
       t.slug = p_table_slug
       or (p_table_slug ~ '^table-[0-9]$' and t.slug = 'table-0' || substr(p_table_slug, 7))
       or (p_table_slug ~ '^table-0[0-9]$' and t.slug = 'table-' || substr(p_table_slug, 8))
+      or (t.table_number = p_table_slug)
+      or (p_table_slug ~ '^table-0?([0-9]+)$' and t.table_number = regexp_replace(p_table_slug, '^table-0?', ''))
     )
       and o.order_number ilike btrim(p_order_number)
+    order by o.created_at desc limit 1;
+  end if;
+
+  -- 2. Second priority: if session_token matches an open or recent session on this table
+  if v_session_id is null and p_session_token is not null and btrim(p_session_token) <> '' and p_session_token <> 'undefined' then
+    select ds.id, ds.status, ds.session_token into v_session_id, v_session_status, v_session_token
+    from public.dining_sessions ds join public.tables t on t.id = ds.table_id
+    where (
+      t.slug = p_table_slug
+      or (p_table_slug ~ '^table-[0-9]$' and t.slug = 'table-0' || substr(p_table_slug, 7))
+      or (p_table_slug ~ '^table-0[0-9]$' and t.slug = 'table-' || substr(p_table_slug, 8))
+      or (t.table_number = p_table_slug)
+      or (p_table_slug ~ '^table-0?([0-9]+)$' and t.table_number = regexp_replace(p_table_slug, '^table-0?', ''))
+    )
+      and ds.session_token = p_session_token
       and (
         ds.status = 'open'
         or coalesce(ds.closed_at, ds.completed_at) >= clock_timestamp() - interval '24 hours'
       )
-    order by o.created_at desc limit 1;
+    order by ds.started_at desc limit 1;
   end if;
 
   -- 3. Third priority: fallback to currently open active session on this table
@@ -65,6 +67,8 @@ begin
       t.slug = p_table_slug
       or (p_table_slug ~ '^table-[0-9]$' and t.slug = 'table-0' || substr(p_table_slug, 7))
       or (p_table_slug ~ '^table-0[0-9]$' and t.slug = 'table-' || substr(p_table_slug, 8))
+      or (t.table_number = p_table_slug)
+      or (p_table_slug ~ '^table-0?([0-9]+)$' and t.table_number = regexp_replace(p_table_slug, '^table-0?', ''))
     )
       and ds.status = 'open'
     order by ds.started_at desc limit 1;
@@ -101,8 +105,14 @@ begin
   ) into v_order
   from public.orders o
   left join public.order_items oi on oi.order_id = o.id
-  where o.order_number ilike btrim(p_order_number) and o.dining_session_id = v_session_id
-  group by o.id, o.order_number, o.status, o.total;
+  where (
+    (p_order_number is not null and btrim(p_order_number) <> '' and o.order_number ilike btrim(p_order_number))
+    or (o.dining_session_id = v_session_id)
+  )
+  and o.dining_session_id = v_session_id
+  group by o.id, o.order_number, o.status, o.total
+  order by o.created_at desc
+  limit 1;
 
   if v_order is null then
     return jsonb_build_object('success', false, 'error', 'Pesanan tidak ditemukan');
@@ -139,6 +149,8 @@ begin
     t.slug = p_table_slug
     or (p_table_slug ~ '^table-[0-9]$' and t.slug = 'table-0' || substr(p_table_slug, 7))
     or (p_table_slug ~ '^table-0[0-9]$' and t.slug = 'table-' || substr(p_table_slug, 8))
+    or (t.table_number = p_table_slug)
+    or (p_table_slug ~ '^table-0?([0-9]+)$' and t.table_number = regexp_replace(p_table_slug, '^table-0?', ''))
   )
     and (
       (p_session_token is not null and btrim(p_session_token) <> '' and p_session_token <> 'undefined' and ds.session_token = p_session_token)

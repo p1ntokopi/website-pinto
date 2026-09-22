@@ -24,22 +24,55 @@ export default async function OrderTrackingPage({
   const supabase = await createClient();
   const sessionToken = await getSessionToken();
 
-  const { data: table } = await supabase
+  let { data: table } = await supabase
     .from("tables")
-    .select("id, table_number")
+    .select("id, table_number, slug")
     .eq("slug", resolvedParams.slug)
     .single();
+
+  if (!table) {
+    const alternateSlug = resolvedParams.slug.match(/^table-(\d)$/)
+      ? `table-0${resolvedParams.slug.split("-")[1]}`
+      : resolvedParams.slug.match(/^table-0(\d)$/)
+        ? `table-${resolvedParams.slug.replace(/^table-0/, "")}`
+        : null;
+
+    if (alternateSlug) {
+      const fallback = await supabase
+        .from("tables")
+        .select("id, table_number, slug")
+        .eq("slug", alternateSlug)
+        .single();
+      if (fallback.data) {
+        table = fallback.data;
+      }
+    }
+  }
 
   if (!table) {
     notFound();
   }
 
   // Resilient order tracking: works with active session token OR direct order number on this table.
-  const { data: result } = await supabase.rpc("get_order_tracking", {
-    p_table_slug: resolvedParams.slug,
+  const tableSlug = table.slug ?? resolvedParams.slug;
+  let { data: result } = await supabase.rpc("get_order_tracking", {
+    p_table_slug: tableSlug,
     p_session_token: sessionToken || "",
     p_order_number: resolvedParams.orderNumber,
   });
+
+  if (!result || !result.success || !result.order) {
+    if (tableSlug !== resolvedParams.slug) {
+      const { data: fallbackResult } = await supabase.rpc("get_order_tracking", {
+        p_table_slug: resolvedParams.slug,
+        p_session_token: sessionToken || "",
+        p_order_number: resolvedParams.orderNumber,
+      });
+      if (fallbackResult && fallbackResult.success && fallbackResult.order) {
+        result = fallbackResult;
+      }
+    }
+  }
 
   if (!result || !result.success || !result.order) {
     notFound();
@@ -62,7 +95,7 @@ export default async function OrderTrackingPage({
 
       <main className="mx-auto w-full max-w-3xl space-y-5 px-3 py-4 sm:space-y-6 sm:px-6 sm:py-8">
         <OrderSessionDetails
-          tableSlug={resolvedParams.slug}
+          tableSlug={tableSlug}
           orderId={order.id}
           orderNumber={order.order_number}
           initialStatus={order.status}
