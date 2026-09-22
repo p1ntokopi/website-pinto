@@ -12,7 +12,7 @@ import { KitchenOrder } from '@/lib/orders/kitchen-types'
 import { KitchenCard } from './kitchen-card'
 import { ArrowLeft, Maximize, Minimize, Wifi, WifiOff, TriangleAlert } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { playNewOrderSound } from '@/lib/notifications/sound'
+import { playNewOrderSound, primeAudioContext } from '@/lib/notifications/sound'
 import { getNotificationsEnabled, getSoundEnabled } from '@/lib/notifications/preferences'
 
 // Legacy statuses that still mean "new" so old rows keep flowing to the KDS.
@@ -100,6 +100,22 @@ export function KitchenClient({
     const handleFullscreenChange = () => setIsFullscreen(!!document.fullscreenElement)
     document.addEventListener('fullscreenchange', handleFullscreenChange)
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
+  }, [])
+
+  // Prime and unlock audio on first user touch/click (essential for kitchen tablets/phones)
+  useEffect(() => {
+    const prime = () => {
+      primeAudioContext().catch(() => {})
+    }
+    const events = ['click', 'touchstart', 'touchend', 'pointerdown', 'keydown']
+    events.forEach((event) => {
+      window.addEventListener(event, prime, { passive: true })
+    })
+    return () => {
+      events.forEach((event) => {
+        window.removeEventListener(event, prime)
+      })
+    }
   }, [])
 
   const refreshOrders = useCallback(async (

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Bell, BellRing, CheckCheck, Wifi, WifiOff, Loader2 } from 'lucide-react'
+import { Bell, BellRing, CheckCheck, Wifi, WifiOff, Loader2, Volume2 } from 'lucide-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +18,7 @@ import {
   setNotificationsEnabled,
   setSoundEnabled,
 } from '@/lib/notifications/preferences'
+import { playNewOrderSound, primeAudioContext } from '@/lib/notifications/sound'
 
 type NotificationControlProps = {
   unreadCount: number
@@ -40,6 +41,7 @@ export function NotificationControl({
   const [notifEnabled, setNotifEnabled] = useState(getNotificationsEnabled)
   const [soundEnabled, setSoundEnabledState] = useState(getSoundEnabled)
   const [requesting, setRequesting] = useState(false)
+  const [testingSound, setTestingSound] = useState(false)
 
   const browser = useBrowserNotifications()
   const { toast } = useToast()
@@ -52,6 +54,26 @@ export function NotificationControl({
   const handleToggleSound = (value: boolean) => {
     setSoundEnabledState(value)
     setSoundEnabled(value)
+  }
+
+  const handleTestSound = async () => {
+    setTestingSound(true)
+    await primeAudioContext().catch(() => {})
+    const played = await playNewOrderSound(true)
+    setTestingSound(false)
+
+    if (played) {
+      toast({
+        title: 'Suara aktif',
+        description: 'Suara notifikasi pesanan berhasil diputar.',
+      })
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Suara tidak bersuara',
+        description: 'Pastikan volume HP tidak hening dan browser memiliki izin audio.',
+      })
+    }
   }
 
   const handleEnableDesktop = async () => {
@@ -152,15 +174,31 @@ export function NotificationControl({
 
           <div className="flex items-center justify-between gap-3 px-2 py-1.5">
             <div>
-              <p className="text-sm font-medium text-ink">Suara</p>
-              <p className="text-xs text-muted-text">Nada pendek saat pesanan baru masuk.</p>
+              <p className="text-sm font-medium text-ink">Suara Pesanan</p>
+              <p className="text-xs text-muted-text">File: notification-order.wav</p>
             </div>
-            <Switch
-              checked={soundEnabled}
-              onCheckedChange={handleToggleSound}
-              disabled={!notifEnabled}
-              aria-label="Aktifkan suara pesanan baru"
-            />
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleTestSound}
+                disabled={testingSound}
+                className="inline-flex h-8 items-center gap-1.5 rounded-sm border border-coffee/30 bg-coffee/5 px-2.5 text-xs font-semibold text-coffee transition-colors hover:bg-coffee/10 active:scale-95 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-ring outline-none"
+                title="Uji coba suara notifikasi di perangkat ini"
+              >
+                {testingSound ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Volume2 className="h-3.5 w-3.5" />
+                )}
+                <span>Tes</span>
+              </button>
+              <Switch
+                checked={soundEnabled}
+                onCheckedChange={handleToggleSound}
+                disabled={!notifEnabled}
+                aria-label="Aktifkan suara pesanan baru"
+              />
+            </div>
           </div>
         </div>
 

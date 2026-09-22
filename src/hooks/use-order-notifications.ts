@@ -140,14 +140,22 @@ export function useOrderNotifications({ enabled = true, onNewOrder }: UseOrderNo
     channelRef.current?.postMessage({ type: 'read' } satisfies BroadcastMessage)
   }, [])
 
-  // Prime the audio context from the first user gesture (autoplay policy).
+  // Prime and unlock audio from the first user interaction (touch, click, key).
+  // Essential on mobile devices (iOS Safari, Android Chrome) due to autoplay policy.
   useEffect(() => {
-    const prime = () => primeAudioContext()
-    window.addEventListener('pointerdown', prime)
-    window.addEventListener('keydown', prime)
+    const prime = () => {
+      primeAudioContext().catch(() => {})
+    }
+
+    const events = ['click', 'touchstart', 'touchend', 'pointerdown', 'keydown']
+    events.forEach((event) => {
+      window.addEventListener(event, prime, { passive: true })
+    })
+
     return () => {
-      window.removeEventListener('pointerdown', prime)
-      window.removeEventListener('keydown', prime)
+      events.forEach((event) => {
+        window.removeEventListener(event, prime)
+      })
     }
   }, [])
 
